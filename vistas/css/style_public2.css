@@ -1,0 +1,235 @@
+
+body.active {background-color:#1f2022;color:white !important;}
+body.active .absoluto{background-color:#373b3e;}
+body.active .absoluto .contactosesion ul{background-color:#373b3e;}
+body.active .absoluto .contactosesion ul li a{background-color:#373b3e;}
+body.active .absoluto .contactosesion ul li a:hover{background-color:#666;}
+body.active .creditos{background-color:#1f2022;}
+body.active .absoluto .contactosesion .precaucion{background-color:#373b3e;}
+body.active .nada{background-color:#1f2022;}
+body.active .nada{background-color:#1f2022;}
+body.active .mentiras{background-color:#1f2022;}
+body.active .tarjetas{background-color:#1f2022;}
+body.active .oculto{background-color:#1f2022;}
+body.active {background-color:#1f2022;}
+body.active .oculto .color{background-color:#1f2022;}
+body.active .datos {background-color:#1f2022;}
+body.active .datos .lado1 {background-color:#1f2022;}
+body.active .datos .lado1 .general {background-color:#1f2022;}
+body.active .datos .lado1 .datosprofe{background-color:#1f2022;}
+body.active .datos .lado1 .checklisst {background-color:#1f2022;}
+body.active .datos .lado1 .checklisst .parachecklisst{background-color:#1f2022;}
+body.active .datos .lado1 .checklisst .parachecklisst .subchecklisst{background-color:#1f2022;}
+body.active .datos .lado1 .checklisst .parachecklisst .subchecklisst .checking{background-color:#1f2022;}
+body.active .datos .lado1 .inclusion {background-color:#1f2022;}
+body.active .datos .lado1 .inclusion .inclusionforzada {background-color:#1f2022;}
+body.active .datos .lado1 .inclusion .inclusionforzada .logros {background-color:#1f2022;}
+body.active .datos .lado2 {background-color:#1f2022;border:3px solid white;}
+body.active .datos .lado2 .lado2png{background-color:#1f2022;}
+body.active .datos .lado2 .otrascosas{background-color:#1f2022;}
+body.active .datos .lado2 .otrascosas .duracion_curso_h_2{color:white;}
+body.active .datos .lado2 .otrascosas .otrascosas1{background-color:#1f2022;}
+body.active .datos .lado2 .otrascosas .otrascosas1 h1, body.active .datos .lado2 .otrascosas .otrascosas21h h1, body.active .datos .lado2 .otrascosas .otrascosas21p h1{color:white;background-color:#1f2022;}
+body.active .tarjetacurso3 .subtarjetacurso3 .datosprofe,body.active .tarjetacurso3 .subtarjetacurso3, body.active .tarjetacurso3{background-color:#373b3e;border-radius:12px;}
+body.active .datos .lado2 .otrascosas {background-color:#1f2022;}
+body.active .datos .lado2 .otrascosas .otrascosas21 {background-color:#1f2022;}
+body.active .datos .lado2 .otrascosas .otrascosas21 .tengoclase {background-color:#1f2022;}
+body.active .datos .lado2 .otrascosas .otrascosas21h {background-color:#1f2022;}
+body.active .datos .lado2 .otrascosas .otrascosas21h .tengoclase {background-color:#1f2022;}
+body.active .datos .lado2 .otrascosas .otrascosas21p {background-color:#1f2022;}
+body.active .datos .lado2 .otrascosas .otrascosas21p .tengoclase {background-color:#1f2022;}
+body.active .datos .lado2 .otrascosas .llamanos {background-color:#1f2022;}
+body.active .datos .lado2 .otrascosas .llamanos .botonesllamanos{background-color:#1f2022;}
+body.active .otrascosas2{background-color:#1f2022;}
+body.active .otrascosas2 .general {background-color:#1f2022;}
+body.active .otrascosas2 .porsiacaso {background-color:#1f2022;}
+body.active .car:hover{box-shadow: rgba(255, 255, 255, 0.24) 0px 3px 8px;}
+body.active .hiddenz{background-color:#F33;color:white;}
+body.active .cebo{background-color:#1f2022;}
+body.active .otrascosas2add {background-color:#1f2022;}
+body.active .generaladd{background-color:#1f2022;}
+
+
+/*
+.switch{display:flex;justify-content:center;align-items:flex-end;bottom:1px;flex-wrap:nowrap;
+	width: 50px;
+    height: 25px;
+    padding: 0;
+	margin:auto;    position: relative;
+    border-radius: 100px;
+    border: 1rem solid #333;
+    background-color: #066;}
+	
+.switch i{font-size:13px;color:#F93;padding:4px 2px 2px 6px;margin:auto;width:48%;}
+
+.contactosesion > ul > li:last-child::before{content:"";position:absolute;height:95%;width:45%;border-radius:6px;background-color:white;border: solid thin #000000;left:0;right:unset;}
+
+.contactosesion > ul > li:last-child.active::before{
+	border: solid thin #fff;
+right:0;
+left:unset;}
+
+.contactosesion > ul > li:last-child.active i:first-child{color:white;}
+.contactosesion > ul > li:last-child.active{border:solid 2px #FFFFFF;background-color:chocolate;}
+
+*/
+
+.nueva2{width:100%;height:85vh;/*1000px*/display:flex;justify-content:center;align-items:center;flex-direction:column;background-image: url('graduacion3.webp');background-size: cover;
+box-shadow: rgba(2, 165, 235, 0.8) 0px 6px, rgba(1, 149, 212, 0.7) 0px 14px,rgba(4, 116, 164, 0.6) 0px 22px,rgba(56, 116, 144, 0.5) 0px 30px,rgba(2, 53, 53, 0.4) 0px 38px;}
+.nueva2 p{width:70%;color:white;font-size:11rem;text-align:center;text-shadow: black 0.1em 0.1em 0.2em;}/*este es el codigo de la imagen de la portada del principio de ceprocacursos*/
+.nueva2 h1{color:white;font-size:13rem;text-align:center;margin-top:130px;text-shadow: black 0.1em 0.1em 0.2em;}
+
+
+
+
+
+
+
+.tarjetacurso3{width:42%;height:45vh;border-radius:12px;margin:2%;display:flex;justify-content:center;align-items:center;box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px, rgba(0, 0, 0, 0.3) 0px 7px 13px -3px, rgba(0, 0, 0, 0.2) 0px -3px 0px inset;transition: all 0.3s ease-in-out;}
+.tarjetacurso3 img{height:100%;width:60%;border-radius:12px;box-shadow: rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px;}
+.subtarjetacurso3{height:100%;width:40%;display:flex;justify-content:center;align-items:flex-start;flex-direction:column;}
+.subtarjetacurso3 p{font-size:6rem;margin:3% 3% 3% 5%;width:90%;}
+.info_precio_tarjeta3{display:flex;margin:1%;justify-content:center;align-items:space-between;width:90%;flex-wrap:wrap;}
+.precio_n_tarjeta3{display:flex;justify-content:center;align-items:space-between;flex-wrap:nowrap;}
+.precio_n_tarjeta3 h1{font-size:12rem;color:#6a6a6a;position:right;margin:3%;}
+.precio_n_tarjeta3 i{color:orange;font-size:12rem;text-align:center;}
+.info_precio_tarjeta3 s{font-size:10rem;color:#6a6a6a;position:right;margin:6%;}
+.subtarjetacurso3 u{font-size:4rem;position:right;color:#6a6a6a;margin-left:8%;}
+.subtarjetacurso3 h3{width:90%;}
+
+.duracion_curso_h {width:80%;font-size:7rem;background-color:#3CA6A6; border: 4px solid #3CA6A6;color:white;border-radius:8px;text-align:center;padding:2%;margin:2%;}
+.duracion_curso_h_2{font-size:6rem; border: 0px;color:black;text-align:left;width:95%; margin-left:10%;}
+.nombre_curso_h{padding:2%;font-size:5rem;border:0px;color:white;text-align:center;width:90%;margin-left:1px;background-color:#2254bb;border-radius:7px;box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;}
+
+
+
+
+
+
+
+.datos{width:100%;height:100%;display:flex;justify-content:center;align-items:flex-start;background-color:white;}
+
+.lado1{width:65%;height:98%;display:flex;margin:1%;justify-content:flex-start;align-items:center;flex-direction:column;background-color:inherit;}
+
+.general{width:99%;display:flex;justify-content:flex-start;align-items:flex-start;flex-direction:column;background-color:white;}
+.general h1{margin:2%;font-size:10rem;color:black;}
+.general p{font-size:5rem;margin-left:1%;}
+.datosprofe{width:90%;height:auto;margin:2% 0;display:flex;justify-content:flex-start;align-items:center;background-color:inherit;}
+.datosprofe img{border-radius:50%;width:50px;height:50px;border:1px solid #F9F;margin:1%}
+.datosprofe p{font-size:4rem;margin-left:1%;}
+.datosprofe p b{color:#36C;font-size:5rem;border-right:3px solid #666;padding-right:20px;}
+
+.checklisst{width:99%;height:auto;display:flex;justify-content:flex-start;align-items:flex-start;background-color:#FFF;flex-direction:column;border:3px solid #F9F;}
+.checklisst h1{margin-left:5%;font-size:9rem;margin-top:2%;}
+.parachecklisst{width:100%;height:auto;display:flex;justify-content:center;align-items:flex-start;background-color:white;flex-direction:row;}
+.subchecklisst{width:49%;height:auto;display:flex;justify-content:flex-start;align-items:center;background-color:white;flex-direction:column;}
+.checking{width:97%;margin:1%;height:auto;display:flex;justify-content:flex-start;align-items:center;flex-direction:row;border:3px solid #3CA6A6;border-radius:12px;}
+.checking i{font-size:10rem;color:#F9F;padding:5%;}
+.checking p{padding-top:2%;font-size:4rem;}
+.inclusion{width:99%;height:30%;display:flex;justify-content:center;align-items:center;flex-direction:column;}
+.inclusion h1{font-size:8rem;}
+.inclusionforzada{width:100%;height:100%;display:flex;justify-content:center;align-items:flex-start;flex-direction:row;flex-wrap:wrap;background-color:white;}
+.logros{width:23%;display:flex;flex-direction:column;justify-content:flex-start;align-items:center;background-color:#fff;margin:1%;border-radius:12px;box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;}
+.logrospng{width:100%;display:flex;justify-content:center;align-items:center;border-radius:12px;}
+.logrospng i{font-size:25rem;margin:0px 0px;padding:15px;color:white;border-radius:12px;}
+.logros p{font-size:4rem;height:30%;text-align:center;width:95%;height:95%;}
+
+.lado2{width:22%;height:auto;display:flex;margin:1%;justify-content:flex-start;align-items:center;flex-direction:column;background-color:inherit;box-shadow: rgba(50, 50, 93, 0.25) 0px 6px 12px -2px, rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;}
+.lado2png{width:99%;box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;}
+
+.otrascosas{width:100%;display:flex;flex-direction:column;justify-content:flex-start;align-items:center;background-color:#fff;}
+/*.otrascosas h1{font-size:6rem;color:white;background-color:pink;border-radius:8px;border:4px solid pink;padding:3%;margin:1%;font-size:8rem;background-color:#3CA6A6; border: 4px solid #3CA6A6;}*/
+
+
+.otrascosas hr{background-color:black;height:3px;width:95%;}
+
+.otrascosas1{width:95%;display:flex;flex-direction:column;
+justify-content:flex-start;align-items:flex-start;margin:1%;background-color:white;}
+.otrascosas1 h1{font-size:6rem;margin-left:5%;padding:1%;color:black;border:0;background-color:white;}
+.otrascosas1 p{font-size:5rem;margin-left:5%;}
+
+/*.otrascosas2{width:100%;display:flex;flex-direction:row;justify-content:space-between;align-items:flex-start;background-color:#fff;}*/
+.otrascosas21{width:46%;display:flex;flex-direction:column;
+justify-content:flex-start;align-items:flex-start;margin:1%;background-color:white;}
+.otrascosas21 p{font-size:3rem;margin-left:5%;padding:1% 2%;}
+.tengoclase{width:46%;display:flex;
+justify-content:flex-start;align-items:center;margin:1%;background-color:white;}
+.tengoclase i{font-size:6rem;color:#F9F;padding:2%;margin-left:3%;}
+.tengoclase h1{font-size:6rem;margin-left:5%;padding:1%;color:black;border:0;background-color:white;}
+
+.llamanos h1{font-size:10rem;padding:1%;color:black;border:0;background-color:white;}
+.llamanos{width:100%;height:20%;display:flex;flex-direction:column;justify-content:flex-start;align-items:center;}
+.botonesllamanos{width:95%;display:flex;
+justify-content:space-between;align-items:center;margin:1%;background-color:white;}
+/*
+.precaucion2{font-size:red;width:46%;height:auto;cursor: pointer;background-color:#3CA6A6;border-radius:40px;}
+.precaucion2 p{padding:15px 5px;color:white;text-decoration:none;text-align:center;font-size:20px;;border-radius:6px;}
+.precaucion2 p:hover{background-color:#026773;font-size:12px;}*/
+
+.otrascosas21p{width:46%;height:30%;display:flex;flex-direction:column;
+justify-content:flex-start;align-items:flex-start;margin:1%;background-color:white;}
+/*.otrascosas21p p{font-size:5rem;margin-left:5%;padding:1% 2%;}*/
+
+.otrascosas21h{width:46%;height:30%;display:flex;flex-direction:column;
+justify-content:flex-start;align-items:flex-start;margin:1%;background-color:white;}
+/*.otrascosas21h p{font-size:5rem;margin-left:5%;padding:1% 2%;}*/
+
+
+/*cupos y oferta de info de cursos*/
+.llamanos111 {font-size:4rem;color:white;background-color:#3CF;border-radius:8px;padding:3%;margin:2%;box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;width:90%;}
+
+.llamanos222 {font-size:4rem;color:white;background-color:#F60;border-radius:8px;padding:3%;margin:2%;box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;width:90%;}
+
+/*aqui terminan los datos de los cursos*/	
+	
+.paginacion a {
+    margin:1% 5%;
+    padding: 5px 10px;
+    text-decoration: none;
+    background-color: #ddd;
+    color: #333;
+    border-radius: 5px;
+	width:40px;height:40px;
+	font-size:5rem;
+}
+
+.paginacion a.activo {background-color: #333;color: #fff;}		
+.paginacion{display:flex;justify-content:center;align-items:center;}	
+
+
+/*el add de la chica con cuaderno y el texto de "el aprendizaje nunca se detiene"*/
+.otrascosas2add{width:100%;height:50vh;display:flex;flex-direction:row;justify-content:space-between;align-items:flex-start;}
+.generaladd{width:90%;height:90%;display:flex;margin:1%;justify-content:center;align-items:flex-start;flex-direction:column;background-color:white;}
+.generaladd h2{color:white;font-size:8rem;text-shadow: -1px 0 #414D68, 0 1px #414D68, 1px 0 #414D68, 0 -1px #414D68, -2px 2px 0 #414D68, 2px 2px 0 #414D68, 1px 1px #414D68, 2px 2px #414D68, 3px 3px #414D68, 4px 4px #414D68, 5px 5px #414D68, 6px 6px #414D68, 7px 7px #414D68, 8px 8px #414D68, 9px 9px #414D68;
+}
+.generaladd h1{color:white;margin:2%;font-size:18rem;
+text-shadow: 0 1px 0 rgba(185,243,255,1), 0 2px 0 rgba(0,212,255,1), 0 3px 0 rgba(9,9,121,1), 0 4px 0 rgba(2,0,36,1), 0 5px 0 rgba(2,0,36,0.75),0 6px 1px rgba(2,0,36,0.5), 0 0 5px rgba(2,0,36,0.5), 0 1px 3px rgba(2,0,36,0.3), 0 3px 5px rgba(2,0,36,0.2),0 5px 10px rgba(2,0,36,0.15), 0 10px 10px rgba(2,0,36,0.1),0 20px 20px rgba(2,0,36,0.05);text-align: center;}
+.generaladd p{font-size:2rem;margin-left:1%;}
+/*
+.tarjetacurso3{width:42%;height:45vh;border-radius:12px;margin:2%;display:flex;justify-content:center;align-items:center;box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px, rgba(0, 0, 0, 0.3) 0px 7px 13px -3px, rgba(0, 0, 0, 0.2) 0px -3px 0px inset;}
+.tarjetacurso3 img{height:100%;width:60%;border-radius:12px;box-shadow: rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px;}
+.subtarjetacurso3{height:100%;width:40%;display:flex;justify-content:center;align-items:flex-start;flex-direction:column;}
+.subtarjetacurso3 p{font-size:6.5rem;margin:3% 3% 3% 5%;width:90%;}
+.info_precio_tarjeta3{display:flex;margin:1%;justify-content:center;align-items:space-between;width:90%;flex-wrap:wrap;}
+.precio_n_tarjeta3{display:flex;justify-content:center;align-items:space-between;flex-wrap:nowrap;}
+.precio_n_tarjeta3 h1{font-size:12rem;color:#6a6a6a;position:right;margin:3%;}
+.precio_n_tarjeta3 i{color:orange;font-size:12rem;text-align:center;}
+.info_precio_tarjeta3 s{font-size:10rem;color:#6a6a6a;position:right;margin:6%;}
+.subtarjetacurso3 u{font-size:4rem;position:right;color:#6a6a6a;margin-left:8%;}
+.subtarjetacurso3 h3{width:90%;}
+*/
+
+
+.barra_busqueda_cursos{display:flex;justify-content:center;align-items:center; border-radius:40px;width:100%;margin-left:1px;height:50%;background-color: #f4f2f2;transition: all 0.4s ease;}
+.barra_busqueda_cursos:hover{box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px;}
+.barra_busqueda_cursos input{font-size:5rem;background-color:#f4f2f2;outline: none;border: 1px solid #f4f2f2;width:85%;}
+.barra_busqueda_cursos input:focus {border: 1px solid #f4f2f2;}
+.resultados_busqueda_nav{padding:4px;border-radius:4px;color:black;width:95%;font-size:6rem;background-color:#f4f2f2;transition:all 1s ease;}
+.resultados_busqueda_nav:hover{cursor:pointer;background-color:#ebe9e9;}
+.card_busqueda{width:100%;z-index:6;display:flex;justify-content:Center;align-items:center;flex-direction:column;}
+.divbarracurso1{display:flex;justify-content:space-between;align-items:center;width:100%;}
+.divbarracurso2{width:40%;;margin-left:8%;display:flex;justify-content:center;align-items:center;flex-direction:column;}
+.button_barra{font-size:6rem;color:grey;border:0px;height:50%;padding:1px 5px;border-radius:8px;transition:all 0.3s ease;}
+.button_barra:hover{background-color:grey;cursor:pointer;color:white;}
+.frase_barra{font-size:6rem;color:grey;margin-right:28%;}
+

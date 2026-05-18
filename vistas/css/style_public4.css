@@ -1,0 +1,1237 @@
+/*hola*/
+/*esto es el css de las vistas publicas, inicio, cursos, curso, y asi, las de gestion de usuarios e inicio de sesion no usan esto*/
+
+/*general */
+.bbb {display: flex;
+    align-items:center;
+    text-align:center;
+    width: 15%/*10%*/;color:white;
+    margin:auto;
+    font-size: 2rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    border: 1px solid black;
+    box-shadow: 0 0 0 0 black;
+    padding: 3em 2em;
+    border-radius:20px;
+}
+
+
+.bbb:hover {
+transform: translateY(-4px) translateX(-2px);
+box-shadow: 2px 5px 0 0 black;
+background-color: yellow;
+background-color: #F00;
+}
+
+
+.bbb:active {
+transform: translateY(2px) translateX(1px);
+box-shadow: 0 0 0 0 black;
+background-color: #6FF;
+}
+
+
+.b1 { background-color: #e74c3c; }
+.b2 { background-color: #3CA6A6; }
+.b3 { background-color: #026773; }
+.b4 { background-color: #024959; }
+.b5 { background-color: #012E40; }
+
+.b1_static { background-color: #e74c3c; }
+.b2_static { background-color: #3CA6A6; }
+.b3_static { background-color: #026773; }
+.b4_static { background-color: #024959; }
+.b5_static { background-color: #012E40; }
+
+/* width 15% yfont size 20px*/
+
+
+.bbb p{font-size:4rem;text-align:center;}
+
+.b1:hover{background-color: #F36;}
+.b2:hover{background-color: #6CF;}
+.b3:hover{background-color: #00C;}
+.b4:hover{background-color: #369;}
+.b5:hover{background-color: #939;}
+
+
+.clr_rojo {background-color: #E74C3C;}
+.clr_verde {background-color: #3CA6A6;}
+.clr_rosa {background-color: #FA2AF5;}
+.clr_morado {background-color: #6527F5;}/*colores que se usan en cursos view*/
+
+
+
+html{scroll-behavior:smooth;}
+
+/*stye public 3*/
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family: "Poppins",sans-serif;
+    font-size:3px;
+}
+	
+
+.oculto {
+  height: 0px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  opacity: 0; 
+  transition: opacity 0.5s ease, height 0.5s ease; 
+  flex-direction: row;
+}
+.oculto div {
+  display: none;
+}
+.oculto.show {
+  height: 300px; 
+  opacity: 1; 
+}
+.oculto div.show {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+    width:100%;
+}
+
+
+
+
+
+	/*aqui empieza nuevoslider*/
+	.nuevoslider{width:100%;display:flex;justify-content:center;align-items:Center;background-color:#e3e1e1;}
+	
+.newslider {position: relative; width: 400px;height:400px;overflow: hidden;border-radius:12px;
+			box-shadow: rgba(0, 0, 0, 0.07) 0px 1px 1px, rgba(0, 0, 0, 0.07) 0px 2px 2px, rgba(0, 0, 0, 0.07) 0px 4px 4px, rgba(0, 0, 0, 0.07) 0px 8px 8px, rgba(0, 0, 0, 0.07) 0px 16px 16px;margin-top:3%;margin-bottom:3%;}
+.newslides{display:flex;transition: transform 0.5s ease-in-out;}
+        .newslides img {width: 400px;height:400px;object-fit:cover;}
+
+               .newnavigation {
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            transform: translateY(-50%);
+        }
+        .nav-btn {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+			margin:3%;
+			font-size:4rem;
+        }
+
+		 .primer_slider_texto{display:flex;align-items:center;justify-content:center;width:20%;margin-right:8%;}
+		.primer_slider_texto h1{font-size:8rem;text-shadow:3px 3px 0px white,3px 3px 0px white;}
+
+		/*aqui termina nuevo slider*/
+
+
+
+
+/*inicio de pagina de ceproca y ceprocacursos*/
+.inicio_header_imagen_ceproca{
+    width:100%;
+	height:100vh;
+	display:flex;
+	justify-content:center;
+	align-items:center;
+/*	background-image: url('../vistas/assets/img/talves4.webp');*/
+	background-size: cover;
+    box-shadow: 
+        rgba(2, 165, 235, 0.8) 0px 6px,  
+        rgba(1, 149, 212, 0.7) 0px 14px, 
+        rgba(4, 116, 164, 0.6) 0px 22px,  
+        rgba(56, 116, 144, 0.5) 0px 30px,    
+        rgba(2, 53, 53, 0.4) 0px 38px; 
+}
+    .inicio_header_imagen_ceproca p{
+        width:70%;
+        color:white;
+        font-size:11rem;
+        text-align:center;
+        margin-top:160px;
+    }
+
+
+/*etiquetas del inicio_header_imagen_ceproca de cursos-view*/
+    .header_imagen_ceproca_cursos_h1{margin:0;padding:0;font-size:10rem;color:white;}
+    .header_imagen_ceproca_cursos_p{margin:0 !important;padding:0;font-size:9rem;}
+
+
+
+
+/*este solo se usa en ceproca.php */
+.texto_header_cursos_100_practicos {}
+.texto_header_cursos_100_practicos_div1{height:10vh;}
+.texto_header_cursos_100_practicos_div2{height:5vh;}
+.texto_header_cursos_100_practicos h1{
+    text-align:center;
+    font-size:12rem;
+    width:90%;
+    margin:auto;
+}
+
+.caracteristicas_cursos{  
+    height: 100px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items:center;
+}
+.caracteristicas_cursos.buton_caracteristicas_cursos {
+    padding:3px;
+    margin:auto;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+.buton_caracteristicas_cursos p{text-align:center;margin:auto;}
+
+
+/*fin de inicio de pagina de ceproca y ceprocacursos*/
+
+
+
+/*aqui empiezan los 5 botones de caracteristicas de los cursos en ceproca.php */
+.texto_caracteristicas_curso{
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    width:40%;
+    height:auto;
+    margin:1% 2%;
+    flex-direction:column;
+    /*background-color:#f36;*/
+    border-radius:12px;
+    box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+}
+.texto_caracteristicas_curso p{
+    width:94%;
+    margin:2%;
+    color:white;
+    font-size:6rem;
+}
+
+.texto_caracteristicas_curso i{
+    font-size:14rem;
+    margin:2%;
+    color:white;
+}
+.imagen_caracteristicas_curso{
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    width:40%;
+    height:95%;
+    margin:1% 2%;
+    flex-direction:column;
+    background-color:#F36;border-radius:12px;
+    box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+}
+
+.imagen_caracteristicas_curso img{
+    width:100%;
+    height:100%;
+    border-radius:12px;
+}
+
+/*fin de inicio-ceproca*/
+
+
+/*anuncio publicidad*/
+.anunciodivprincipal{
+    width:100%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background-color:inherit;
+}
+
+
+.seccion_anuncio_encerrador{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:row;
+    height:100%;
+    width:100%;
+    background-color:red;
+}
+
+
+
+
+
+
+
+#ir_arriba{
+	width: 5%/*70px*/;
+	height: 9%;
+	background: #999;
+	color: white;
+	display: none;
+	justify-content: center;
+	align-items: center;
+	font-size: 6rem;
+	position: fixed;
+	bottom: 20px;
+	cursor: pointer;
+	border-radius: 60px;
+	right: 20px;
+	z-index: 10;
+	transition:all 0.3s ease;
+}
+
+#ir_arriba i{font-size:10rem;}
+#ir_arriba:hover {background-color:#888;}
+
+
+
+
+
+
+/*aqui empieza periodico y enlaces*/
+
+.espacio_periodicos{width:100%;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;}
+
+	.encabezados_periodicos{width:80%;height:65vh;/*65vh*/display:flex;align-items:center;justify-content:center;background-color:white;}
+
+		.encabezado1{width:28%;height:65vh;margin-left:10px;margin-right:10px;display:flex;justify-content:center;align-items:center;flex-direction:column;box-shadow: rgba(0, 0, 0, 0.45) 0px 25px 20px -20px;background-color:#f2f3f4;border-top: 1px solid #0CF;}
+
+			.encabezado1 p{font-size:4rem;color:black;padding:5px 10px;}
+
+			.encabezado1 p > b{color:#6FF;font-size:5rem;/*6rem*/}
+
+			.encabezado1 img{width:100%;height:40%;margin-top:5px;margin-bottom:3px;}
+
+		.encabezado2{width:25%;display:flex;height:65vh;/*65vh*/justify-content:center;margin-left:10px;margin-right:10px;align-items:center;flex-direction:column;box-shadow: rgba(0, 0, 0, 0.45) 0px 25px 20px -20px;background-color:#f2f3f4;}
+
+			.encabezado2 p{font-size:4rem;color:black;padding:5px 10px;}
+			.encabezado2 p > b{font-size:6rem;}
+
+		.hr_encabezado{width:80%;margin-left:9%;margin-right:9%;margin-top:5px;}
+		.hr_linea_color{ width:100%;height:20px;margin-left:9%;margin-right:9%;}
+
+		.cecilio_acosta_foto{ width:50%;height:30%;margin-top:10px;border-radius:50%;}
+		.imagen4_encabezado{width:100%;height:40%;margin-top:5px;margin-bottom:3px;box-shadow: rgba(0, 0, 0, 0.1) 0px 10px 50px;}
+
+
+.subtitulo_encabezado1{color:#36C !important;font-size:10rem;text-align:center;}
+.subtitulo_encabezado2{color:#C33 !important;font-size:6rem;text-align:center;}
+.subtitulo_encabezado3{color:black !important;font-size:4rem;text-align:center;}
+
+
+.car{transition:all 400ms ease;}
+.car:hover{box-shadow:5px 5px 20px rgb(0,0,0,0.4);transform:translateY(-3%);cursor:pointer;}
+
+
+article {
+    position: absolute;
+    margin-top: 10%;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+
+.visiblez {opacity: 1;margin-top:12%;}
+.visiblez {font-size:6rem;}
+.hiddenz {display: none;}
+
+
+
+.div_contactos{ width:100%;height:30vh;display:flex;justify-content:center;align-items:center;}
+.enlaces_div_circulos{width:100%;height:30vh;display:flex;justify-content:center;align-items:center;}
+
+
+ .boton_contactos{display:flex;justify-content:center; align-items:center;width:14%;margin-left:1%;margin-right:1%;border-radius:60px;height:30%/*90px*/;box-shadow: rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px;}
+/*.boton_contactos2{}*/
+
+.boton_contactos img{width:50%;height:50%;object-fit:cover;}
+
+.div_tlfno_correo{display:flex;justify-content:center; align-items:center;width:14%;margin-left:1%;margin-right:1%;flex-direction:column;height:30%;transition:width 0.5s,height 0.5s;}
+.div_tlfno_correo:hover{width:15%;height:31%;}
+
+.btn_contactos_animacion{transition: background-color 0.5s,width 0.5s,height 0.5s;}
+.btn_contactos_animacion:hover{cursor:pointer;width:15%;height:31%;}
+
+.btn_contactos_clr1{background-color:#36F;}
+.btn_contactos_clr1:hover{background-color:#33F;}
+
+.btn_contactos_clr2{background-color:#F9F;}
+.btn_contactos_clr2:hover{background-color:#F0F;}
+
+.btn_contactos_clr3{background-color:#C00;}
+.btn_contactos_clr3:hover{background-color:#F03;}
+
+.boton_contactos_animacion2{display:flex;justify-content:center; align-items:center;cursor:pointer;flex-direction:column;width:99%;border-radius:60px;height:99%;box-shadow: rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px;transition: background-color 0.5s,width 0.5s,height 0.5s;}
+.boton_contactos_animacion2:hover{cursor:pointer;width:100%;height:100%;/*31*/}
+.boton_contactos_animacion2 img{width:50%;height:50%;object-fit:cover;}
+
+.btn_contactos_clr4{background-color:#0C0;}
+.btn_contactos_clr4:hover{background-color:#02e002;}
+
+.btn_contactos_clr5{background-color:#66C;}
+.btn_contactos_clr5:hover{background-color:#D327F5;}/*6CF*/
+
+
+
+#oculto3,#ocultocontactos{box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;background-color:#e64a19;height:0px; /*el oculto que guardan los mapas de google*/}
+.mapas{width:60%;margin-left:4%;margin-right:4%;height:100%/*400px*/;display:flex;justify-content:center;align-items:center;flex-wrap:nowrap;}
+
+	.div_mapas_texto{
+        width:30%;height:90%;margin-right:1%;
+        margin-left:1%;
+        display:flex;flex-direction:column;justify-content:center;align-items:center;
+	}
+
+		.div_mapas_texto img{
+            width:98%;height:40%;border-radius:8px;
+            box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px;
+		}
+
+		.mapas_texto{
+            display:flex;align-items:center;justify-content:center;flex-direction:column;
+            margin-bottom:5%;box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px;
+            padding:12px;  background-color:#e74c3c;border-radius:6px;width:95%;height:50%;
+		}
+			.mapas_texto p{
+                display:flex;align-items:center;color:white;font-size:5rem;
+                justify-content:center;padding:5px;
+			}
+			.mapas_texto h3{
+                display:flex;align-items:center;color:white;font-size:7rem;
+			}
+
+	.mapa_desplazante{
+        border-radius:20px;
+        cursor:pointer;
+        transition:all 0.3s ease-in-out;
+        object-fit:contain;
+    }
+
+	.mapa_desplazante:hover{
+    	box-shadow: rgba(244, 67, 54, 0.3) 0px 19px 38px, rgba(244, 67, 54, 0.22) 0px 15px 12px;
+	}
+
+#slidiomapas{width:70%;height:80%;overflow-x:hidden;}
+
+
+
+
+
+
+/*aqui empiezan tarjetas de info de cursos*/
+.tarjetas{
+	width:80%;
+	display:flex;
+	justify-content:center;
+	align-items:center;
+	flex-wrap: wrap;
+	overflow:hidden;
+	padding:50px 0px;
+}
+
+.tarjconteiners{
+    width:100%;
+    display:flex;
+    max-width:1100px;
+    flex-wrap:wrap;
+    justify-content:center;
+	align-items:center;
+    overflow:hidden;
+    height:auto;
+}
+
+        .tarjeta_div_precio_cupos{display:flex;width:100%;justify-content:center;align-items:center;}
+        .tarjeta_div_precio{display:flex;width:50%;justify-content:center;align-items:center;}  
+        .tarjeta_div_precio p{font-size:4rem;margin-left:1%;}
+
+        .tarjeta_div_oferta_icono{display:flex;width:50%;justify-content:center;margin-left:1%;align-items:center;}
+        .tarjeta_div_oferta_icono p{font-size:4rem;}
+        .tarjeta_div_cupo p{font-size:4rem;}                     
+        .tarjeta_div_cupo{display:flex;width:50%;justify-content:center;margin-left:5%;align-items:center;}
+
+
+
+.card{
+    width:28%;
+    margin:20px;
+    border-radius:6px;
+    overflow:hidden;
+    background:white;
+    box-shadow:0px 1px 10px rgb(0,0,0,0.2);
+    cursor:default;
+    transition:all 400ms ease;
+}
+.card:hover{
+    box-shadow:5px 5px 20px rgb(0,0,0,0.4);
+    transform:translateY(-3%);
+    cursor:pointer;
+}
+.card img{
+    width:100%;
+    height:250px;
+    box-shadow:
+        rgba(0, 0, 0, 0.4) 0px 2px 4px,
+        rgba(0, 0, 0, 0.3) 0px 7px 13px -3px,
+        rgba(0, 0, 0, 0.2) 0px -3px 0px inset;
+}
+.contenido{
+    padding:15px;
+    text-align:center;
+}
+.contenido p{
+    line-height:1.5;
+    color:#6a6a6a;
+    text-align:center;
+    font-size:5rem;
+}
+.contenido i{font-size:8rem;}
+.contenido h4{
+    font-weight:400;
+    margin-bottom:15px;
+    text-align:center;
+    font-size:6rem;
+}
+.ver_mas{
+    width:100%;
+    height:100px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:5px;
+    background-color:#0faaec;
+    font-size:28px;
+    text-decoration:none;
+    transition:background-color 0.8s, box-shadow 0.8s, height 0.8s;
+    box-shadow:
+        rgba(0, 0, 0, 0.07) 0px 1px 1px,
+        rgba(0, 0, 0, 0.07) 0px 2px 2px,
+        rgba(0, 0, 0, 0.07) 0px 4px 4px,
+        rgba(0, 0, 0, 0.07) 0px 8px 8px,
+        rgba(0, 0, 0, 0.07) 0px 16px 16px;
+    color:white;
+}
+.ver_mas:hover{
+    background-color:#66F;
+    box-shadow:
+        rgba(0, 0, 0, 0.3) 0px 19px 38px,
+        rgba(0, 0, 0, 0.22) 0px 15px 12px;
+    height:120px;
+}
+
+
+/*este es el q contiene las cards y las imagenes veerticales*/
+.div_img_verticales_y_tarjetas{width:100%;height:auto;display:flex;flex-direction:row;justify-content:flex-end;align-items:center;}
+
+/*aqui terminan tarjetas y el boton de ver mas*/
+
+
+
+
+#gallery {
+   width: 60%;
+   margin: auto;
+   overflow: hidden;
+}
+
+.gallery-container {
+   display: flex;
+   transition: transform 0.5s ease-in-out;
+   width:100%;
+}
+
+.gallery-navigation {
+   display: flex;
+   justify-content: space-between;
+   position: relative;
+   top: -50px;
+}
+
+.nav-button {
+   background-color: #008CBA;
+   color: white;
+   border: none;
+   padding: 10px 20px;
+   cursor: pointer;
+   border-radius: 5px;
+   font-size:6rem;
+}
+
+.nav-button:hover {
+background-color: #005f5f;
+}
+
+/*aqui termina slider de profes*/
+
+
+
+
+
+
+
+
+
+/*facebook y comentarios*/
+.div_facebook_y_comentarios{width:100%;flex-wrap:wrap;}
+.div_facebook{overflow:hidden;border-radius:8px;width:300px;height:535px;margin:4%;}
+.div_iframe_facebook{width:300px;height:550px;border-radius:10px;}
+
+.bloque_cmts{width:500px;height:700px;display:flex;justify-content:center;align-items:center;flex-direction:column;flex-wrap:wrap;}
+
+.cmt_unitario{height:30%;display:flex;flex-direction:column;justify-content:flex-start;align-items:flex-start;background-color:#3ca6a6;border-radius:30px;box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;}/*width:100%;*/
+
+.cmt_unitario p{font-size:4.5rem;margin-left:5%;padding:1% 2%;color:white;width:95%;margin:auto;}
+
+    .cmt_doble{display:flex;flex-direction:row;justify-content:center;align-items:flex-start;}/*width:100%;height:30%; estos son los q siempre cambian*/
+
+        .cmt{display:flex;flex-direction:column;justify-content:flex-start;align-items:flex-start;margin:1%;border-radius:30px;box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;}/*width:46%;height:90%;background-color:#3ca6a6;*/
+        .cmt p{font-size:4.5rem;margin-left:5%;padding:1% 2%;color:white;width:95%;margin:auto;}
+
+    .datos_cmt{width:92%;height:auto;display:flex;justify-content:flex-start;align-items:center;margin-top:8%;}
+
+    .datos_cmt img{border-radius:50%;width:50px;height:50px;border:1px solid #F9F;margin:1%}
+
+	.datos_cmt p b{font-size:5rem;padding-top:10px;width:90%;}
+
+
+
+/*bloque 1*/
+
+.cmt_doble_1_1{width:90%;margin:5%;height:40%;}
+    .cmt_1_1{width:40%;margin-bottom:5%;height:85%;background-color:#6C9;}
+	.cmt_1_2{width:85%;margin-top:5%;height:89%;margin-left:5%;background-color:#6C3;}
+.cmt_unitario_1_1{width:80%;background-color:#69F;}
+
+/*bloque 2*/
+
+.cmt_doble_2_1{flex-direction:column;width:50%;height:95%;}
+	.cmt_2_1{height:46%;width:88%;margin: 20% 2%;background-color:#63F;}
+	.cmt_2_2{height:30%;width:94%;background-color:#63C;}
+.cmt_doble_2_2{flex-direction:column;justify-content:center;width:50%;height:95%;}
+	.cmt_2_3{height:28%;width:91%;background-color:#36F;}
+	.cmt_2_4{height:50%;width:86%;margin:13% 2%;background-color:#03F;}
+
+/*bloque 3*/
+
+.cmt_doble_3_1{flex-direction:column;width:50%;height:95%;}
+	.cmt_3_1{height:38%;width:86%;margin-right:4%;background-color:#F90;}
+	.cmt_3_2{height:45%;width:90%;margin-top:5%;margin-left:3%;background-color:#F36;}
+.cmt_unitario_3_1{width:30%;margin:1%;height:50%;background-color:#C00;}
+
+/*bloque 4*/
+
+.cmt_unitario_4_1{width:80%;height:25%;margin-right:5%;margin-bottom:5%;}
+.cmt_unitario_4_2{width:80%;margin-left:5%;background-color:#026773;}
+.cmt_unitario_4_3{height:20%;margin:5%;width:80%;background-color:#024959;}
+
+
+
+
+/*nuevo profecard*/
+
+.div_slider_profes{background-color:#eaebeb;width:100%;}
+	.div_tarjetas_profes{width:100%;display:flex;justify-content:space-between;align-items:center;}
+
+					/*  width:30%;height:300px;*/
+         .tarjeta_profe{padding:10px;width:45%;height:100%;display:flex;margin:1%;justify-content:center;align-items:flex-start;flex-direction:column;background-color:white;border-radius:12px;box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;}
+            .tarjeta_profe p{font-size:5rem;padding:15px;color:black;}
+
+
+              .datos_profe{width:97%;height:auto;display:flex;justify-content:flex-start;align-items:center;background-color:#FFF;margin:2%;}
+
+                  .datos_profe img{border-radius:50%;width:17%;height:17%;margin:1%;box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;}/*20% w&h*/
+
+                  .datos_profe p{font-size:5rem;margin-left:1%;}
+                  .datos_profe p b{color:#36C;font-size:6rem;}
+
+
+
+            .contactos_profe {width:98%;display:flex;margin:1%;justify-content:center;align-items:flex-start;flex-direction:column;background-color:white;}
+          
+                .datos_contactos_profe {margin:0 1%;height:auto;display:flex;justify-content:flex-start;align-items:flex-start;flex-direction:row;padding:5px 0;width:97%;}
+                .datos_contactos_profe i{font-size:5rem;color:#F36;padding:2%;}
+                .datos_contactos_profe p{font-size:4rem;padding:2% 0 0 0;color:black;}
+
+/*barra de inicio, la de arriba*/
+		.header_barra{display:flex;align-items:center;justify-content:flex-end;width:75%;height:100%;margin-right:20px;}
+		.header_barra a{text-decoration:none;margin:5px;text-align:center;color:white;width:auto;background-color:#00a9f1;}
+		.header_barra ul{list-style:none;}
+		.header_barra ul li{display:inline-block;position:relative;border-radius:6px;}
+		.header_barra ul li a{display:block;padding:10px 5px;color:white;text-decoration:none;text-align:center;border-radius:6px;font-size:6rem;}
+		.header_barra ul li a:hover{background-color:#002a6f;}
+
+.dropdown{width:100%;background-color:#00a9f1;position:absolute; z-index:999;display:none;border-radius:6px;}
+.dropdown li{display:block;}
+    .header_barra ul li:hover ul.dropdown{display:block;}
+
+.logo_ceproca{width:20%;display:flex;align-items:center;justify-content:center;}
+
+.logo_ceproca a img{margin:8px;width:40px;height:auto}
+
+.logo_ceproca a{text-decoration:none;font-size:5rem;}
+
+.logo_ceproca h3 b{padding-top:10px;color:white;font-size:5rem;}
+
+.logo_ceproca p{padding-top:10px;color:white;font-size:5rem;}
+
+
+.div_header{
+    height:10vh;
+    z-index:99;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  position:fixed;background-color:#00a9f1;
+  box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+}
+  
+
+.contactos_header{width:inherit;height:inherit;cursor: pointer;background-color:#00a9f1;border-radius:6px; }
+	.contactos_header p{padding:15px 5px;color:white;text-decoration:none;text-align:center;font-size:6rem;border-radius:6px;}
+		.contactos_header p:hover{background-color:#002a6f;}
+
+/*aqui termina la barra de inicio de sesion*/
+
+
+
+
+/*aqui empieza logo final y copiright*/
+
+.footer{
+    width:100%;
+	height:215px;/*200px*/
+	display:flex;
+	justify-content:center;
+	flex-wrap:wrap;
+	align-items:center;
+	background-color:#002a6f;
+	}
+
+	.footer p{text-align:center;width:100%;color:white;font-size:6rem;}
+
+
+    .tlfno_y_correo_footer{width:98%;display:flex;margin:1%;justify-content:center;align-items:flex-start;flex-direction:row;background-color:inherit;height:auto;}
+         .datos_tlfno_y_correo_footer{margin:0 1%;height:auto;display:flex;justify-content:flex-start;align-items:flex-start;flex-direction:row;padding:0;width:auto;}         
+              .datos_tlfno_y_correo_footer p{font-size:5rem;padding:0;color:white;}
+              .datos_tlfno_y_correo_footer i{font-size:5rem;color:white;padding:2% /*1 3 0 0px !important*/;margin:0;}
+
+
+	.footer_creditos{height: 36%;width: 100%;display: flex;justify-content: center;align-items:flex-start;}
+
+		.footer_creditos_imagen{width:33%;display:flex;flex-wrap:wrap;}
+			.footer_creditos_imagen img{margin:3px;width:60px;height:60px;transition: all 0.3s ease;}
+			.footer_creditos_imagen img:hover{background-color:#00a9f1;}
+
+        .footer_creditos_siguenos{width:33%;display:flex;align-items:center;flex-wrap:wrap;}
+        .footer_creditos_siguenos p{text-align:center;width:100%;color:white;font-size:6rem;}
+
+            .footer_creditos_siguenos_enlaces{display:flex;align-items:center;justify-content:center;width:100%}
+            .footer_creditos_siguenos_enlaces a{text-decoration:none;margin:5px;text-align:center;width:auto;}
+            .footer_creditos_siguenos_enlaces a img{border-radius:50%;}
+
+                    .footer_creditos_siguenos_enlaces1{border-radius:50%;transition:all 0.3s ease;padding:3px;}
+                    .footer_creditos_siguenos_enlaces1:hover{background-color:#f0f;}
+                    .footer_creditos_siguenos_enlaces2{border-radius:50%;transition:all 0.3s ease;padding:3px;}
+                    .footer_creditos_siguenos_enlaces2:hover{background-color:#33f;}
+
+        .footer_creditos_copi{width:33%;}
+        .footer_creditos_copi p{font-size:4rem;}
+
+
+/*aqui termina logo final y copiright*/
+
+.footer_fondo{	
+    width:100%;
+	height:80vh;
+	display:flex;
+	justify-content:center;
+	align-items:flex-end;
+	background-image: url('../vistas/assets/img/graduacion.webp');
+	background-size: cover;
+}
+	.footer_fondo p{width:70%;color:white;font-size:8rem;text-align:center;margin-bottom:10%;text-shadow:3px 3px 0px #000,3px 3px 0px #666;}
+
+.arroba{font-size:5rem;cursor:context-menu;padding:0 2px;background-color:#00a9f1;border-radius:2px;transition:all 0.3s ease;}
+#pedro{opacity:0;transition: opacity 0.5s ease;}
+.arroba:hover{background-color:#F2CB05;}
+
+
+
+.tooltip {position: relative;border-bottom: 1px dotted black;cursor: pointer;}
+.tooltip::before {content: attr(data-tooltip);white-space: pre-line;position: absolute;width: auto;padding: 8px;bottom: 125%;border-radius: 8px;background-color: #11598b;color: #fff;line-height: 1.5;text-align: center;font-size: 0.75em;visibility: hidden;opacity: 0;transition: opacity 0.5s;}
+.tooltip::after {content: '';position: absolute;left: 50%;bottom: 50%;border-width: 9px;border-style: solid;border-color: #11598b transparent transparent transparent;visibility: hidden;opacity: 0;transition: opacity 0.5s;}
+
+.tooltip:hover::before,
+.tooltip:hover::after {opacity: 1;visibility: visible;}
+
+
+
+
+
+	/*aqui empieza slider automatico*/
+.slidiorr {width: 100%/*100vw*/;height: auto;margin: auto;overflow: hidden;background-color:#6CF;}
+
+.slidiorr .slide-trackior {display: flex;animation: scroll 40s linear infinite;
+  -webkit-animation: scroll 40s linear infinite;width: calc(400px * 16);}
+
+.slidiorr .slidio {width: 400px;height:300px;display: flex;justify-content: center;
+  align-items: center;}
+
+.slidiorr .slidio img {
+  width: 100%;
+  height: 100%; 
+  object-fit: cover; 
+}
+
+@keyframes scroll {
+  0% {
+    -webkit-transform: translateX(0);
+    transform: translateX(0);
+  }
+  100% {
+    -webkit-transform: translateX(calc(-400px * 8));
+    transform: translateX(calc(-400px * 8));
+  }
+}
+/*aqui termina slider automatico*/
+
+
+
+
+
+
+
+/*multislider*/
+.multislider-container {position: relative;width: 100%;overflow: hidden;}
+
+.multislider-content {display: flex;transition: transform 0.5s ease-in-out;}
+.multislide {width: 100%;flex-shrink: 0;}
+
+.multinav-button {position: absolute;top: 50%;transform: translateY(-50%);
+  background-color: rgba(0, 0, 0, 0.5);color: white;border: none;cursor: pointer;}
+.multiprev-button {left: 0;}
+.multinext-button {right: 0;}
+
+
+
+
+
+.nada h1{font-size:10rem;}
+.nada2{background-color:white;color:black;}
+.nada3 h3{color:#e74c3c;font-size:12rem;margin:auto;}
+.nada3{display:flex;justify-content:center;align-items:center;flex-direction:column;}
+
+.flex_def{display:flex;justify-content:center;align-items:center;}
+
+/*
+.tier1{font-size:4rem;}
+.tier2{font-size:5rem;}
+.tier3{font-size:6rem;}
+.tier4{font-size:7rem;}
+.tier5{font-size:8rem;}
+*/
+
+
+.space{height:10vh;}
+.footer_fondo{}
+
+.height100{height:100%;}
+.width400{width:400px;}
+.enlaces_div_circulos{width:50%;margin:auto;}
+
+
+
+/*estos son del div de imagenes verticales*/
+#slidio6{height:1200px;width:20%;}/*div que define el espacio que tienen las imagenes verticales*/
+.imagenes_verticales{ height:35%;margin-top:5px;}
+	.div_imagenes_verticales{display:flex;justify-content:center;align-items:center;flex-direction:column;}
+	.div_imagenes_verticales img{width:80%;border-radius:6px;}
+
+
+
+
+/*a partir de aqui empiezan los elementos css de cursos-view*/
+
+.ocultocontactos {
+  height: 0px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.5s ease, height 0.5s ease;
+  flex-direction: row;
+}
+.ocultocontactos div {
+  display: none;
+}
+.ocultocontactos.show {
+  height:155vh;
+  opacity: 1;
+}
+.ocultocontactos div.show {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+/*aqui empieza el div de la frase 'El aprendizaje nunca se detiene'*/
+.div_footer_cursos_texto{width:100%;height:50vh;display:flex;flex-direction:row;justify-content:space-between;align-items:flex-start;}
+	.footer_cursos_texto{border:0;width:90%;height:90%;display:flex;margin:1%;justify-content:center;align-items:flex-start;flex-direction:column;background-color:white;}
+		.footer_cursos_texto h1{font-size:8rem;color:white;margin:2%;text-shadow: 0 1px 0 rgba(185,243,255,1), 0 2px 0 rgba(0,212,255,1), 0 3px 0 rgba(9,9,121,1), 0 4px 0 rgba(2,0,36,1), 0 5px 0 rgba(2,0,36,0.75),0 6px 1px rgba(2,0,36,0.5), 0 0 5px rgba(2,0,36,0.5), 0 1px 3px rgba(2,0,36,0.3), 0 3px 5px rgba(2,0,36,0.2),0 5px 10px rgba(2,0,36,0.15), 0 10px 10px rgba(2,0,36,0.1),0 20px 20px rgba(2,0,36,0.05);text-align: center;}
+		.footer_cursos_texto p{font-size:6rem;margin-left:1%;}
+	.footer_cursos_texto_img{position:relative;width:30%;height:100%;bottom:0;}
+		.footer_cursos_texto_img img{position:absolute;width:90%; height:90%;bottom:0;left:0;}
+
+
+
+
+.cursos{width:100%;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;}
+  .tarjeta_curso{width:42%;height:45vh;border-radius:12px;margin:2%;display:flex;justify-content:center;align-items:center;box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px, rgba(0, 0, 0, 0.3) 0px 7px 13px -3px, rgba(0, 0, 0, 0.2) 0px -3px 0px inset;transition: all 0.3s ease-in-out;}
+
+  	.tarjeta_curso img{height:100%;width:60%;border-radius:12px;box-shadow: rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px;}
+	.tarjeta_curso_texto{height:100%;width:40%;display:flex;justify-content:center;align-items:flex-start;flex-direction:column;}
+         .tarjeta_curso_texto p{font-size:6rem;margin:3% 3% 3% 5%;width:90%;}
+
+         .tarjeta_curso_texto_prefacio{font-size:4rem !important;margin:3% 3% 3% 5%;width:90%;}
+
+
+    .div_precio_tarjeta{display:flex;margin:1%;justify-content:center;align-items:space-between;width:90%;flex-wrap:wrap;}
+    .div_precio_tarjeta s{font-size:10rem;color:#6a6a6a;position:right;margin:6%;}/*este no se si se usa tampoco*/
+
+     .precio_tarjeta{display:flex;justify-content:center;align-items:space-between;flex-wrap:nowrap;}
+		.precio_tarjeta p{font-size:5rem;}
+		.precio_tarjeta h1{font-size:12rem;color:#6a6a6a;position:right;margin:3%;}
+		.precio_tarjeta i{color:orange;font-size:12rem;text-align:center;}
+
+
+
+
+.cursos{width:100%;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;}
+
+.datos_cursos{width:100%;height:100%;display:flex;justify-content:center;align-items:flex-start;background-color:white;}
+
+	.div_conjunto_datos_curso_1{width:65%;height:98%;display:flex;margin:1%;justify-content:flex-start;align-items:center;flex-direction:column;background-color:inherit;}
+      
+		.curso_descripcion_y_profesor{width:99%;display:flex;justify-content:flex-start;align-items:flex-start;flex-direction:column;background-color:white;}
+
+			.curso_descripcion_y_profesor h1{margin:2%;font-size:10rem;color:black;}
+
+			.curso_descripcion_y_profesor p{font-size:6rem;margin-left:1%;margin-top:5px;}
+
+            .datosprofe_curso{width:90%;height:auto;margin:2% 0;display:flex;justify-content:flex-start;align-items:center;background-color:inherit;}
+                .datosprofe_curso img{border-radius:50%;width:50px;height:50px;border:1px solid #F9F;margin:1%}
+                .datosprofe_curso p{font-size:4rem;margin-left:1%;}
+            	    .datosprofe_curso p b{color:#36C;font-size:5rem;border-right:3px solid #666;padding-right:20px;}
+
+        .contenido_list{width:99%;height:auto;display:flex;justify-content:flex-start;align-items:flex-start;background-color:#FFF;flex-direction:column;border:3px solid #F9F;}
+
+            .contenido_list h1{margin-left:5%;font-size:6rem;margin-top:2%;}
+
+                .div_contenido_list{width:100%;height:auto;display:flex;justify-content:center;align-items:center;background-color:white;flex-direction:row;}
+
+                    .sub_div_contenido_list{width:100%;height:auto;flex-wrap:wrap;display:flex;justify-content:center;align-items:center;background-color:white;flex-direction:row;}
+
+                        .contenido_curso{width:45%;margin:1%;height:auto;display:flex;justify-content:flex-start;align-items:center;flex-direction:row;border:3px solid #3CA6A6;border-radius:12px;}
+
+                            .contenido_list i{font-size:10rem;color:#F9F;padding:5%;}
+                            .contenido_list p{padding-top:2%;font-size:4rem;}
+
+                            .contenido_curso i{font-size:10rem;color:#F9F;padding:5%;}
+                            .contenido_curso p{padding-top:2%;font-size:4rem;}
+
+        .div_beneficios_curso{width:99%;height:30%;display:flex;justify-content:center;align-items:center;flex-direction:column;margin-top:10px;}
+            .div_beneficios_curso h1{font-size:6rem;}
+
+
+            .beneficios_curso{width:100%;height:100%;display:flex;justify-content:center;align-items:flex-start;flex-direction:row;flex-wrap:wrap;background-color:white;}
+
+                .beneficio{width:23%;display:flex;flex-direction:column;justify-content:flex-start;align-items:center;background-color:#fff;margin:1%;border-radius:12px;box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;}
+
+                    .beneficio_icon{width:100%;display:flex;justify-content:center;align-items:center;border-radius:12px;}
+
+                        .beneficio_icon i{font-size:25rem;margin:0px 0px;padding:15px;color:white;border-radius:12px;}
+
+                    .beneficio p{font-size:4rem;height:30%;text-align:center;width:95%;height:95%;}
+
+
+.div_conjunto_datos_curso_2{width:22%;height:auto;display:flex;margin:1%;justify-content:flex-start;align-items:center;flex-direction:column;background-color:inherit;box-shadow: rgba(50, 50, 93, 0.25) 0px 6px 12px -2px, rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;}
+
+	.div_req_precio_duracion{width:100%;display:flex;flex-direction:column;justify-content:flex-start;align-items:center;background-color:#fff;}
+
+        .duracion_curso_h {width:80%;font-size:7rem;background-color:#3CA6A6; border: 4px solid #3CA6A6;color:white;border-radius:8px;text-align:center;padding:2%;margin:2%;}
+        .nombre_curso_h{padding:2%;font-size:5rem;border:0px;color:white;text-align:center;width:90%;margin-left:1px;background-color:#2254bb;border-radius:7px;box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;}
+
+			.div_req_precio_duracion hr{background-color:black;height:auto/*3px*/;width:95%;}
+
+                .requisitos_curso{width:100%;display:flex;flex-direction:column;justify-content:flex-start;align-items:flex-start;margin:1%;background-color:white;}
+
+                    .requisitos_curso h1{font-size:6rem;margin-left:5%;padding:1%;color:black;border:0;background-color:white;}
+
+                    .requisitos_curso p{font-size:5rem;margin-left:5%;}
+
+
+	.div_precio_y_horario_curso{width:95%;height:30%;display:flex;flex-direction:column;justify-content:center;align-items:space-between;margin:1%;background-color:white;}
+	.precio_y_horario_curso{width:100%;height:100%;display:flex;flex-direction:column;justify-content:flex-start;align-items:flex-start;background-color:white;}
+
+/*----------------------------------------------------------------------------/
+.enlace_inscripcion_cursos_view_tlfno{width:100%;display:none;}/*flex_def/
+.enlace_inscripcion_cursos_view_tlfno.duracion_curso_h{width:55%;font-size:6rem;}
+/*.duracion_curso_h {width:55%;}/
+.enlace_inscripcion_cursos_view_tlfno.cohorte_y_solicitud_curso a{width:40%;}
+/*----------------------------------------------------------------------------*/
+
+
+
+
+					.precio_y_horario_curso p{font-size:5rem;margin-left:5%;padding:1% 2%;}/*estos 2 ultimos elementos a lo mejor no van del precio_y_horario_ccurso_p*/
+
+                    .precio_y_horario_titulo{width:46%;display:flex;justify-content:flex-start;align-items:center;margin:1%;background-color:white;}
+
+                        .precio_y_horario_titulo i{font-size:6rem;color:#F9F;padding:2%;margin-left:3%;}
+
+                        .precio_y_horario_titulo h1{font-size:6rem;margin-left:5%;padding:1%;color:black;border:0;background-color:white;}
+
+
+                .cohorte_y_solicitud_curso{width:100%;height:15%/*20%*/;display:flex;flex-direction:column;justify-content:flex-start;align-items:center;}
+                    .cohorte_y_solicitud_curso p{font-size:5rem;padding:1%;color:black;border:0;background-color:white;}
+                    .cohorte_y_solicitud_curso a{margin:10px auto;width:90%;text-align:center;background-color:#3CA6A6; color:white; padding:8px; border-radius:8px;text-decoration:none;font-size:5rem;box-shadow:rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;}
+
+
+
+.tarjeta_datosprofe_curso{margin-left:3%;width:95%;height:30%;}/*lastarjetas del togglediv tienen cambios ligeros en el div de datosprofe tonces van mas al final pa cargar esto*/
+	.tarjeta_datosprofe_curso img{width:40%;height:65%;border-radius:50%;}
+	
+.paginacion a {
+    margin:1% 5%;
+    padding: 5px 10px;
+    text-decoration: none;
+    background-color: #ddd;
+    color: #333;
+    border-radius: 5px;
+	width:40px;height:40px;
+	font-size:5rem;
+}
+
+.paginacion a.activo {background-color: #333;color: #fff;}		
+.paginacion{display:flex;justify-content:center;align-items:center;}	
+
+
+
+.barra_busqueda_cursos{display:flex;justify-content:center;align-items:center; border-radius:40px;width:100%;margin-left:1px;height:50%;background-color: #f4f2f2;transition: all 0.4s ease;}
+.barra_busqueda_cursos:hover{box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px;}
+.barra_busqueda_cursos input{font-size:5rem;background-color:#f4f2f2;outline: none;border: 1px solid #f4f2f2;width:85%;}
+.barra_busqueda_cursos input:focus {border: 1px solid #f4f2f2;}
+.resultados_busqueda_nav{padding:4px;border-radius:4px;color:black;width:95%;font-size:6rem;background-color:#f4f2f2;transition:all 1s ease;}
+.resultados_busqueda_nav:hover{cursor:pointer;background-color:#ebe9e9;}
+.card_busqueda{width:100%;z-index:6;display:flex;justify-content:Center;align-items:center;flex-direction:column;}
+.divbarracurso1{display:flex;justify-content:space-between;align-items:center;width:100%;}
+.divbarracurso2{width:40%;;margin-left:8%;display:flex;justify-content:center;align-items:center;flex-direction:column;}
+.button_barra{font-size:6rem;color:grey;border:0px;height:50%;padding:1px 5px;border-radius:8px;transition:all 0.3s ease;}
+.button_barra:hover{background-color:grey;cursor:pointer;color:white;}
+.frase_barra{font-size:6rem;color:grey;margin-right:28%;}
+
+
+
+/* Contenedor del formulario */
+.filtro-formulario {
+  max-height: 15vh;
+  max-width: 80%;
+  margin: 30px auto;
+  padding: 20px;
+  background-color: #f2f2f2;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+option{font-size:4rem;}
+
+.filtro-formulario h3 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 3rem;
+  color: #333;
+}
+
+.filtro-grupo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: space-between;
+}
+
+.filtro-campo {
+  flex: 1 1 45%;
+  display: flex;
+  flex-direction: column;
+}
+
+.filtro-campo label {
+  margin-bottom: 6px;
+  font-weight: bold;
+  color: #444;
+}
+
+.filtro-campo select {
+  padding: 8px 10px;
+  font-size: 5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  transition: border-color 0.3s;
+}
+
+.filtro-campo select:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+/* Botón de búsqueda */
+.filtro-formulario .btn-filtrar {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  transition: background-color 0.3s;
+}
+
+.filtro-formulario .btn-filtrar:hover {background-color: #0056b3;}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Media query para resoluciones mayores a 1000x750 */
+@media (max-width: 1000px) and (max-height: 750px) {
+    .tarjetas {width:100%;}
+    *{font-size:2px;}
+    .mapas{width:99%;}
+    #slidio6 {display: none;}
+    .enlace_inscripcion_cursos_view_tlfno{display:none;}
+}
+
+
+/* Media query para resoluciones mayores a 1000x750 */
+@media (max-width: 1000px) and (max-height: 750px) {
+      .tarjetas {
+        width: 100%;
+      }
+    *{font-size:2px;}
+        .mapas{width:99%;}
+      #slidio6 {
+        display: none;
+      }
+    
+    .paginacion a {width:40px;height:40px;font-size:5rem;}
+    .oculto.show {height:170vh;}
+    .enlace_inscripcion_cursos_view_tlfno{display:none;}
+}
+
+
+/* Estilos para móviles*/
+@media (max-width: 639px) {
+    	*{font-size:2px;}
+        #multislider3{display:none;}
+        #slidio6{display:none;}
+        #oculto3{height:40vh;}
+        #not_dropdown{display:none;}
+        #not_ceproca{display:none;}
+        .not_dropdown a{display:none;color:black;}
+        .dropdown{display:none;}
+	    .arroba.tooltip {display: none;}
+        .enlaces_div_circulos{width:90%;}
+   		.inicio_header_imagen_ceproca{height:60vh;}
+    	.inicio_header_imagen_ceproca p{font-size:7rem;}
+        .nuevoslider{flex-wrap:wrap;}
+        .tarjetas {width: 100%;}
+        .primer_slider_texto{width:50%;text-align:center;margin-right:1%;}
+    	.texto_header_cursos_100_practicos h1{font-size:9rem;}
+        .div_facebook_y_comentarios{margin:10% 0%;}
+        .periodicou{width:95%;height:55vh;}
+  		.encabezados_periodicos{width:95%;height:55vh;}
+	    .div_periodicos{margin:10% 0%;}
+        .switch{width:45px;height:20px;}
+        .switch i{font-size:10px;padding:3px 1px 1px 5px;margin:auto;width:48%;}  
+        .visiblez {opacity: 1;margin-top:20%;}
+        .mapas{width:100%;flex-direction:column;}
+    	.mapas_texto{margin-right:10px;}
+	    .div_mapas_texto{width:50%;}
+	    .div_mapas_texto img{height:50%;}
+	    .mapas_texto{height:60%;}
+    	.mapasfotos{flex-direction:row;}
+        .show{height:100%;}
+   		.bbb p{font-size:4rem;}
+    	.caracteristicas_cursos.bbb{border-radius:5px;}
+		.bbb{border-radius:10px;}
+    	.imagen_caracteristicas_curso{height:30vh;}
+	    #ir_arriba{width:7%;height:7%;}
+        .card img{height:200px;}	
+        .card {width:35%;}	
+        .ver_mas{height:80px;}
+        .visiblez{margin-top:30%;}/*el texto que sale cuando hover sobre whatsapp y tlfno*/
+        .footer_fondo{height:60vh;}
+
+
+/*a partir de aqui empiezan los cambios con cursos view*/
+        .tarjeta_curso{flex-direction:column;}
+        .tarjeta_curso img{width:100%;height:55%;}
+        .tarjeta_curso_texto{width:100%;height:45%;}
+        .tarjeta_datosprofe_curso{width:45%;}
+
+        .datos_cursos{flex-direction:column;justify-content:flex-start;align-items:center;}
+        .div_conjunto_datos_curso_1{width:90%;height:auto;}
+        .div_conjunto_datos_curso_2{width:90%;}
+        .nombre_curso_h{display:none;}
+        .enlace_inscripcion_cursos_view_tlfno{display:none;}
+}
+
+@media (max-width: 380px) {
+      	.encabezado1{height:75vh;}
+  		.encabezado2{height:75vh;}
+  		.footer_fondo p{font-size:6rem;}
+	    .bbb p{font-size:2.5rem;}
+             .contenido_curso i{display:none;}
+             .contenido_curso p{padding:4px;}
+    .curso_descripcion_y_profesor p{font-size:5rem;}
+
+    	.tarjeta_curso_texto_prefacio{display:none;}
+    .oculto.show {height:300vh;}
+    			.div_req_precio_duracion hr{display:none;}
+        .beneficio_icon i{font-size:10rem;}/*20rem;*/
+    .duracion_curso_h{padding:1px;margin:1px;font-size:5rem;}
+
+    .div_precio_y_horario_curso{flex-direction:row;}
+    
+    .cohorte_y_solicitud_curso{width:55%;}
+    .cohorte_y_solicitud_curso a{padding:3px;margin:3px;}
+    .pref_curso{display:none;}
+
+                .datosprofe_curso{width:95%;height:auto;}
+                .datosprofe_curso img{width:40px;height:40px;}
+                .datosprofe_curso p{font-size:4rem;}
+
+
+}
