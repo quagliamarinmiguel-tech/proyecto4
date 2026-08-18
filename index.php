@@ -2,11 +2,15 @@
 
 
 <?php
-	
-	require_once "./config/APP.php";
-	require_once "./controladores/vistasControlador.php";
+
+//estoes del index original
+	//require_once "./config/APP.php";
+	//require_once "./controladores/vistasControlador.php";
+//	$plantilla = new vistasControlador();
+	//$plantilla->obtener_plantilla_controlador();
 
 //a partir de aqui empieza la prueba
+require 'config/SERVER.php';
 	$dsn = "pgsql:host=" . HOST . ";port=" . PORT . ";dbname=" . DB . ";sslmode=require";
 //SERVER antesde HOST
 try {
@@ -24,9 +28,7 @@ try {
 } catch (Throwable $e) {
     echo "❌ Error de conexión: " . $e->getMessage();
 }
-//lo normal del index
-	$plantilla = new vistasControlador();
-	$plantilla->obtener_plantilla_controlador();
+
 
 
 
