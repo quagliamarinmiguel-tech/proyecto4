@@ -19,17 +19,29 @@
 
 
 
-// Conexion a Postgres (Supabase)
-const SERVER = "db.uxzthiwwpxurhlcbecwh.supabase.co"; // Host
-const PORT   = "5432";
-const DB     = "postgres";
-const USER   = "postgres";
-const PASS   = "1234";
+// ////// aqui intente pero parece q hay un errorde uso devariables y constantes
+
+//const SERVER = "db.uxzthiwwpxurhlcbecwh.supabase.co"; // Host
+//const PORT   = "5432";
+//const DB     = "postgres";
+//const USER   = "postgres";
+//const PASS   = "1234";
 
 // DSN PDO
-$dsn = "pgsql:host=" . SERVER . ";port=" . PORT . ";dbname=" . DB . ";sslmode=require";
+//$dsn = "pgsql:host=" . SERVER . ";port=" . PORT . ";dbname=" . DB . ";sslmode=require";
 
 //$pdo = new PDO($dsn, USER, PASS, [
 //  PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
 //  PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
 //]);
+
+
+
+//aqui toy intentando pero ahora usando const SGBD
+const HOST = "db.uxzthiwwpxurhlcbecwh.supabase.co";
+const PORT = "5432";
+const DB   = "postgres";
+const USER = "postgres";
+const PASS = "1234";
+
+const SGBD = "pgsql:host=" . HOST . ";port=" . PORT . ";dbname=" . DB . ";sslmode=require";
