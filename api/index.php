@@ -9,7 +9,7 @@
 //	$plantilla = new vistasControlador();
 //	$plantilla->obtener_plantilla_controlador();
 
-require './config/SERVER.php';
+require '../config/SERVER.php';
 
 $dsn = "pgsql:host=" . HOST . ";port=" . PORT . ";dbname=" . DB . ";sslmode=require";
 //SERVER antesde HOST
