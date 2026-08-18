@@ -10,9 +10,10 @@
 //	$plantilla->obtener_plantilla_controlador();
 
 //require '../config/SERVER.php';
-$host = "db.uxzthiwwpxurhlcbecwh.supabase.co";
-echo gethostbyname($host);
-
+//$host = "db.uxzthiwwpxurhlcbecwh.supabase.co";
+//echo gethostbyname($host);
+echo "Hola mundo";
+?>
 
 
 
