@@ -4,8 +4,8 @@
         exit();
     }
 
-    require_once "./controladores/seccionControlador.php";
-    $ins_seccion = new seccionControlador();
+    require_once "./controladores/periodoControlador.php";
+    $ins_seccion = new periodoControlador();
 
     $curso_vigente_id = isset($_GET['curso_vigente']) ? $_GET['curso_vigente'] : 0;
     $seccion_letra = isset($_GET['seccion']) ? $_GET['seccion'] : '';
@@ -15,13 +15,13 @@
         exit();
     }
 
+   //     $pagina_est = isset($_GET['est_page']) ? (int)$_GET['est_page'] : 1;
     $datos_seccion = $ins_seccion->obtener_datos_seccion_controlador_para_ambos_casos($curso_vigente_id, $seccion_letra);
-    $estudiantes = $ins_seccion->obtener_estudiantes_inscritos_controlador($datos_seccion['id_seccion']);
-          $total_evaluaciones = $ins_seccion->contar_evaluaciones_controlador($datos_seccion['id_seccion']);
+    $estudiantes =  $ins_seccion->obtener_estudiantes_controlador($datos_seccion['id_seccion']);
 
+ 
 ?>
 
-<!-- 🔹 Encabezado -->
 <div class="full-box page-header">
     <h3 class="text-left">
         <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVA EVALUACIÓN
@@ -31,7 +31,6 @@
     </p>
 </div>
 
-<!-- 🔹 Navegación -->
 <div class="container-fluid">
     <ul class="full-box list-unstyled page-nav-tabs">
         <li>
@@ -43,7 +42,7 @@
 </div>
 
 
-<!-- 🔹 Contexto de la sección -->
+<!--Contexto de la sección -->
 <div class="container-fluid mb-4">
     <div class="alert alert-info" role="alert">
         <strong>Sección:</strong> <?php echo $seccion_letra; ?> &nbsp; | &nbsp;
@@ -52,8 +51,8 @@
         <?php if (!is_null($datos_seccion['numero_cohorte']) && !is_null($datos_seccion['anio_cohorte'])): ?>
             <strong>Cohorte:</strong> <?php echo $datos_seccion['numero_cohorte'] . " / " . $datos_seccion['anio_cohorte']; ?> &nbsp; | &nbsp;
         <?php else: ?>
-            <strong>Fecha de inicio del periodo intensivo:</strong> <?php echo $datos_seccion['fecha_inicio_int']; ?> &nbsp; | &nbsp;
-            <strong>Fecha de culminación del periodo intensivo:</strong> <?php echo $datos_seccion['fecha_fin_int']; ?> &nbsp; | &nbsp;
+            <strong>Fecha de inicio del periodo intensivo:</strong> <?php echo $datos_seccion['fecha_inicio']; ?> &nbsp; | &nbsp;
+            <strong>Fecha de culminación del periodo intensivo:</strong> <?php echo $datos_seccion['fecha_fin']; ?> &nbsp; | &nbsp;
         <?php endif; ?>
         <strong>Profesor:</strong> 
         <?php 
@@ -66,29 +65,28 @@
     </div>
 </div>
 
-<!-- 🔹 Formulario -->
+<!--  Formulario -->
 <div class="container-fluid">
-    <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/seccionAjax.php" method="POST" data-form="save" autocomplete="off">
+    <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/periodoAjax.php" method="POST" data-form="save" autocomplete="off">
         <input type="hidden" name="id_seccion" value="<?php echo $datos_seccion['id_seccion']; ?>">
 
         <fieldset>
             <legend><i class="fas fa-info-circle fa-fw"></i> &nbsp; Datos de la evaluación</legend>
             
             
-                            <?php
-          // Contar evaluaciones usando el controlador
-          if ($total_evaluaciones == 6):
-        ?>
-                      <span class="text-danger font-weight-bold">Límite de pruebas alcanzado</span>
-                    <?php endif; ?>    
+            <?php
+                if ($datos_seccion['total_evaluaciones'] == 6):
+            ?>
+                <span class="text-danger font-weight-bold">Límite de pruebas alcanzado</span>
+            <?php endif; ?>    
 
 
             
             <div class="text-danger small mt-1" id="alerta-porcentaje" style="display:none;">
                 El porcentaje total de evaluaciones en esta sección excede el 100%. Ajusta el valor.
             </div>
-            <div class="text-muted small" id="porcentaje-acumulado" style="display:none;">
-                Porcentaje acumulado actual: <span id="porcentaje-total">0</span>%
+            <div class="text-muted small" id="porcentaje-acumulado">
+                Porcentaje acumulado actual: <span id="porcentaje-total"><?php echo $datos_seccion['total_porcentaje']; ?></span>%
             </div>
             
             <div class="container-fluid">
@@ -116,7 +114,7 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label for="fecha_evaluacion" class="bmd-label-floating">Fecha de evaluación</label>
-                            <input type="date" name="fecha_evaluacion" id="fecha_evaluacion" max="<?php echo date('Y-m-d'); ?>" class="form-control" required>
+                            <input type="date" name="fecha_evaluacion" id="fecha_evaluacion" min="<?php echo $datos_seccion['fecha_inicio']; ?>" max="<?php echo date('Y-m-d'); ?>" class="form-control" required>
                         </div>
                     </div>
                 </div>
@@ -159,7 +157,7 @@
    
                 <?php
           // Contar evaluaciones usando el controlador
-          if ($total_evaluaciones < 6):
+          if ($datos_seccion['total_evaluaciones'] < 6):
         ?>
                 <p class="text-center" style="margin-top: 40px;">
             <button type="submit" class="btn btn-raised btn-success btn-sm"><i class="far fa-save"></i> &nbsp; GUARDAR EVALUACIÓN</button>
@@ -177,60 +175,39 @@
 </div>
 
 
+document.addEventListener("DOMContentLoaded", () => {
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-  const porcentajeInput = document.getElementById("porcentaje");
-  const idSeccion = document.querySelector("input[name='id_seccion']").value;
-  const alertaPorcentaje = document.getElementById("alerta-porcentaje");
-  const porcentajeTotalSpan = document.getElementById("porcentaje-total");
-  const porcentajeAcumulado = document.getElementById("porcentaje-acumulado");
-  const btnSubmit = document.querySelector("button[type='submit']");
-  const SERVERURL = "<?php echo SERVERURL; ?>";
+    const porcentajeInput = document.getElementById("porcentaje");
+    const alertaPorcentaje = document.getElementById("alerta-porcentaje");
+    const porcentajeTotalSpan = document.getElementById("porcentaje-total");
+    const btnSubmit = document.querySelector("button[type='submit']");
+    // Valor acumulado actual desde PHP
+    const porcentajeAcumuladoActual = parseFloat(porcentajeTotalSpan.textContent) || 0;
 
-
-
-  porcentajeInput.addEventListener("input", () => {
-    const nuevo = parseFloat(porcentajeInput.value);
-    if (isNaN(nuevo) || nuevo <= 0) {
-      alertaPorcentaje.style.display = "none";
-      porcentajeAcumulado.style.display = "none";
-      btnSubmit.disabled = true;
-      return;
+    function validarPorcentaje() {
+        const nuevo = parseFloat(porcentajeInput.value);
+        if (isNaN(nuevo) || nuevo <= 0) {
+            alertaPorcentaje.style.display = "none";
+            Utils.marcarInputError("porcentaje", true);
+            btnSubmit.disabled = true;
+            return;
+        }
+        const total = porcentajeAcumuladoActual + nuevo;
+        porcentajeTotalSpan.textContent = porcentajeAcumuladoActual;
+        if (total > 100) {
+            alertaPorcentaje.style.display = "block";
+            Utils.marcarInputError("porcentaje", true);
+            btnSubmit.disabled = true;
+        } else {
+            alertaPorcentaje.style.display = "none";
+            Utils.marcarInputError("porcentaje", false);
+            btnSubmit.disabled = false;
+        }
     }
 
-
-fetch(`${SERVERURL}ajax/seccionAjax.php?accion=validar_porcentaje&id_seccion=${idSeccion}&nuevo=${nuevo}`)
-  .then(res => res.text())
-  .then(texto => {
-    console.log("Respuesta cruda del servidor:", texto);
-    try {
-      const data = JSON.parse(texto);
-      porcentajeTotalSpan.textContent = data.total;
-      porcentajeAcumulado.style.display = "block";
-
-      if (data.excede) {
-        alertaPorcentaje.style.display = "block";
-        btnSubmit.disabled = true;
-      } else {
-        alertaPorcentaje.style.display = "none";
-        btnSubmit.disabled = false;
-      }
-    } catch (error) {
-      console.error("Error al convertir a JSON:", error);
-      console.warn("Contenido recibido:", texto);
-      alertaPorcentaje.style.display = "none";
-      porcentajeAcumulado.style.display = "none";
-      btnSubmit.disabled = true;
-    }
-  })
-  .catch(err => {
-    console.error("Error de red o fetch:", err);
-    alertaPorcentaje.style.display = "none";
-    porcentajeAcumulado.style.display = "none";
-    btnSubmit.disabled = true;
-  });
-
-  });
+    porcentajeInput.addEventListener("input", validarPorcentaje);
+    validarPorcentaje();
 });
 </script>
 

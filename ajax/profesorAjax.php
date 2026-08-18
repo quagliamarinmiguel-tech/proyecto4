@@ -1,4 +1,3 @@
-
 <?php
 $peticionAjax = true;
 
@@ -6,10 +5,36 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 try {
-    require_once "../config/APP.php";
+    require_once __DIR__ . "/../config/APP.php";
 
-
-
+    // 🔹 Validación en tiempo real de campo único MVC
+    if (isset($_GET['accion']) && $_GET['accion'] === 'validar_campo' && isset($_GET['campo']) && isset($_GET['valor'])) {
+        header('Content-Type: application/json');
+        require_once __DIR__ . "/../modelos/mainModel.php";
+        
+        $campo = mainModel::limpiar_cadena($_GET['campo']);
+        $valor = mainModel::limpiar_cadena($_GET['valor']);
+        $id_valor = isset($_GET['id_valor']) && $_GET['id_valor'] != '' && $_GET['id_valor'] != 'null' ? mainModel::limpiar_cadena($_GET['id_valor']) : null;
+        
+        $res = null;
+        if ($campo === 'cedula') {
+            $res = mainModel::validar_cedula_universal($valor, 'profesor', 'ci_profesor', $id_valor, 'id_profesor');
+        } elseif ($campo === 'telefono') {
+            $res = mainModel::validar_telefono_universal($valor, 'profesor', 'telefono_profesor', $id_valor, 'id_profesor');
+        } elseif ($campo === 'correo') {
+            $res = mainModel::validar_correo_universal($valor, 'profesor', 'correo', $id_valor, 'id_profesor');
+        } else {
+            echo json_encode(["valido" => false, "mensaje" => "Campo no válido"]);
+            exit();
+        }
+        
+        if ($res['Tipo'] === 'error') {
+            echo json_encode(["valido" => false, "mensaje" => $res['Texto']]);
+        } else {
+            echo json_encode(["valido" => true, "mensaje" => ""]);
+        }
+        exit();
+    }
 
     // 🔹 Validación en tiempo real (GET)
     if (

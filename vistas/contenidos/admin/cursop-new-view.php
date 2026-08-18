@@ -50,11 +50,9 @@ $cursos = $sql->fetchAll();
     <ul class="full-box list-unstyled page-nav-tabs">
         <li>
             <a class="active" href="<?php echo SERVERURL . 'index.php?views=' . urlencode($carpeta) . '/cursop-new'; ?>"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVA PUBLICIDAD</a>
-
         </li>
         <li>
             <a href="<?php echo SERVERURL . 'index.php?views=' . urlencode($carpeta) . '/cursop-list'; ?>"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE PUBLICIDADES</a>
-
         </li>
     </ul>
 </div>

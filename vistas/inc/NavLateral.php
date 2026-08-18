@@ -123,7 +123,7 @@
 				<?php if($_SESSION['cargo_spm'] == 1 || $_SESSION['cargo_spm'] == 4 || $_SESSION['cargo_spm'] == 3 || $_SESSION['cargo_spm'] == 2): ?>
 
 				<li>
-					<a href="#" class="nav-btn-submenu"> &nbsp; Periodos de cursos int <i class="fas fa-chevron-down"></i></a>
+					<a href="#" class="nav-btn-submenu"> &nbsp; Periodos intensivos <i class="fas fa-chevron-down"></i></a>
 					<ul>
                         
                         <li>
@@ -190,7 +190,7 @@
 							<a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/cursop-list-archived"> &nbsp;Cursos publicitados archivados</a>
 						</li>
 						<li>
-							<a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/imagen-new">&nbsp; Nueva imágen de slider</a>
+							<a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/imagen-new">&nbsp; Sliders</a>
 						</li>
 
 						<!--li>

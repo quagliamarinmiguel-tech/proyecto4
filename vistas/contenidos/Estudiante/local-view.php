@@ -14,6 +14,18 @@ if($datos->rowCount() != 1){
 }
 
 $local = $datos->fetch();
+
+// Extraer imágenes mapeadas
+$imagenesMap = [];
+$resImg = $ctrl->obtener_imagenes_local_controlador();
+while($img = $resImg->fetch(PDO::FETCH_ASSOC)) {
+    $imagenesMap[$img['nom_esp']] = $img['ruta'];
+}
+
+// Función auxiliar para obtener ruta de imagen mapeada
+function getMappedImage($nom_esp, $array) {
+    return isset($array[$nom_esp]) ? SERVERURL . "vistas/" . $array[$nom_esp] : SERVERURL . "vistas/assets/img/default.png";
+}
 ?>
 <style>
 #preview-local, #preview-mapa, #preview-satelite {
@@ -89,25 +101,25 @@ $local = $datos->fetch();
                 <!-- Fachada -->
                 <div class="col-md-4 mb-3">
                     <label class="form-label">Imagen actual del local</label><br>
-                    <img src="<?php echo SERVERURL . 'vistas/' . $local['ruta_local']; ?>" class="img-thumbnail" style="max-width: 200px;">
+                    <img src="<?php echo getMappedImage('loca', $imagenesMap); ?>" class="img-thumbnail" style="max-width: 200px;">
                     <label class="form-label mt-2">Reemplazar imagen</label>
-                    <input type="file" name="imagen_local" class="form-control-file" accept=".jpg,.jpeg,.png,.webp">
+                    <input type="file" name="loca" class="form-control-file" accept=".jpg,.jpeg,.png,.webp">
                 </div>
 
                 <!-- Mapa -->
                 <div class="col-md-4 mb-3">
                     <label class="form-label">Mapa actual</label><br>
-                    <img src="<?php echo SERVERURL . 'vistas/' . $local['ruta_mapa']; ?>" class="img-thumbnail" style="max-width: 200px;">
+                    <img src="<?php echo getMappedImage('mapa_google', $imagenesMap); ?>" class="img-thumbnail" style="max-width: 200px;">
                     <label class="form-label mt-2">Reemplazar imagen</label>
-                    <input type="file" name="imagen_local_mapa" class="form-control-file" accept=".jpg,.jpeg,.png,.webp">
+                    <input type="file" name="mapa_google" class="form-control-file" accept=".jpg,.jpeg,.png,.webp">
                 </div>
 
                 <!-- Satélite -->
                 <div class="col-md-4 mb-3">
                     <label class="form-label">Vista satelital actual</label><br>
-                    <img src="<?php echo SERVERURL . 'vistas/' . $local['ruta_satelite']; ?>" class="img-thumbnail" style="max-width: 200px;">
+                    <img src="<?php echo getMappedImage('mapa_vista_satelital', $imagenesMap); ?>" class="img-thumbnail" style="max-width: 200px;">
                     <label class="form-label mt-2">Reemplazar imagen</label>
-                    <input type="file" name="imagen_local_satelite" class="form-control-file" accept=".jpg,.jpeg,.png,.webp">
+                    <input type="file" name="mapa_vista_satelital" class="form-control-file" accept=".jpg,.jpeg,.png,.webp">
                 </div>
 
             </div>
@@ -134,9 +146,9 @@ $local = $datos->fetch();
 document.addEventListener("DOMContentLoaded", () => {
     const form = document.querySelector("form[data-form='update']");
     const camposImagen = [
-        { inputName: "imagen_local", previewId: "preview-local" },
-        { inputName: "imagen_local_mapa", previewId: "preview-mapa" },
-        { inputName: "imagen_local_satelite", previewId: "preview-satelite" }
+        { inputName: "loca", previewId: "preview-local" },
+        { inputName: "mapa_google", previewId: "preview-mapa" },
+        { inputName: "mapa_vista_satelital", previewId: "preview-satelite" }
     ];
 
     camposImagen.forEach(campo => {

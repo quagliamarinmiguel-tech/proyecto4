@@ -2,59 +2,22 @@
 
     require_once "mainModel.php";
 
-    class seccionModelo extends mainModel{
+    class periodoModelo extends mainModel{
+
+
+
+
+//        obtener_evaluaciones_modelo    estos son los que nos competen, estos traen todo lo que necesitamos
+  //      obtener_estudiantes_modelo
+    //    obtener_puntajes_modelo
 
 
 
 
 
 
-protected function actualizar_profesor_seccion_modelo($idSeccion, $idProfesor) {
-    $sql = mainModel::conectar()->prepare("
-        UPDATE seccion 
-        SET ci_profesor = :idProf 
-        WHERE id_seccion = :idSec
-    ");
-    $sql->bindParam(':idProf', $idProfesor, PDO::PARAM_INT);
-    $sql->bindParam(':idSec', $idSeccion, PDO::PARAM_INT);
-    return $sql;
-}
 
 
-//para el conteo de evaluaciones >6 de seccion consult
-        protected static function contar_evaluaciones_modelo($id_seccion) {
-            $sql = mainModel::conectar()->prepare("
-                SELECT COUNT(*) FROM evaluacion
-                WHERE id_seccion = :id_seccion AND archivar_evaluacion=1;
-            ");
-            $sql->execute([':id_seccion' => $id_seccion]);
-            return (int)$sql->fetchColumn();
-        }
-        
-  
-//para los datos de las calificaciones de los estudiantes en la paginacion de calificaciones y pagos osea seccion consult
-public function obtener_evaluaciones_sin_limite_modelo($id_seccion){
-    $id_seccion = mainModel::limpiar_cadena($id_seccion);
-
-    $sql = mainModel::conectar()->prepare("
-       SELECT 
-            id_evaluacion,
-            tipo_evaluacion,
-            porcentaje,
-            obj,
-            fecha_evaluacion
-        FROM evaluacion
-        WHERE id_seccion  = :id_seccion
-          AND archivar_evaluacion = 1
-        ORDER BY fecha_evaluacion ASC
-    ");
-
-    $sql->bindParam(":id_seccion", $id_seccion, PDO::PARAM_INT);
-    $sql->execute();
-    return $sql;
-}
-
-        
 public static function obtener_evaluaciones_modelo($id_seccion){
     $sql = mainModel::conectar()->prepare("
         SELECT id_evaluacion, tipo_evaluacion, obj, porcentaje, fecha_evaluacion 
@@ -67,14 +30,18 @@ public static function obtener_evaluaciones_modelo($id_seccion){
     return $sql;
 }
 
-
         
 //tambien del paginador de estudiantes y sus puntajes
 protected static function obtener_estudiantes_modelo($id_seccion, $inicio, $registros){
     $id_seccion = mainModel::limpiar_cadena($id_seccion);
     $inicio = (int) $inicio;
     $registros = (int) $registros;
+    $limit="";
+    if($inicio >= 0 && $registros > 0){
+        $limit = "LIMIT :inicio, :registros";
+    }
 
+    //LIMIT :inicio, :registros
     $sql = mainModel::conectar()->prepare("
         SELECT 
             est.id_estudiante,
@@ -91,12 +58,14 @@ protected static function obtener_estudiantes_modelo($id_seccion, $inicio, $regi
             AND est.estado_estudiante = 1
             AND s.archivar_seccion = 1
         ORDER BY est.apellido ASC, est.nombre ASC
-        LIMIT :inicio, :registros
+        $limit
     ");
 
     $sql->bindParam(":id_seccion", $id_seccion, PDO::PARAM_INT);
-    $sql->bindParam(":inicio", $inicio, PDO::PARAM_INT);
-    $sql->bindParam(":registros", $registros, PDO::PARAM_INT);
+    if($inicio >= 0 && $registros > 0){
+        $sql->bindParam(":inicio", $inicio, PDO::PARAM_INT);
+        $sql->bindParam(":registros", $registros, PDO::PARAM_INT);
+    }
     $sql->execute();
 
     return $sql;
@@ -129,7 +98,215 @@ protected static function obtener_puntajes_modelo($id_inscripcion){
     return $sql;
 }
 
+
+ 
+public function obtener_datos_seccion_para_ambos_casos_modelo($curso_vigente_id, $seccion_letra) {
+    $pdo = mainModel::conectar();
+
+    // Obtener sección, curso vigente, duración y luego determinar si es cohorte o intensivo
+    $sql = $pdo->prepare("
+        SELECT 
+            s.id_seccion,
+            s.dia,
+            cv.id_curso_vigente,
+            cv.id_duracion_fk,
+            c.nombre_curso,
+            dp.fecha_inicio,dp.fecha_fin,dp.estado_periodo,
+            p.id_profesor,
+            p.nombre_profesor,
+            p.apellido_profesor,
+
+            -- para evaluacion new y update
+            (SELECT COUNT(*) FROM evaluacion e WHERE e.id_seccion = s.id_seccion AND e.archivar_evaluacion = 1) AS total_evaluaciones,
+            (SELECT SUM(porcentaje) FROM evaluacion e WHERE e.id_seccion = s.id_seccion AND e.archivar_evaluacion = 1) AS total_porcentaje
+        
+            FROM seccion s
+        INNER JOIN curso_vigente cv ON s.id_curso_vigente_fk = cv.id_curso_vigente
+        INNER JOIN duracion_periodo dp ON cv.id_duracion_fk = dp.id_duracion
+        INNER JOIN curso c ON cv.id_curso_fk = c.id_curso
+        LEFT JOIN profesor p ON s.ci_profesor = p.id_profesor
+        WHERE s.id_curso_vigente_fk = :curso 
+          AND s.nombre_seccion = :seccion 
+          AND s.archivar_seccion = 1
+        LIMIT 1
+    ");
+    $sql->bindParam(":curso", $curso_vigente_id);
+    $sql->bindParam(":seccion", $seccion_letra);
+    $sql->execute();
+
+    if ($sql->rowCount() === 0) {
+        return $sql; // sin resultados
+    }
+
+    $datos = $sql->fetch(PDO::FETCH_ASSOC);
+    $idDuracion = $datos['id_duracion_fk'];
+
+    // Buscar si esta duración pertenece a una cohorte
+    $sqlCohorte = $pdo->prepare("
+        SELECT numero_cohorte, anio_cohorte
+        FROM cohorte
+        WHERE id_duracion_fk = :id_duracion
+        LIMIT 1
+    ");
+    $sqlCohorte->bindParam(":id_duracion", $idDuracion);
+    $sqlCohorte->execute();
+    $cohorte = $sqlCohorte->fetch(PDO::FETCH_ASSOC);
+
+    if ($cohorte) {
+        $datos['numero_cohorte'] = $cohorte['numero_cohorte'];
+        $datos['anio_cohorte'] = $cohorte['anio_cohorte'];
+        $datos['fecha_inicio_int'] = null;
+        $datos['fecha_fin_int'] = null;
+    } else {
+        // Si no es cohorte, buscar en periodo_intensivo
+        $sqlIntensivo = $pdo->prepare("
+            SELECT pago_inscripcion_int
+            FROM periodo_intensivo
+            WHERE id_duracion_fk = :id_duracion
+            LIMIT 1
+        ");
+        $sqlIntensivo->bindParam(":id_duracion", $idDuracion);
+        $sqlIntensivo->execute();
+        $intensivo = $sqlIntensivo->fetch(PDO::FETCH_ASSOC);
+
+        $datos['numero_cohorte'] = null;
+        $datos['anio_cohorte'] = null;
+        $datos['fecha_inicio'] = $datos['fecha_inicio'] ?? null;
+        $datos['fecha_fin'] = $datos['fecha_fin'] ?? null;
+    }
+
+    return $datos;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+protected function actualizar_profesor_seccion_modelo($idSeccion, $idProfesor) {
+    $sql = mainModel::conectar()->prepare("
+        UPDATE seccion 
+        SET ci_profesor = :idProf 
+        WHERE id_seccion = :idSec
+    ");
+    $sql->bindParam(':idProf', $idProfesor, PDO::PARAM_INT);
+    $sql->bindParam(':idSec', $idSeccion, PDO::PARAM_INT);
+    return $sql;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+//evaluacion new, busca a los estudiantes inscritos en la seccion para ponerles nota
+public static function obtener_estudiantes_inscritos_por_seccion_modelo($id_seccion) {
+    $consulta = mainModel::conectar()->prepare("
+        SELECT i.id_inscripcion, e.ci_estudiante, e.nombre, e.apellido
+        FROM inscripcion i
+        INNER JOIN estudiante e ON i.id_estudiante_fk = e.id_estudiante
+        WHERE i.id_seccion_fk = :id AND i.archivada = 1
+        ORDER BY e.apellido ASC
+    ");
+    $consulta->bindParam(":id", $id_seccion);
+    $consulta->execute();
+    return $consulta->fetchAll();
+}
+*/
+
+
+//-----------------------------------------------------------------------------------------
+//para el conteo de evaluaciones >6 de seccion consult
+ 
+protected static function contar_evaluaciones_modelo($id_seccion) {
+            $sql = mainModel::conectar()->prepare("
+                SELECT COUNT(*) FROM evaluacion
+                WHERE id_seccion = :id_seccion AND archivar_evaluacion=1;
+            ");
+            $sql->execute([':id_seccion' => $id_seccion]);
+            return (int)$sql->fetchColumn();
+        }
+        
+  //------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//para los datos de las calificaciones de los estudiantes en la paginacion de calificaciones y pagos osea seccion consult
+/*
+public function obtener_evaluaciones_sin_limite_modelo($id_seccion){
+    $id_seccion = mainModel::limpiar_cadena($id_seccion);
+
+    $sql = mainModel::conectar()->prepare("
+       SELECT 
+            id_evaluacion,
+            tipo_evaluacion,
+            porcentaje,
+            obj,
+            fecha_evaluacion
+        FROM evaluacion
+        WHERE id_seccion  = :id_seccion
+          AND archivar_evaluacion = 1
+        ORDER BY fecha_evaluacion ASC
+    ");
+
+    $sql->bindParam(":id_seccion", $id_seccion, PDO::PARAM_INT);
+    $sql->execute();
+    return $sql;
+}
+*/
+        
+
         //contar estudiantes en el paginador de calificaciones de seccion consult
+        //tengo q averigua pa q mierda me sirve este--------------------------------
         protected static function contar_estudiantes_modelo($id_seccion){
     $id_seccion = mainModel::limpiar_cadena($id_seccion);
 
@@ -319,79 +496,7 @@ public function obtener_datos_seccion_modelo($curso_vigente_id, $seccion_letra){
 
         
         
-    
-
-        
-public function obtener_datos_seccion_para_ambos_casos_modelo($curso_vigente_id, $seccion_letra){
-
-
-    
-    $pdo = mainModel::conectar();
-
-    // Primero obtenemos la sección y el curso vigente
-    $sql = $pdo->prepare("
-        SELECT 
-            s.id_seccion,
-            s.dia,
-            cv.id_curso_vigente,
-            cv.id_cohorte_fk,
-            c.nombre_curso,
-            p.id_profesor,
-            p.nombre_profesor,
-            p.apellido_profesor
-        FROM seccion s
-        INNER JOIN curso_vigente cv ON s.id_curso_vigente_fk = cv.id_curso_vigente
-        INNER JOIN curso c ON cv.id_curso_fk = c.id_curso
-        LEFT JOIN profesor p ON s.ci_profesor = p.id_profesor
-        WHERE s.id_curso_vigente_fk = :curso AND s.nombre_seccion = :seccion AND archivar_seccion = 1
-        LIMIT 1
-    ");
-    $sql->bindParam(":curso", $curso_vigente_id);
-    $sql->bindParam(":seccion", $seccion_letra);
-    $sql->execute();
-
-    if ($sql->rowCount() === 0) {
-        return $sql; // sin resultados
-    }
-
-    $datos = $sql->fetch(PDO::FETCH_ASSOC);
-
-    // Si tiene cohorte, buscamos sus datos
-    if (!empty($datos['id_cohorte_fk']) && $datos['id_cohorte_fk'] != 0) {
-        $sqlCohorte = $pdo->prepare("
-            SELECT numero_cohorte, anio_cohorte
-            FROM cohorte
-            WHERE id_cohorte = :id
-            LIMIT 1
-        ");
-        $sqlCohorte->bindParam(":id", $datos['id_cohorte_fk']);
-        $sqlCohorte->execute();
-        $cohorte = $sqlCohorte->fetch(PDO::FETCH_ASSOC);
-
-        $datos['numero_cohorte'] = $cohorte['numero_cohorte'] ?? null;
-        $datos['anio_cohorte'] = $cohorte['anio_cohorte'] ?? null;
-        $datos['fecha_inicio_int'] = null;
-        $datos['fecha_fin_int'] = null;
-    } else {
-        // Si no tiene cohorte, buscamos periodo intensivo
-        $sqlIntensivo = $pdo->prepare("
-            SELECT fecha_inicio_int, fecha_fin_int
-            FROM periodo_intensivo
-            WHERE id_curso_vigente_fk = :id
-            LIMIT 1
-        ");
-        $sqlIntensivo->bindParam(":id", $curso_vigente_id);
-        $sqlIntensivo->execute();
-        $intensivo = $sqlIntensivo->fetch(PDO::FETCH_ASSOC);
-
-        $datos['numero_cohorte'] = null;
-        $datos['anio_cohorte'] = null;
-        $datos['fecha_inicio_int'] = $intensivo['fecha_inicio_int'] ?? null;
-        $datos['fecha_fin_int'] = $intensivo['fecha_fin_int'] ?? null;
-    }
-
-    return $datos;
-}
+   
 
 /* no trae id de curso vigente
                 SELECT 

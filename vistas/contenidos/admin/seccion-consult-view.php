@@ -12,12 +12,15 @@
         exit();
     }
 
-    require_once "./controladores/seccionControlador.php";
-    $ins_seccion = new seccionControlador();
+    require_once "./controladores/periodoControlador.php";
+    $ins_seccion = new periodoControlador();
     $datos_seccion = $ins_seccion->obtener_datos_seccion_controlador_para_ambos_casos($curso_vigente_id, $seccion_letra);
     $profesores = $ins_seccion->obtener_profesores_activos_controlador();
 
 
+    $mostrarExportar = false;
+    $total_porcentaje = (float) ($datos_seccion['total_porcentaje'] ?? 0);
+    $mostrarExportar = ($total_porcentaje === 100.0);
 
 $cargo = $_SESSION['cargo_spm'] ?? 1;
 
@@ -31,30 +34,7 @@ $carpetasPorCargo = [
 
 $carpeta = $carpetasPorCargo[$cargo] ?? "admin";
 
-
-
-
-
-$conexion = mainModel::conectar();
-$id_seccion = $datos_seccion['id_seccion'] ?? null;
-$mostrarExportar = false;
-
-if ($id_seccion) {
-    $stmt = $conexion->prepare("
-        SELECT SUM(porcentaje) AS total_porcentaje
-        FROM evaluacion
-        WHERE id_seccion = :id AND archivar_evaluacion=1;
-    ");
-    $stmt->execute([':id' => $id_seccion]);
-    $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    $total_porcentaje = (float) ($resultado['total_porcentaje'] ?? 0);
-    $mostrarExportar = ($total_porcentaje === 100.0);
-}
-
 ?>
-
-
 
 
 <div class="full-box page-header">
@@ -73,34 +53,30 @@ if ($id_seccion) {
 
 <div class="container-fluid">
     <ul class="full-box list-unstyled page-nav-tabs">
-
         <li>
-            <a href="<?php echo SERVERURL . 'index.php?views=' . urlencode($carpeta) . '/seccion-list'; ?>"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE PERIODOS REGULARES </a>
+            <a href="<?php echo SERVERURL . 'index.php?views=' . urlencode($carpeta) . '/seccion-list'; ?>"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE PERIODOS COHORTES </a>
         </li>
         <li>
             <a href="<?php echo SERVERURL . 'index.php?views=' . urlencode($carpeta) . '/cv-int-list'; ?>"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE PERIODOS INTENSIVOS </a>
         </li>
-              
     </ul>   
 </div>
 
 
 
 
-<!-- 🔹 Datos generales de la sección -->
+<!-- Datos generales de la sección -->
 <div class="container-fluid mb-4">
     <div class="row">
         <div class="col-md-6">
             <p><strong>ID de sección:</strong> <?php echo $datos_seccion['id_seccion']; ?></p>
             <p><strong>Curso:</strong> <?php echo $datos_seccion['nombre_curso']; ?></p>
             <p><strong>ID del periodo del curso:</strong> <?php echo $datos_seccion['id_curso_vigente']; ?></p>
-            <!--p><strong>Cohorte:</strong> <php echo $datos_seccion['numero_cohorte']." / ".$datos_seccion['anio_cohorte']; ?></p-->
-
                 <?php if (!is_null($datos_seccion['numero_cohorte']) && !is_null($datos_seccion['anio_cohorte'])): ?>
         <p><strong>Cohorte:</strong> <?php echo $datos_seccion['numero_cohorte'] . " / " . $datos_seccion['anio_cohorte']; ?></p>
     <?php else: ?>
-        <p><strong>Fecha de inicio del periodo intensivo:</strong> <?php echo $datos_seccion['fecha_inicio_int']; ?></p>
-        <p><strong>Fecha de culminación del periodo intensivo:</strong> <?php echo $datos_seccion['fecha_fin_int']; ?></p>
+        <p><strong>Fecha de inicio del periodo intensivo:</strong> <?php echo $datos_seccion['fecha_inicio']; ?></p>
+        <p><strong>Fecha de culminación del periodo intensivo:</strong> <?php echo $datos_seccion['fecha_fin']; ?></p>
     <?php endif; ?>
 
 
@@ -134,7 +110,7 @@ if ($id_seccion) {
                             <option value="" disabled>Seleccione un día</option>
                             <?php
                             $dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-                            $dia_actual = $datos_seccion['dia'] ?? ''; // Asumiendo que el campo se llama 'dia_seccion'
+                            $dia_actual = $datos_seccion['dia'] ?? ''; 
 
                             foreach($dias as $dia){
                                 $selected = ($dia == $dia_actual) ? 'selected' : '';
@@ -161,58 +137,28 @@ if ($id_seccion) {
 
 
 
-<!--
 
-        <a href="<?php echo SERVERURL . 'index.php?views=' . urlencode($carpeta) . '/evaluacion-new&curso_vigente=' . urlencode($datos_seccion['id_curso_vigente']) . '&seccion=' . urlencode($seccion_letra); ?>" class="btn btn-lg btn-primary" style="text-transform: none;">       
-                <!--a href="<?php echo SERVERURL; ?>index.php?views=evaluacion-new&curso_vigente=<?php echo $datos_seccion['id_curso_vigente']; ?>&seccion=<?php echo $seccion_letra; ?>" class="btn btn-lg btn-primary" style="text-transform: none;"->
-                <i class="fas fa-plus"></i> Agregar evaluación
-        </a>    
--->
-
-
-
-
-
-
-<!--    <a href="exportadores/exportar-excel-phpspreadsheet1.php?curso_vigente=207&seccion=A" target="_blank">
-    	<button class="btn btn-success">Descargar Excel 2(.xlsx)</button>
-    </a>    -->
-<!-- exportar_excel_seccion.php?curso_vigente= -->
 <?php if($_SESSION['cargo_spm'] == 1 || $_SESSION['cargo_spm'] == 2): ?>
 
-
-
-<?php if ($mostrarExportar): ?>
-    <a href="<?php echo SERVERURL; ?>exportadores/exportar-excel-phpspreadsheet1.php?curso_vigente=<?php echo $curso_vigente_id; ?>&seccion=<?php echo $seccion_letra; ?>" 
-       class="btn btn-success" target="_blank">
-       Exportar a Excel
-    </a>
-    <a href="<?php echo SERVERURL; ?>exportadores/exportar_pdf_seccion.php?curso_vigente=<?php echo $curso_vigente_id; ?>&seccion=<?php echo $seccion_letra; ?>"
-       class="btn btn-danger" target="_blank" rel="noopener">
-       <i class="fa fa-file-pdf-o" aria-hidden="true"></i> Exportar a PDF
-    </a>
-<?php endif; ?>
-
-<!--a href="<php echo SERVERURL; ?>exportadores/exportar_excel_seccion.php?curso_vigente=<?php echo $curso_vigente_id; ?>&seccion=<?php echo $seccion_letra; ?>" 
-   class="btn btn-success" target="_blank">
-   Exportar a Excel
-</a>
-<a href="<php echo SERVERURL; ?>exportadores/exportar_pdf_seccion.php?curso_vigente=<?php echo $curso_vigente_id; ?>&seccion=<?php echo $seccion_letra; ?>"
-   class="btn btn-danger" target="_blank" rel="noopener">
-   <i class="fa fa-file-pdf-o" aria-hidden="true"></i> Exportar a PDF
-</a-->
-
+    <?php if ($mostrarExportar): ?>
+        <a href="<?php echo SERVERURL; ?>exportadores/exportar-excel-phpspreadsheet1.php?curso_vigente=<?php echo $curso_vigente_id; ?>&seccion=<?php echo $seccion_letra; ?>" 
+        class="btn btn-success" target="_blank">
+        Exportar a Excel
+        </a>
+        <a href="<?php echo SERVERURL; ?>exportadores/exportar_pdf_seccion.php?curso_vigente=<?php echo $curso_vigente_id; ?>&seccion=<?php echo $seccion_letra; ?>"
+        class="btn btn-danger" target="_blank" rel="noopener">
+        <i class="fa fa-file-pdf-o" aria-hidden="true"></i> Exportar a PDF
+        </a>
+    <?php endif; ?>
 
 
 <div class="container-fluid mb-4">
     <div class="d-flex justify-content-between align-items-center mb-2">
         <h4 class="mb-0">Evaluaciones registradas</h4>
-
-
-        
-                <?php
-          // Contar evaluaciones usando el controlador
-          $total_evaluaciones = $ins_seccion->contar_evaluaciones_controlador($datos_seccion['id_seccion']);
+   
+        <?php
+          // Contar evaluaciones
+          $total_evaluaciones = ($datos_seccion['total_evaluaciones']);
 
           if ($total_evaluaciones < 6):
         ?>
@@ -222,8 +168,6 @@ if ($id_seccion) {
         <?php else: ?>
           <span class="text-danger font-weight-bold">Límite de pruebas alcanzado</span>
         <?php endif; ?>
-        
-        
         
     </div>
 
@@ -255,9 +199,7 @@ if ($id_seccion) {
 
 
 
-
-
-
+<!--script src="..vistas/js/miscript.js"></scrip--t-->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />

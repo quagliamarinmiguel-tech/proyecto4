@@ -289,8 +289,8 @@ if ($origen === 'curso' && isset($_GET['filtro_nombre'])) {
 
 <div class="container-fluid">
     <?php
-        require_once "./controladores/seccionControlador.php";
-        $ins_secciones = new seccionControlador();
+        require_once "./controladores/periodoControlador.php";
+        $ins_secciones = new periodoControlador();
                     
                     
          $cargo = $_SESSION['cargo_spm'] ?? 1;
@@ -372,7 +372,7 @@ $carpeta = $carpetasPorCargo[$cargo] ?? "admin";
 
         $pagina_actual = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 
-        echo $ins_secciones->paginador_secciones_controlador($pagina_actual, 15, "");
+        echo $ins_secciones->paginador_secciones_controlador($pagina_actual, 15, 1,"intensivo");
                     
                                 
                     
@@ -406,6 +406,7 @@ $(document).ready(function() {
 });
 </script-->
 
+<script src="./vistas/js/miscript.js"></script>
 <script>
 $(document).ready(function() {
   $('#filtro_profesor').select2({

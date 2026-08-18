@@ -52,6 +52,10 @@ $carpeta = $carpetasPorCargo[$cargo] ?? "admin";
             <a class="active" href="<?php echo SERVERURL . 'index.php?views=' . urlencode($carpeta) . '/cohorte-list'; ?>"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE COHORTES</a>
             <!--a class="active" href="<?php echo SERVERURL; ?>index.php?views=cohorte-list"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE COHORTES</a-->
         </li>
+        <li>
+            <a href="<?php echo SERVERURL . 'index.php?views=' . urlencode($carpeta) . '/cohorte-archived'; ?>"><i class="fas fa-archive fa-fw"></i> &nbsp; COHORTES ARCHIVADAS</a>
+        </li>    
+
 
     </ul>
 </div>

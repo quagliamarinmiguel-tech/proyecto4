@@ -978,7 +978,7 @@ public function paginador_curso_vigente_por_curso_controlador($idCurso, $pagina,
         // Construcción de la tabla
         $tabla = '<div class="table-responsive"><table class="table table-dark table-sm"><thead><tr class="text-center">
                     <th>Id</th><th>Cohorte</th><th>Tipo</th><th>Estado</th><th>F_inicio</th><th>F_fin</th><th>Inscripción</th><th>Módulos</th>';
-//<th>Alterno</th>
+//<th> Alterno</th>
         if ($cargo != 5) $tabla .= '<th>Cursos</th><th>Inscritos</th>';
         //$tabla .= '<th>Ver</th>';
         if ($cargo == 1 || $cargo == 4) $tabla .= '<th>Acciones</th>';

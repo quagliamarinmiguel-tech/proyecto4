@@ -302,9 +302,6 @@ public function actualizar_evaluacion_controlador($datos){
         return json_encode($validacion['alerta']);
     }
     
-    
-    
-    
 // Asegurar que todos los inscritos tengan puntaje_estudiante creado
 $pdo = mainModel::conectar();
 $inscritos = $pdo->prepare("
@@ -338,12 +335,6 @@ foreach ($lista_inscripciones as $id_inscripcion) {
         ]);
     }
 }
-    
-    
-    
-    
-    
-    
 
     // Actualizar evaluación
     $datos_eval = [
@@ -394,7 +385,7 @@ foreach ($lista_inscripciones as $id_inscripcion) {
 
 
 
-    /*--------- Archivar evaluación ---------*/
+    /*--------- Archivar evaluación ---------*
     public function archivar_evaluacion_controlador($id){
         
 $id = mainModel::decryption($id);
@@ -459,7 +450,7 @@ $id = mainModel::limpiar_cadena($id);
         }
     }
 
-    /*--------- Restaurar evaluación ---------*/
+    /*--------- Restaurar evaluación ---------/
     public function restaurar_evaluacion_controlador($id){
         
  
@@ -473,6 +464,6 @@ $id = mainModel::limpiar_cadena($id);
         return $sql->execute()
             ? mainModel::sweet_alert("recargar", "Restaurada", "La evaluación fue restaurada correctamente", "success")
             : mainModel::sweet_alert("simple", "Error", "No se pudo restaurar la evaluación", "error");
-    }
+    }*/
 
 }

@@ -32,14 +32,22 @@ public function agregar_profesor_controlador2(){
         ]);
     }
 
-    // CI formato
-    if(!preg_match('/^[VE]{1}[0-9]{5,9}$/', $ci)){
-        return json_encode([
-            "Alerta" => "simple",
-            "Titulo" => "CI inválida",
-            "Texto" => "La cédula debe comenzar con V o E seguida de 7 a 8 números.",
-            "Tipo" => "error"
-        ]);
+    // Usar la validación universal para CI, Correo y Teléfono
+    $val_ci = mainModel::validar_cedula_universal($ci, 'profesor', 'ci_profesor', null, null);
+    if($val_ci['Tipo'] == 'error'){
+        return json_encode($val_ci);
+    }
+
+    $val_correo = mainModel::validar_correo_universal($correo, 'profesor', 'correo', null, null);
+    if($val_correo['Tipo'] == 'error'){
+        return json_encode($val_correo);
+    }
+
+    if($telefono != ""){
+        $val_tel = mainModel::validar_telefono_universal($telefono, 'profesor', 'telefono_profesor', null, null);
+        if($val_tel['Tipo'] == 'error'){
+            return json_encode($val_tel);
+        }
     }
 
     // Validar nombre/apellido
@@ -56,47 +64,6 @@ public function agregar_profesor_controlador2(){
             "Alerta" => "simple",
             "Titulo" => "Apellido inválido",
             "Texto" => "Solo se permiten letras en el apellido.",
-            "Tipo" => "error"
-        ]);
-    }
-
-    // Validar correo
-    if(!filter_var($correo, FILTER_VALIDATE_EMAIL)){
-        return json_encode([
-            "Alerta" => "simple",
-            "Titulo" => "Correo inválido",
-            "Texto" => "Debes ingresar un correo electrónico válido.",
-            "Tipo" => "error"
-        ]);
-    }
-
-    // Validar teléfono
-    if($telefono != "" && !preg_match('/^[0-9]{7,12}$/', $telefono)){
-        return json_encode([
-            "Alerta" => "simple",
-            "Titulo" => "Teléfono inválido",
-            "Texto" => "Solo se permiten entre 7 y 12 dígitos numéricos.",
-            "Tipo" => "error"
-        ]);
-    }
-
-    // Validar que CI o correo no esté repetido
-    $check_ci = mainModel::ejecutar_consulta_simple("SELECT ci_profesor FROM profesor WHERE ci_profesor='$ci' AND estado_profesor = 1");
-    if($check_ci->rowCount() > 0){
-        return json_encode([
-            "Alerta" => "simple",
-            "Titulo" => "Duplicado",
-            "Texto" => "Ya existe un profesor con esa cédula.",
-            "Tipo" => "error"
-        ]);
-    }
-
-    $check_correo = mainModel::ejecutar_consulta_simple("SELECT correo FROM profesor WHERE correo='$correo' AND estado_profesor = 1");
-    if($check_correo->rowCount() > 0){
-        return json_encode([
-            "Alerta" => "simple",
-            "Titulo" => "Correo registrado",
-            "Texto" => "Ya hay un profesor registrado con ese correo.",
             "Tipo" => "error"
         ]);
     }
@@ -351,14 +318,22 @@ public function agregar_profesor_con_imagen_controlador(){
             ]);
         }
 
-        // CI formato
-        if(!preg_match('/^[VE]{1}[0-9]{5,9}$/', $ci)){
-            return json_encode([
-                "Alerta"=>"simple",
-                "Titulo"=>"CI inválida",
-                "Texto"=>"La cédula debe comenzar con V o E seguida de 7 a 8 números.",
-                "Tipo"=>"error"
-            ]);
+        // Usar la validación universal para CI, Correo y Teléfono
+        $val_ci = mainModel::validar_cedula_universal($ci, 'profesor', 'ci_profesor', null, null);
+        if($val_ci['Tipo'] == 'error'){
+            return json_encode($val_ci);
+        }
+
+        $val_correo = mainModel::validar_correo_universal($correo, 'profesor', 'correo', null, null);
+        if($val_correo['Tipo'] == 'error'){
+            return json_encode($val_correo);
+        }
+
+        if($telefono != ""){
+            $val_tel = mainModel::validar_telefono_universal($telefono, 'profesor', 'telefono_profesor', null, null);
+            if($val_tel['Tipo'] == 'error'){
+                return json_encode($val_tel);
+            }
         }
 
         // Validar nombre/apellido
@@ -375,47 +350,6 @@ public function agregar_profesor_con_imagen_controlador(){
                 "Alerta"=>"simple",
                 "Titulo"=>"Apellido inválido",
                 "Texto"=>"Solo se permiten letras en el apellido.",
-                "Tipo"=>"error"
-            ]);
-        }
-
-        // Validar correo
-        if(!filter_var($correo, FILTER_VALIDATE_EMAIL)){
-            return json_encode([
-                "Alerta"=>"simple",
-                "Titulo"=>"Correo inválido",
-                "Texto"=>"Debes ingresar un correo electrónico válido.",
-                "Tipo"=>"error"
-            ]);
-        }
-
-        // Validar teléfono
-        if($telefono!="" && !preg_match('/^[0-9]{7,12}$/', $telefono)){
-            return json_encode([
-                "Alerta"=>"simple",
-                "Titulo"=>"Teléfono inválido",
-                "Texto"=>"Solo se permiten entre 7 y 12 dígitos numéricos.",
-                "Tipo"=>"error"
-            ]);
-        }
-
-        // Validar que CI o correo no esté repetido
-        $check_ci = mainModel::ejecutar_consulta_simple("SELECT ci_profesor FROM profesor WHERE ci_profesor='$ci' AND estado_profesor = 1");
-        if($check_ci->rowCount() > 0){
-            return json_encode([
-                "Alerta"=>"simple",
-                "Titulo"=>"Duplicado",
-                "Texto"=>"Ya existe un profesor con esa cédula.",
-                "Tipo"=>"error"
-            ]);
-        }
-
-        $check_correo = mainModel::ejecutar_consulta_simple("SELECT correo FROM profesor WHERE correo='$correo' AND estado_profesor = 1");
-        if($check_correo->rowCount() > 0){
-            return json_encode([
-                "Alerta"=>"simple",
-                "Titulo"=>"Correo registrado",
-                "Texto"=>"Ya hay un profesor registrado con ese correo.",
                 "Tipo"=>"error"
             ]);
         }

@@ -4,14 +4,19 @@
         exit();
     }
 
-    require_once "./controladores/seccionControlador.php";
-    $ins_seccion = new seccionControlador();
+
+//el babo
+
+    require_once "./controladores/periodoControlador.php";
+    $ins_seccion = new periodoControlador();
+
 
     $id_evaluacion = isset($_GET['evaluacion_id_up']) ? $_GET['evaluacion_id_up'] : 0;
-//    $datos_evaluacion = $ins_seccion->obtener_datos_evaluacion_controlador($id_evaluacion);
     $datos_evaluacion = $ins_seccion->obtener_datos_evaluacion_controlador_para_ambos_casos($id_evaluacion);
 
-//    echo $id_evaluacion;
+    $datos_seccion = $ins_seccion->obtener_datos_seccion_controlador_para_ambos_casos($curso_vigente_id, $seccion_letra);
+    $estudiantes =  $ins_seccion->obtener_puntajes_controlador($datos_seccion['id_seccion']);
+
 
     if(!$datos_evaluacion){
         echo '<div class="alert alert-danger text-center">Evaluación no encontrada.</div>';

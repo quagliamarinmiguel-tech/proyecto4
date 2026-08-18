@@ -9,23 +9,21 @@ try {
 
     if (
         isset($_POST['local_id_up']) ||
-        isset($_POST['info_ceproca_reset']) // ← para futuras acciones si querés reiniciar datos
+        isset($_POST['info_ceproca_reset']) ||
+        isset($_POST['slider_update'])
     ) {
         require_once "../controladores/localControlador.php";
         $ins_local = new localControlador();
 
         /*--------- Actualizar información institucional ---------*/
         if (isset($_POST['local_id_up'])) {
-            // Si alguna imagen fue cambiada (se detecta por input oculto o archivo subido)
-            if (
-                (isset($_FILES['imagen_local']) && $_FILES['imagen_local']['error'] === 0) ||
-                (isset($_FILES['imagen_local_mapa']) && $_FILES['imagen_local_mapa']['error'] === 0) ||
-                (isset($_FILES['imagen_local_satelite']) && $_FILES['imagen_local_satelite']['error'] === 0)
-            ) {
-                echo $ins_local->actualizar_local_con_imagenes_controlador();
-            } else {
-                echo $ins_local->actualizar_local_sin_imagenes_controlador();
-            }
+            echo $ins_local->actualizar_local_controlador();
+            exit();
+        }
+
+        /*--------- Actualizar sliders mediante modelo local ---------*/
+        if (isset($_POST['slider_update'])) {
+            echo $ins_local->actualizar_sliders_controlador();
             exit();
         }
 

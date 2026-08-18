@@ -7,10 +7,10 @@ ini_set('display_errors', 1);
 
 try {
     require_once "../config/APP.php";
-    require_once "../controladores/seccionControlador.php";
+    require_once "../controladores/periodoControlador.php";
     require_once "../controladores/evaluacionControlador.php";
 
-    $ins_seccion = new seccionControlador();
+    $ins_seccion = new periodoControlador();
     $ins_evaluacion = new evaluacionControlador();
 
 
@@ -130,19 +130,16 @@ if(isset($_POST['curso_vigente_id'])) {
 
 
 
-    /*--------- Validar porcentaje acumulado de evaluación que funciona con crear y actualizar---------*/
+    /*--------- Validar porcentaje acumulado de evaluación que funciona con crear y actualizar---------*
     if(isset($_GET['accion']) && $_GET['accion'] === 'validar_porcentaje' && isset($_GET['id_seccion']) && isset($_GET['nuevo'])){
         header('Content-Type: application/json');
         //require_once "../modelos/evaluacionModelo.php";
-        require_once "../modelos/seccionModelo.php";
+        require_once "../modelos/periodoModelo.php";
         $id = mainModel::limpiar_cadena($_GET['id_seccion']);
         $nuevo = (float) mainModel::limpiar_cadena($_GET['nuevo']);
         $excluir = isset($_GET['excluir']) ? mainModel::decryption($_GET['excluir']) : null;
-        //$excluir = isset($_GET['excluir']) ? mainModel::limpiar_cadena($_GET['excluir']) : null;
-        $seccion = new seccionModelo();
-        //$evaluaciones = $seccion->obtener_evaluaciones_sin_limite_modelo($id);
+        $seccion = new periodoModelo();
         $evaluaciones = $seccion->obtener_evaluaciones_sin_limite_modelo($id)->fetchAll();
-        //$evaluaciones = seccionModelo::obtener_evaluaciones_sin_limite_modelo($id)->fetchAll();
         $total = 0;
 
         foreach ($evaluaciones as $eval) {
@@ -160,7 +157,7 @@ if(isset($_POST['curso_vigente_id'])) {
         ]);
         exit();
     }
-
+*/
 
     /*--------- Evaluación: Actualizar ---------*/
     if(isset($_POST['evaluacion_id_up'])){
@@ -175,17 +172,17 @@ if(isset($_POST['curso_vigente_id'])) {
     }
 
 
-    /*--------- Evaluación: Archivar ---------*/
+    /*--------- Evaluación: Archivar ---------*
     if(isset($_POST['evaluacion_id_archivar'])){
         echo $ins_evaluacion->archivar_evaluacion_controlador($_POST['evaluacion_id_archivar']);
         exit();
     }
 
-    /*--------- Evaluación: Restaurar ---------*/
+    /*--------- Evaluación: Restaurar ---------/
     if(isset($_POST['evaluacion_id_restore'])){
         echo $ins_evaluacion->restaurar_evaluacion_controlador($_POST['evaluacion_id_restore']);
         exit();
-    }
+    }*/
 
 // En el switch principal de seccionAjax.php
 elseif (isset($_POST['evaluacion_id_delete'])) {

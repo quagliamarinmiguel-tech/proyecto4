@@ -72,14 +72,6 @@ $carpeta = $carpetasPorCargo[$cargo] ?? "admin";
       </select>
     </div>
 
-    <!--div class="col-md-3">
-      <label for="orden">Ordenar por</label>
-      <select name="orden" id="orden" class="form-control">
-        <option value="normal" <?= (!isset($_GET['orden']) || $_GET['orden'] == "normal") ? "selected" : "" ?>>Más reciente</option>
-        <option value="cursos" <?= (isset($_GET['orden']) && $_GET['orden'] == "cursos") ? "selected" : "" ?>>Cantidad de cursos</option>
-        <option value="estudiantes" <?= (isset($_GET['orden']) && $_GET['orden'] == "estudiantes") ? "selected" : "" ?>>Cantidad de estudiantes</option>
-      </select>
-    </div-->
 
     <div class="col-md-2">
       <button type="submit" class="btn btn-primary btn-block">
@@ -96,6 +88,7 @@ $carpeta = $carpetasPorCargo[$cargo] ?? "admin";
 
         $pagina_actual = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 
-        echo $ins_cohorte->paginador_cohorte_archivado_controlador($pagina_actual, 15, "cohorte-archived", "");
+        echo $ins_cohorte->paginador_cohorte_controlador($pagina_actual, 15, "cohorte-list", 0);
+        //echo $ins_cohorte->paginador_cohorte_archivado_controlador($pagina_actual, 15, "cohorte-archived", "");
     ?>
 </div>
