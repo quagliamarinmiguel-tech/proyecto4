@@ -5,7 +5,7 @@
 //use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 
-require_once '../librerias/vendor/autoload.php';
+require_once '../vendor/autoload.php';
   //  require_once '../librerias/autoload-phpspreadsheet.php'; // tu autoload personalizado
 //require_once '../controladores/seccionControlador2.php';
 

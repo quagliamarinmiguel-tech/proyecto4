@@ -1,5 +1,5 @@
 <?php
-//require_once '../librerias/vendor/autoload.php';
+//require_once '../vendor/autoload.php';
 require_once './controladores/seccionControlador2.php';
 
 $id_cohorte = 47;
