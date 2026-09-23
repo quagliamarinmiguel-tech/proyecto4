@@ -1,55 +1,350 @@
 <?php
-
 require_once "./controladores/publicoControlador.php";
-$inicioCtrl = new publicoControlador();
-$datosInicio = $inicioCtrl->cargar_inicio_controlador();
-//$cursos = $datosInicio["curso"];
-$profesores = $datosInicio["profesores"];
-$cursos = $datosInicio["curso"];
-$imgn1 = $datosInicio["slider"]["slider_1"];
-$imgn2 = $datosInicio["slider"]["slider_2"];
-$imgn3 = $datosInicio["slider"]["slider_3"];
-$info = $datosInicio["infoceproca"];
+$localCtrl = new publicoControlador();
+$localRespuesta = $localCtrl->datos_local_publico_controlador(1);
+
+$local = is_array($localRespuesta) && !empty($localRespuesta['ok']) && is_array($localRespuesta['data'])
+    ? $localRespuesta['data']
+    : [];
+
+$textosLocal = is_array($local['textos_pagina'] ?? null) ? $local['textos_pagina'] : [];
 
 
 
+// ============================================
+// 1. Colores desde el mainModel (sin duplicar)
+// ============================================
+$paletasInicio  = mainModel::obtener_paletas();
+$paletaInicioId = mainModel::extraer_paleta_activa($local['colores_pagina'] ?? null);
+$coloresInicio  = $paletasInicio[$paletaInicioId] ?? $paletasInicio[0];
 
 
 
+/*
+// 1. Paletas de colores
+$paletasInicio = [
+    0 => ['#00a9f1', '#002a6f', '#72F2EB', '#FF5F5D', '#3ca6a6'],
+    1 => ['#9C2113', '#F9ECEC', '#014B43', '#FFD6D1', '#099078'],
+    2 => ['#1C338C', '#1B1E59', '#8C1B1B', '#F2F2F2', '#262626'],
+    3 => ['#BF0413', '#F27329', '#F24F13', '#F9ECEC', '#A60303'],
+    4 => ['#518C81', '#667302', '#515916', '#D9C196', '#D92A1A'],
+    5 => ['#FFEFC8', '#7A2B1F', '#471B00', '#522D00', '#E8A149'],
+    6 => ['#F9D746', '#142C49', '#F3E3C6', '#4F7FE7', '#FFFFFF'],
+    7 => ['#B3A5CC', '#E9EEFF', '#CCBAA6', '#9E82D9', '#C2ACF2'],
+    8 => ['#27498C', '#1A4173', '#2E578C', '#B1BBC7', '#D9D9D7'],
+    9 => ['#EB7428', '#4F342B', '#F1CDAB', '#D7EFE1', '#EFA438'],
+    10 => ['#FBFFFF', '#EBC9C0', '#D48392', '#B73736', '#CFAA7D'],
+    11 => ['#010326', '#024959', '#208C8C', '#89D9C2', '#0D0D0D'],
+    12 => ['#F5F3F0', '#E8DFD1', '#5C1C3C', '#94215A', '#BAAC97'],
+    13 => ['#193C40', '#2E5902', '#1E661B', '#D96941', '#A62B1F']
+];
 
-require_once "./vistas/inc/utilidadesPublicas.php"; // Ruta válida desde index.php
 
-$pdo = conectarBase();
-$ip = $_SERVER['REMOTE_ADDR'];
-$idIP = registrar_ip_visitante($pdo, $ip);
-registrar_visita($pdo, $idIP);
+function hex2rgba($hex, $alpha = 1) {
+    $hex = str_replace('#', '', $hex);
+    if (strlen($hex) == 3) {
+        $r = hexdec(substr($hex, 0, 1) . substr($hex, 0, 1));
+        $g = hexdec(substr($hex, 1, 1) . substr($hex, 1, 1));
+        $b = hexdec(substr($hex, 2, 1) . substr($hex, 2, 1));
+    } else {
+        $r = hexdec(substr($hex, 0, 2));
+        $g = hexdec(substr($hex, 2, 2));
+        $b = hexdec(substr($hex, 4, 2));
+    }
+    return "rgba($r, $g, $b, $alpha)";
+}
 
 
+$coloresLocal = $local['colores_pagina'] ?? [];
+$paletaInicioId = is_array($coloresLocal) ? (int) ($coloresLocal['paleta_id'] ?? 0) : 0;
+$coloresInicio = $paletasInicio[$paletaInicioId] ?? $paletasInicio[0];
+
+// 2. Sliders (filtrando correctamente desde $local['sliders'])
+$sliders = $local['sliders'] ?? [];
+$imgn1 = array_values(array_filter(array_map(function($item) {
+    return strpos($item['route'] ?? '', 'sldr1') !== false ? $item['route'] : null;
+}, $sliders)));
+
+$imgn3 = array_values(array_filter(array_map(function($item) {
+    return strpos($item['route'] ?? '', 'sldr2') !== false ? $item['route'] : null;
+}, $sliders)));
+*/
+// 3. Profesores (mapeando desde $local['profesores'])
+$profesores = array_map(function($prof) {
+    return [
+        'imagen_profesor' => $prof['img_route'] ?? '',
+        'nombre_profesor' => $prof['name'] ?? '',
+        'apellido_profesor' => $prof['last_name'] ?? '',
+        'descripcion' => $prof['description'] ?? '',
+        'telefono_profesor' => $prof['phone'] ?? '',
+        'correo' => $prof['email'] ?? '',
+    ];
+}, $local['profesores'] ?? []);
+
+// 4. Cursos (mapeando y calculando desde $local['cursos'])
+$cursos = array_map(function($curso, $index) {
+    $inscripcion = (float) ($curso['prices']['inscripcion'] ?? 0);
+    $tipo = strtolower($curso['type'] ?? '');
+    $modulo = (float) ($curso['prices']['modulo1'] ?? 0);
+    if ($tipo === 'intensivo') {
+        $modulo = (float) ($curso['prices']['encuentro'] ?? 0);
+    }
+    $pago_total = $inscripcion + ($modulo * 3);
+
+    return [
+        'id_materia' => $index + 1,
+        'ruta_materia' => $curso['img_route'] ?? '',
+        'nombre_curso' => $curso['name'] ?? '',
+        'prefacio' => $curso['introduction'] ?? '',
+        'marketing_id' => $curso['marketing_id'] ?? '',
+        'pago_inscripcion' => $inscripcion,
+        'pago_modulo' => $modulo,
+        'oferta_vigente' => 0,
+        'pago_total' => $pago_total,
+    ];
+}, $local['cursos'] ?? [], array_keys($local['cursos'] ?? []));
+
+// Variables de contacto
+$telefonoInicio = htmlspecialchars((string) ($local['telefono_contacto'] ?? ''), ENT_QUOTES, 'UTF-8');
+$correoInicio = htmlspecialchars((string) ($local['correo_contacto'] ?? ''), ENT_QUOTES, 'UTF-8');
+$facebookInicio = htmlspecialchars((string) ($local['link_facebook'] ?? '#'), ENT_QUOTES, 'UTF-8');
+$instagramInicio = htmlspecialchars((string) ($local['link_instagram'] ?? '#'), ENT_QUOTES, 'UTF-8');
+$ciudadInicio = htmlspecialchars((string) ($local['direccion_local_ciudad'] ?? ''), ENT_QUOTES, 'UTF-8');
+$paisInicio = htmlspecialchars((string) ($local['direccion_local_pais'] ?? ''), ENT_QUOTES, 'UTF-8');
+$rif = htmlspecialchars((string) ($local['rif'] ?? ''), ENT_QUOTES, 'UTF-8');
+//var_dump($telefonoInicio,$correoInicio,$facebookInicio,$instagramInicio,$ciudadInicio,$paisInicio);die();
+//var_dump($cursos);die();
+
+$imgn3 = [];
+for ($i = 1; $i <= 6; $i++) {
+    $ruta = mainModel::obtenerRutaImagenLocal("slider_vertical_$i");
+    if (!empty($ruta)) {
+        $imgn3[] = $ruta;
+    }
+}
+
+// ============================================
+// Sliders automáticos (slider_auto_1 .. slider_auto_8)
+// ============================================
+$imgn1 = [];
+for ($i = 1; $i <= 8; $i++) {
+    $ruta = mainModel::obtenerRutaImagenLocal("slider_auto_$i");
+    if (!empty($ruta)) {
+        $imgn1[] = $ruta;
+    }
+}
 
 ?>
 
+
+<style>
+    :root {
+        --inicio-primario: <?php echo $coloresInicio[0]; ?>;
+        --inicio-secundario: <?php echo $coloresInicio[1]; ?>;
+        --inicio-terciario: <?php echo $coloresInicio[2]; ?>;
+        --inicio-cuaternario: <?php echo $coloresInicio[3]; ?>;
+        --inicio-quinario: <?php echo $coloresInicio[4]; ?>;
+    }
+    .div_header, .header_barra { background-color: var(--inicio-primario); }
+    .div_header .contactos_header,.div_header .header_barra ul li a, .div_header { background-color: var(--inicio-primario); }
+    .dropdown { background-color: var(--inicio-primario); }
+    .header_barra ul li a:hover{ background-color: var(--inicio-secundario); }
+    .ver_mas  { background-color: var(--inicio-primario); }
+    .ver_mas:hover  { background-color: var(--inicio-secundario); } 
+
+
+    .div_header .contactos_header:hover { background-color: var(--inicio-secundario); }
+    .nuevoslider { border-color: var(--inicio-quinario); }
+    .hr_linea_color, .hr_encabezado { background-color: var(--inicio-terciario) !important; }
+    .espacio_periodicos .encabezado1, .espacio_periodicos .encabezado2 { border-color: var(--inicio-quinario); }
+
+    .footer_fondo { box-shadow: 0 6px var(--inicio-primario), 0 14px var(--inicio-secundario), 0 22px var(--inicio-terciario); }
+    .creditos.footer { background-color: var(--inicio-secundario); }
+    
+    /*
+    .inicio_header_imagen_ceproca {
+        --sombra-base: <c?php echo hex2rgba($coloresInicio[0], 1); ?>;
+        --sombra1: <c?php echo hex2rgba($coloresInicio[0], 0.8); ?>;
+        --sombra2: <c?php echo hex2rgba($coloresInicio[0], 0.7); ?>;
+        --sombra3: <c?php echo hex2rgba($coloresInicio[0], 0.6); ?>;
+        --sombra4: <c?php echo hex2rgba($coloresInicio[0], 0.5); ?>;
+        --sombra5: <c?php echo hex2rgba($coloresInicio[0], 0.4); ?>;
+    }*/
+    
+    
+
+        .inicio_header_imagen_ceproca {
+        --sombra-base: <?php echo mainModel::hex2rgba($coloresInicio[0], 1); ?>;
+        --sombra1:     <?php echo mainModel::hex2rgba($coloresInicio[0], 0.8); ?>;
+        --sombra2:     <?php echo mainModel::hex2rgba($coloresInicio[0], 0.7); ?>;
+        --sombra3:     <?php echo mainModel::hex2rgba($coloresInicio[0], 0.6); ?>;
+        --sombra4:     <?php echo mainModel::hex2rgba($coloresInicio[0], 0.5); ?>;
+        --sombra5:     <?php echo mainModel::hex2rgba($coloresInicio[0], 0.4); ?>;
+    }
+</style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--?php
+echo "<pre style='background:#111;color:#0f0;padding:20px;font-size:13px;line-height:1.5;max-height:90vh;overflow:auto;'>";
+
+echo "═══════════════════════════════════════════\n";
+echo "  DEBUG — datosInicio.php\n";
+echo "═══════════════════════════════════════════\n\n";
+
+// ── Respuesta cruda del controlador ──
+echo "▶ \$localRespuesta (crudo del controlador):\n";
+var_dump($localRespuesta);
+echo "\n";
+
+// ── Local normalizado ──
+echo "▶ \$local (extraído de \$localRespuesta['data']):\n";
+echo "   Total claves: " . count($local) . "\n";
+echo "   Claves: " . implode(', ', array_keys($local)) . "\n";
+var_dump($local);
+echo "\n";
+
+// ── Textos ──
+echo "▶ \$textosLocal:\n";
+var_dump($textosLocal);
+echo "\n";
+
+// ── Paletas y colores ──
+echo "▶ \$paletasInicio (todas las paletas del mainModel):\n";
+var_dump($paletasInicio);
+echo "\n";
+
+echo "▶ \$paletaInicioId (extraído por mainModel::extraer_paleta_activa):\n";
+var_dump($paletaInicioId);
+echo "\n";
+
+echo "▶ \$coloresInicio (paleta aplicada):\n";
+var_dump($coloresInicio);
+echo "\n";
+
+// ── Sombras calculadas ──
+echo "▶ Sombras hex2rgba (para .inicio_header_imagen_ceproca):\n";
+$colorBase = $coloresInicio[0] ?? '#000000';
+echo "   Color base: $colorBase\n";
+echo "   sombra-base: " . mainModel::hex2rgba($colorBase, 1)   . "\n";
+echo "   sombra1:     " . mainModel::hex2rgba($colorBase, 0.8) . "\n";
+echo "   sombra2:     " . mainModel::hex2rgba($colorBase, 0.7) . "\n";
+echo "   sombra3:     " . mainModel::hex2rgba($colorBase, 0.6) . "\n";
+echo "   sombra4:     " . mainModel::hex2rgba($colorBase, 0.5) . "\n";
+echo "   sombra5:     " . mainModel::hex2rgba($colorBase, 0.4) . "\n";
+echo "\n";
+
+// ── Sliders ──
+echo "▶ \$imgn3 (sliders verticales, slider_vertical_1..6):\n";
+echo "   Total: " . count($imgn3) . "\n";
+var_dump($imgn3);
+echo "\n";
+
+echo "▶ \$imgn1 (sliders automáticos, slider_auto_1..8):\n";
+echo "   Total: " . count($imgn1) . "\n";
+var_dump($imgn1);
+echo "\n";
+
+// ── Profesores ──
+echo "▶ \$profesores:\n";
+echo "   Total: " . count($profesores) . "\n";
+var_dump($profesores);
+echo "\n";
+
+// ── Cursos ──
+echo "▶ \$cursos:\n";
+echo "   Total: " . count($cursos) . "\n";
+var_dump($cursos);
+echo "\n";
+
+// ── Variables de contacto ──
+echo "▶ Variables de contacto (ya escapadas):\n";
+echo "   \$telefonoInicio:  $telefonoInicio\n";
+echo "   \$correoInicio:    $correoInicio\n";
+echo "   \$facebookInicio:  $facebookInicio\n";
+echo "   \$instagramInicio: $instagramInicio\n";
+echo "   \$ciudadInicio:    $ciudadInicio\n";
+echo "   \$paisInicio:      $paisInicio\n";
+echo "   \$rif:             $rif\n";
+echo "\n";
+
+echo "═══════════════════════════════════════════\n";
+echo "  FIN DEBUG\n";
+echo "═══════════════════════════════════════════\n";
+
+echo "</pre>";
+?-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <div class="div_header">
 	<div style="cursor:pointer;" class="logo_ceproca" onclick="window.location.href='<?php echo SERVERURL; ?>index.php', '_blank';">
-        <h3><b id="not_ceproca">ceprociando</b></h3>
-        <a href="index.php"><img src="../vistas/assets/img/logoceprocahd1.webp" alt="porqueno"></a>
+        <h3><b id="not_ceproca"><?php echo htmlspecialchars($textosLocal['nombre_corto'], ENT_QUOTES, 'UTF-8'); ?></b></h3>
+        <a href="index.php"><img src="<?= mainModel::obtenerRutaImagenLocal('logo') ?>" alt="porqueno"></a> <!--<c?php echo htmlspecialchars($imagenesLocal['logo'], ENT_QUOTES, 'UTF-8'); ?>-->				                  
     </div>
-
     <div class="header_barra">
         <ul>
             <li><a href="<?php echo SERVERURL; ?>index.php?views=cursos">Cursos</a></li>
             <li id="not_dropdown">
                 <a style="cursor:context-menu;"  >Contáctanos</a>
                 <ul class="dropdown">
-                    <li><a href="<?php echo htmlspecialchars($info['link_facebook']); ?>">Facebook</a></li>
-                    <li><a href="<?php echo htmlspecialchars($info['link_instagram']); ?>">Instagram</a></li>
+                    <li><a href="<?php echo $facebookInicio; ?>">Facebook</a></li>
+                    <li><a href="<?php echo $instagramInicio; ?>">Instagram</a></li>
                     <li> 
                         <div class="contactos_header" >
-                             <a href="https://wa.me/<?php echo htmlspecialchars($info['telefono_contacto']); ?>">Teléfono</a>
+                             <a href="https://wa.me/<?php echo $telefonoInicio; ?>">Teléfono</a>
                         </div>
                     </li>
                     <li>
                         <div class="contactos_header" >
-                            <a href="mailto:<?php echo htmlspecialchars($info['correo_contacto']); ?>?subject=Asunto%20predefinido&body=Hola,%20quiero%20contactarte">Correo</a>
+                            <a href="mailto:<?php echo $correoInicio; ?>?subject=Asunto%20predefinido&body=Hola,%20quiero%20contactarte">Correo</a>
                         </div>
                     </li>
                 </ul>
@@ -60,8 +355,12 @@ registrar_visita($pdo, $idIP);
     </div>
 </div>
 
-<header class="inicio_header_imagen_ceproca" style="background-image: url('../vistas/assets/img/talves4.webp');">
-    <p>SOMOS UNA INSTITUCIÓN EDUCATIVA DEDICADA A LA FORMACIÓN DE CIUDADANOS ÍNTEGROS, OFRECIENDO CURSOS ADAPTADOS PARA ESTUDIANTES DE DIVERSAS EDADES, QUIENES, MEDIANTE LA EDUCACIÓN CON UN SENTIDO ÚTIL Y PRÁCTICO, BUSCAN REINVENTARSE PARA AVANZAR Y PRODUCIR.</p>
+<header class="inicio_header_imagen_ceproca" style="background-image: url('<?= mainModel::obtenerRutaImagenLocal('img_header') ?>');"><!--<c?php echo htmlspecialchars($imagenesLocal['img_header'], ENT_QUOTES, 'UTF-8'); ?>-->
+    <p>
+        <!--?php echo htmlspecialchars($imagenesLocal['logo'], ENT_QUOTES, 'UTF-8'); ?>
+        <c?php echo inicioLocalText('txt_header', 'SOMOS UNA INSTITUCIÓN EDUCATIVA DEDICADA A LA FORMACIÓN DE CIUDADANOS ÍNTEGROS, OFRECIENDO CURSOS ADAPTADOS PARA ESTUDIANTES DE DIVERSAS EDADES, QUIENES, MEDIANTE LA EDUCACIÓN CON UN SENTIDO ÚTIL Y PRÁCTICO, BUSCAN REINVENTARSE PARA AVANZAR Y PRODUCIR.', $textosLocal); ?-->
+		<?php echo htmlspecialchars($textosLocal['txt_header'], ENT_QUOTES, 'UTF-8'); ?>
+    </p>
 </header>
 
 
@@ -73,141 +372,66 @@ registrar_visita($pdo, $idIP);
 <!--aqui empiezan los botones de cursos-->
 <header class="texto_header_cursos_100_practicos">
     <div class="texto_header_cursos_100_practicos_div1"></div>
-    	<h1>VEN Y FORMA PARTE DE LA ACADEMIA MÁS GRANDE EL ESTADO GUÁRICO</h4>
-    	<h1>CURSOS 100% PRÁCTICOS</h1>
+    	<h1><!--?php echo inicioLocalText('txt_titulo_post_header', 'VEN Y FORMA PARTE DE LA ACADEMIA MÁS GRANDE EL ESTADO GUÁRICO', $textosLocal); ?-->
+    		<?php echo htmlspecialchars($textosLocal['txt_titulo_post_header'], ENT_QUOTES, 'UTF-8'); ?>
+		</h1>
+        <h1>
+                <!--?php echo inicioLocalText('txt_subtitulo_post_header', 'CURSOS 100% PRÁCTICOS', $textosLocal); ?-->
+	    		<?php echo htmlspecialchars($textosLocal['txt_subtitulo_post_header'], ENT_QUOTES, 'UTF-8'); ?>
+	    </h1>
     <div class="texto_header_cursos_100_practicos_div2"></div>
 </header>
-
-<section class="caracteristicas_cursos">
-    <div class="buton_caracteristicas_cursos b1 bbb" onclick="toggleDiv(0,'oculto1',400)"><p>Sabatinos</p></div>
-    <div class="buton_caracteristicas_cursos b2 bbb" onclick="toggleDiv(1,'oculto1',400)"><p>Dias de semana</p></div>
-    <div class="buton_caracteristicas_cursos b3 bbb" onclick="toggleDiv(2,'oculto1',400)"><p>Intensivos</p></div>
-    <div class="buton_caracteristicas_cursos b4 bbb" onclick="toggleDiv(3,'oculto1',400)"><p>Técnicos Profesionales</p></div>
-    <div class="buton_caracteristicas_cursos b5 bbb" onclick="toggleDiv(4,'oculto1',400)"><p>Cursos para niños</p></div>
-</section>
-
-<div class="oculto" id="oculto1">
-    <div>
-  	    <section class="texto_caracteristicas_curso b1_static">
-	        <i class='bx bxs-brightness'></i>    
-	        <p>En solo unos cuantos fines de semana, verás un cambio significativo en tus habilidades y conocimientos. Ya sea que busques mejorar en tu carrera, emprender un nuevo proyecto o simplemente aprender algo nuevo.</p> 
- 	        <br>
-        </section> 
-        <section class="imagen_caracteristicas_curso">
-            <img loading="lazy" src="../vistas/assets/img/finde.webp"/>
-        </section>
-    </div>
-  		 
-    <div>	
-  		<section class="texto_caracteristicas_curso b2_static">
-            <i class='bx bx-calendar'></i>
-	        <p>La regularidad en las clases puede ayudar a mantener alta la motivación. Al ver avances y recibir retroalimentación constante, es más fácil mantenerse enfocado en tus objetivos y seguir comprometido con el curso.</p> 
- 	        <br>
- 		</section>    
-        <section class="imagen_caracteristicas_curso">
-            <img loading="lazy" src="../vistas/assets/img/barbero5.webp"/>
-        </section>
-    </div>
-  
-    <div> 
-  		<section class="texto_caracteristicas_curso b3_static">
-            <i class='bx bxs-timer'></i>
-            <p>los cursos intensivos están diseñados para cubrir una gran cantidad de contenido en un corto período de tiempo. Esto significa que puedes adquirir habilidades y conocimientos rápidamente, lo que es ideal si necesitas aprender algo nuevo para un trabajo o proyecto específico.</p>
- 	        <br>
- 		</section>    
-  		<section class="imagen_caracteristicas_curso">
-            <img loading="lazy" src="../vistas/assets/img/barbero4.webp"/>
-        </section>
-    </div>
-
-    <div> 
-		<section class="texto_caracteristicas_curso b4_static">
-	        <i class='bx bxs-graduation'></i>
-            <p>Los programas técnicos suelen actualizarse más rápidamente para adaptarse a las demandas cambiantes del mercado, asegurando que los estudiantes aprendan las habilidades más relevantes y actuales.</p>
- 	        <br>
-        </section>       
-  		<section class="imagen_caracteristicas_curso">
-            <img loading="lazy" src="../vistas/assets/img/tecnico2.webp"/>
-        </section>  
-    </div>
-
-    <div> 
-  	    <section class="texto_caracteristicas_curso b5_static">
-            <i class='bx bx-child'></i>
-	        <p>Los cursos proporcionan un entorno en el que los niños y jóvenes pueden hacer amigos y aprender a trabajar en equipo donde aprenden a comunicarse, compartir y colaborar con otros niños, lo cual es crucial para su desarrollo social.</p>
- 	        <br>
-        </section>  
-  		<section class="imagen_caracteristicas_curso">
-            <img loading="lazy" src="../vistas/assets/img/ingles4.webp"/>
-        </section>   
-    </div>
-
-</div><!--info oculto de caracteristicas de cursos-->
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 <div class="div_img_verticales_y_tarjetas">
 
     <!--este es el slider de imagenes verticales-->
-	<div class="multislider-container" id="slidio6">
-  		<div class="multislider-content height100" >
-            <!--style="margin:auto;"-->
-            <div class="multislide height100 div_imagenes_verticales">        
-              <img class="imagenes_verticales" loading="lazy" src="../vistas/<?php echo htmlspecialchars($imgn3[0]); ?>" alt="Imagen 1">
-            </div>
-    
-            <div class="multislide div_imagenes_verticales" >
-              <img class="imagenes_verticales" loading="lazy" src="../vistas/<?php echo htmlspecialchars($imgn3[1]); ?>" alt="Imagen 2">
-              <img class="imagenes_verticales" loading="lazy" src="../vistas/<?php echo htmlspecialchars($imgn3[2]); ?>" alt="Imagen 3">
-            </div>
-                         
-            <div class="multislide height100 div_imagenes_verticales">
-              <img class="imagenes_verticales" loading="lazy" src="../vistas/<?php echo htmlspecialchars($imgn3[3]); ?>" alt="Imagen 4">
-            </div>
-                
-            <div class="multislide div_imagenes_verticales">
-              <img class="imagenes_verticales" loading="lazy" src="../vistas/<?php echo htmlspecialchars($imgn3[4]); ?>" alt="Imagen 5">
-              <img class="imagenes_verticales" loading="lazy" src="../vistas/<?php echo htmlspecialchars($imgn3[5]); ?>" alt="Imagen 6">
-            </div> 
-		</div>
-	</div>
 
+    <div class="multislider-container" id="slidio6">
+        <div class="multislider-content height100" >
+            <?php
+            // Agrupar imágenes de a pares o individuales según la estructura original
+            $total = count($imgn3);
+            for ($i = 0; $i < $total; $i++):
+                // Determinar si es un slide con 1 o 2 imágenes
+                $slideImgs = [];
+                if ($i % 2 == 0) {
+                    // Slide con 1 imagen (índice par)
+                    $slideImgs[] = $imgn3[$i];
+                } else {
+                    // Slide con 2 imágenes (índice impar)
+                    if (isset($imgn3[$i])) $slideImgs[] = $imgn3[$i];
+                    if (isset($imgn3[$i+1])) $slideImgs[] = $imgn3[$i+1];
+                    $i++; // saltamos el siguiente índice porque ya lo usamos
+                }
+            ?>
+                <div class="multislide <?php echo count($slideImgs) > 1 ? 'div_imagenes_verticales' : 'height100 div_imagenes_verticales'; ?>">
+                    <?php foreach ($slideImgs as $img): ?>
+                        <img class="imagenes_verticales" loading="lazy" src="<?php echo htmlspecialchars($img); ?>" alt="Imagen">
+                    <?php endforeach; ?>
+                </div>
+            <?php endfor; ?>
+        </div>
+    </div>
+    
+    
+    
+    
+    
 	<!--aqui empiezan tarjetas-->
     <div class="tarjetas">
         <div class="tarjconteiners">
+      
             <?php foreach ($cursos as $curso): ?>
-                <div class="card" onclick="redirigirACurso(<?php echo $curso['id_materia']; ?>, <?php echo $curso['id_materia']; ?>, 1)">
+                <div class="card" onclick="registrarYRedirigir('<?php echo $curso['marketing_id']; ?>')">
                     <figure>
                         <img loading="lazy" src="../vistas/<?php echo htmlspecialchars($curso['ruta_materia']); ?>" alt="Imagen del curso">
                     </figure>
                     <div class="contenido">
                         <h4><?php echo htmlspecialchars($curso['nombre_curso']); ?></h4>
                         <p><?php echo htmlspecialchars($curso['prefacio']); ?></p>
-
-                            <?php
-                                $inscripcion = (float)$curso['pago_inscripcion'] ?? 0;
-                                $modulo      = (float)$curso['pago_modulo'] ?? 0;
-                                $oferta      = (int)$curso['oferta_vigente'] ?? 0;
-
-                                $pago_total = $inscripcion + ($modulo * 3); // precio sin descuento
-                                $pago_y_oferta = $pago_total;
-                                $curso['pago_total'] = $pago_total;
-                            ?>
-
                         <div class="tarjeta_div_precio_cupos">
-                                <p>Precio: <?php echo htmlspecialchars($curso['pago_total']); ?>$</p><i class='bx bxs-badge-dollar' style='color:orange;'></i>
+                            <p>Precio: <?php echo htmlspecialchars($curso['pago_total']); ?>$</p>
+                            <i class='bx bxs-badge-dollar' style='color:orange;'></i>
                         </div>
                     </div>
                 </div>
@@ -231,166 +455,58 @@ registrar_visita($pdo, $idIP);
 
 
 
-<!--primer slider-->
-<div class="nuevoslider">
-    <div class="primer_slider_texto">
-        <h1>No solo nos dedicamos a la formación profesional, sino que también jugamos un papel activo en la comunidad, promoviendo el desarrollo integral de nuestros estudiantes y fortaleciendo los lazos sociales en Valle de la Pascua.</h1>
-    </div>
-        
-    <div class="newslider width400">
-        <div class="newslides width400">
-                
-            <?php for ($i = 1; $i <= 8; $i++): ?><!--images_automatico3-->
-                <img class="width400" loading="lazy" src="../vistas/<?php echo htmlspecialchars($imgn2[$i-1]); ?>" alt="Imagen del Slider">
-            <?php endfor; ?>
-                            
-        </div>
-        <div class="newnavigation">
-            <button class="nav-btn" id="previBtn">⟨</button>
-            <button class="nav-btn" id="nextiBtn">⟩</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 
-
-
-
-
-
-
-
-
-
-
-<div class="space nada"></div>
+<!--div class="space nada"></div>
 <div class="space nada">
-	<h1 class="flex_def">Más sobre Ceproca</h1><br><br style="height:5vh;">
-</div>
+	<h1 class="flex_def">Más sobre <c?php echo htmlspecialchars($textosLocal['nombre_corto'], ENT_QUOTES, 'UTF-8'); ?></h1><br><br style="height:5vh;">
+</div-->
 
 
-<!--aqui empiezan los periodicos-->
-<div class="espacio_periodicos">
-	<div class="encabezados_periodicos div_periodicos">
-        
-    	<div class="encabezado1 car" onclick="toggleDiv(0,'oculto2',650)">
-        	<p><b class="subtitulo_encabezado1">¿Quiénes Somos?</b></p>
-            <hr class="hr_linea_color" style="background-color:#039;">
-            <img loading="lazy" src="../vistas/assets/img/viejaceproca.webp" style="margin-top:0px">
-            <p>El Centro Educativo Profesional Cecilio Acosta (CEPROCA) es una institución educativa ubicada en Valle de la Pascua, estado Guárico, Venezuela Se caracteriza por su enfoque en la formación técnica y profesional...</p>
-        </div>
-        
-        <div class="encabezado1 car" onclick="toggleDiv(1,'oculto2',650)">
-        	<p><b class="subtitulo_encabezado2">¿Cuál es nuestro Objetivo?</b> Tenemos como misión principal proporcionar una educación técnica y profesional de alta calidad que responda a las necesidades del mercado laboral y contribuya al desarrollo integral de sus estudiantes.</p>
-            <img loading="lazy" src="../vistas/assets/img/objetivo.webp">
-            <hr class="hr_linea_color" style="background-color:#C33;">
-        </div>
-        
-        <div class="encabezado2 car" onclick="toggleDiv(2,'oculto2',650)">
-        	<p><b>¿Quién es Cecilio Acosta?</b> Destacado intelectual y escritor venezolano, nacido el 15 de diciembre de 1818 en La Guaira, Venezuela. Es conocido por su contribución a la literatura, la educación y la cultura en el país durante el siglo XIX.</p>
-            <img loading="lazy" class="cecilio_acosta_foto" src="../vistas/assets/img/cecilio2.webp">
-        </div>
-        
-	</div>
-</div>
 
 
-<div class="oculto" id="oculto2">
-	<div>
-    	<section class="espacio_periodicos">
-    		<section class="encabezados_periodicos" style="margin-left:0%;">
-                
-    			<section class="encabezado1">
-    				<p style="padding: 10px 10px;">ofreciendo una variedad de cursos y programas que buscan equipar a los estudiantes con habilidades prácticas y conocimientos relevantes para el mercado laboral. CEPROCA ofrece una amplia gama de cursos permanentes en diversas áreas, lo que permite a los estudiantes elegir formaciones que se alineen con sus intereses y necesidades profesionales. Estos cursos abarcan desde la formación en áreas técnicas hasta programas de desarrollo personal y profesional. </p>
-                    <hr class="hr_encabezado">
-                </section>
-         
-            	<section class="encabezado1">
-					<p>La institución también se involucra en actividades comunitarias y eventos que promueven la educación y el desarrollo social en la región.</p><p>El centro no solo se enfoca en la educación formal, sino que también busca crear un ambiente de comunidad y colaboración. A menudo, organizan eventos y actividades que fomentan la interacción entre estudiantes, profesores y la comunidad local. Esto ayuda a construir una red de apoyo y a fortalecer los lazos sociales entre los participantes.</p>
-                    <hr class="hr_encabezado">
-                </section>
-                
-            	<section class="encabezado2">
-    				<p>El equipo de CEPROCA está compuesto por profesionales capacitados y comprometidos con la educación. Los docentes son seleccionados por su experiencia en sus respectivas áreas y su capacidad para impartir conocimientos de manera efectiva. Esto asegura que los estudiantes reciban una educación de calidad que les prepare adecuadamente para sus futuros laborales.</p>
-                    <br><hr class="hr_encabezado">
-                </section>
-                
-            </section>    
-        </section>
-    </div>
-    
-	<div>
-    	<section class="espacio_periodicos">
-    		<section class="encabezados_periodicos" style="margin-left:0%;">
-                
-    			<section class="encabezado1">
-    				<p>Tenemos como misión principal proporcionar una educación técnica y profesional de alta calidad que responda a las necesidades del mercado laboral y contribuya al desarrollo integral de sus estudiantes. Su enfoque está en formar profesionales competentes que no solo posean conocimientos teóricos, sino también habilidades prácticas que les permitan destacarse en sus respectivas áreas.</p>
-					<p><b class="subtitulo_encabezado3">Entre nuestras metas principales tenemos...</b></p>
-					<hr class="hr_encabezado">
-        		</section>
-                
-                <section class="encabezado1">
-    				<p>◦ Fomentar el desarrollo personal y profesional de sus estudiantes, ayudándoles a alcanzar sus metas y a mejorar su calidad de vida.</p>
-                    <p>◦ Contribuir al desarrollo económico y social de la comunidad de Valle de la Pascua, formando profesionales que puedan satisfacer las demandas del mercado laboral local.</p>
-                    <p>◦ Promover la inclusión y la equidad en la educación, asegurando que todos los interesados tengan acceso a oportunidades de formación, independientemente de su contexto socioeconómico.</p>
-                 	<hr class="hr_encabezado" >
-        		</section>
-                
-                <section class="encabezado2">
-    				<p>◦ Establecer alianzas estratégicas con empresas y organizaciones locales para facilitar la inserción laboral de sus egresados y asegurar que los programas educativos estén alineados con las necesidades del sector productivo.</p>
-                    <img class="imagen4_encabezado" loading="lazy" src="../vistas/assets/img/paisaje.webp"> 
-                    <br> <hr class="hr_encabezado" style="margin-top:5px;">
-        		</section>
-                
-            </section>
-        </section>
-    </div>
-        
-	<div>
-    	<section class="espacio_periodicos">
-    		<section class="encabezados_periodicos" style="margin-left:0%;">
-                
-    			<section class="encabezado1">
-    				<p>Cecilio Acosta se caracterizaba por su profundo compromiso con la educación y la promoción del pensamiento crítico. Fue un ferviente defensor de la libertad de expresión y de la importancia de la educación como herramienta de progreso social. Su obra abarcó diversos géneros, incluyendo ensayos, artículos periodísticos y obras literarias, donde abordó temas como la moral, la política y la filosofía.</p>
-                    <hr class="hr_encabezado">
-        		</section>
-                
-                <section class="encabezado1">
-    				<p>"El espíritu de la letra": Un ensayo que reflexiona sobre la importancia de la educación y la cultura.</p>
-                    <p>"La educación pública": Un texto en el que expone sus ideas sobre la necesidad de una educación accesible y de calidad para todos.</p>
-                    <p> "Cartas a un amigo": Una serie de cartas que abordan temas filosóficos y sociales, mostrando su pensamiento crítico y su visión sobre la sociedad venezolana.</p>
-                    <hr class="hr_encabezado">
-        		</section>
-                
-                <section class="encabezado2">
-    				<p>Cecilio Acosta se destacó no solo como escritor, sino también como educador y periodista. Fue un pionero en la promoción de la educación laica en Venezuela y participó activamente en la creación de instituciones educativas. Su influencia se extendió a través de sus escritos y su labor en la prensa, donde defendió ideales de justicia social y equidad.</p>
-                    <hr class="hr_encabezado" >
-        		</section>
-                
-            </section>
-        </section>
+<!--primer slider-->
+<div class="nuevoslider" style="background-color: <?php echo htmlspecialchars($coloresInicio[2] ?? '#FF5F5D', ENT_QUOTES, 'UTF-8'); ?>;">
+    <div class="primer_slider_texto" style="background-color:inherit;display:flex;justify-content:center;align-items:center;flex-direction:column;margin:20px;width:50%;">
+        <h1 style="text-align:center;font-size:10rem;color: white;text-shadow: 4px 3px 0 #7A7A7A;"><?php echo htmlspecialchars($textosLocal['txt_titulo_info1'], ENT_QUOTES, 'UTF-8'); ?></h1>
+        <h1 style="text-shadow:0px 0px 10px rgba(15,7,4,0);text-align:center;"><?php echo htmlspecialchars($textosLocal['txt_subtitulo_info1'], ENT_QUOTES, 'UTF-8'); ?></h1>
+    </div>    
+    <div class="newslider width400" style="background-color:green;border-radius:12px;margin:30px;">
+        <div class="newslides width400" style="border-radius:12px;">
+                <img class="width400" style="border-radius:12px;" loading="lazy" src="<?= mainModel::obtenerRutaImagenLocal('img_desc1') ?>" alt="Imagen del Slider">
+        </div><!--<c?php echo htmlspecialchars($imagenesLocal['img_desc1'], ENT_QUOTES, 'UTF-8'); ?>-->
     </div>
 </div>
-<!--aqui terminan los periodicos-->
+
+<div class="nuevoslider" style="background-color: <?php echo htmlspecialchars($coloresInicio[3] ?? '#FF5F5D', ENT_QUOTES, 'UTF-8'); ?>;">        
+    <div class="newslider width400" style="background-color:green;border-radius:12px;margin:30px;">
+        <div class="newslides width400" style="border-radius:12px;">
+                <img class="width400" style="border-radius:12px;" loading="lazy" src="<?= mainModel::obtenerRutaImagenLocal('img_desc2') ?>" alt="Imagen del Slider">
+        </div><!--<c?php echo htmlspecialchars($imagenesLocal['img_desc2'], ENT_QUOTES, 'UTF-8'); ?>-->
+    </div>
+    <div class="primer_slider_texto" style="background-color:inherit;display:flex;justify-content:center;align-items:center;flex-direction:column;margin:20px;width:50%;">
+        <h1 style="text-align:center;font-size:10rem;color: white;text-shadow: 4px 3px 0 #7A7A7A;"><?php echo htmlspecialchars($textosLocal['txt_titulo_info2'], ENT_QUOTES, 'UTF-8'); ?></h1>
+        <h1 style="text-shadow:0px 0px 10px rgba(15,7,4,0);text-align:center;"> <?php echo htmlspecialchars($textosLocal['txt_subtitulo_info2'], ENT_QUOTES, 'UTF-8'); ?></h1>
+    </div>
+</div>
+
+<div class="nuevoslider" style="background-color: <?php echo htmlspecialchars($coloresInicio[4] ?? '#FF5F5D', ENT_QUOTES, 'UTF-8'); ?>;">
+    <div class="primer_slider_texto" style="background-color:inherit;display:flex;justify-content:center;align-items:center;flex-direction:column;margin:20px;width:50%;">
+        <h1 style="text-align:center;font-size:10rem;color: white;text-shadow: 4px 3px 0 #7A7A7A;"><?php echo htmlspecialchars($textosLocal['txt_titulo_info3'], ENT_QUOTES, 'UTF-8'); ?></h1>
+        <h1 style="text-shadow:0px 0px 10px rgba(15,7,4,0);text-align:center;"><?php echo htmlspecialchars($textosLocal['txt_subtitulo_info3'], ENT_QUOTES, 'UTF-8'); ?></h1>
+    </div>       
+    <div class="newslider width400" style="background-color:green;border-radius:12px;margin:30px;">
+        <div class="newslides width400" style="border-radius:12px;">
+                <img class="width400" style="border-radius:12px;" loading="lazy" src="<?= mainModel::obtenerRutaImagenLocal('img_desc3') ?>" alt="Imagen del Slider">
+        </div><!--<c?php echo htmlspecialchars($imagenesLocal['img_desc3'], ENT_QUOTES, 'UTF-8'); ?>-->
+    </div>
+</div>
+
+
+
 <div class="space"></div>
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-
-
-
-
-
-
-
 
 
 <!--facebook y comentarios-->
@@ -402,7 +518,8 @@ registrar_visita($pdo, $idIP);
     <!-- style="overflow:hidden;border-radius:8px;width:300px;height:535px;margin:4%;"-->
     <div class="div_facebook">
     <!--style="width:300px;height:550px;"-->    
-    	<iframe class="pedro div_iframe_facebook" src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F2854427401381978%2F&show_text=false&width=267&t=0" width="267" height="476" style="border:none;overflow:hidden;" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
+        <!--src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F2854427401381978%2F&show_text=false&width=267&t=0" -->
+    	<iframe class="pedro div_iframe_facebook" src="<?php echo htmlspecialchars($textosLocal['url_add'], ENT_QUOTES, 'UTF-8'); ?>" width="267" height="476" style="border:none;overflow:hidden;" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
     </div>
 
 	<br><br><br>
@@ -418,24 +535,24 @@ registrar_visita($pdo, $idIP);
                 	<section class="cmt_doble cmt_doble_1_1">
                     	<section class="cmt cmt_1_1">
                         	<section class="datos_cmt">
-                            	<p><b>Juan Osorio</b></p>
+                            	<p><b><?php echo htmlspecialchars($textosLocal['nombre_com1'], ENT_QUOTES, 'UTF-8'); ?></b></p>
                         	</section>
-                        <p>"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut"</p>
+                        <p><?php echo htmlspecialchars($textosLocal['texto_com1'], ENT_QUOTES, 'UTF-8'); ?></p>
                     	</section>	
 
                 		<section class="cmt cmt_1_2">
                         	<section class="datos_cmt">
-                            	<p><b>Angela Arevalo</b></p>
+                            	<p><b><?php echo htmlspecialchars($textosLocal['nombre_com2'], ENT_QUOTES, 'UTF-8'); ?></b></p>
                         	</section>
-                        <p>"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."</p>
+                        <p><?php echo htmlspecialchars($textosLocal['texto_com2'], ENT_QUOTES, 'UTF-8'); ?></p>
                    		</section>
                 	</section>
                     
                     <section class="cmt_unitario cmt_unitario_1_1">
                         <section class="datos_cmt">
-                                <p><b>Luán Gomez</b></p>
+                            	<p><b><?php echo htmlspecialchars($textosLocal['nombre_com3'], ENT_QUOTES, 'UTF-8'); ?></b></p>
                         </section>
-                        <p>"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation uLorem ipsum dolor sit amet, consectetur"</p>
+                        <p><?php echo htmlspecialchars($textosLocal['texto_com3'], ENT_QUOTES, 'UTF-8'); ?></p>
                     </section>
                     
             	</div>
@@ -443,44 +560,7 @@ registrar_visita($pdo, $idIP);
 
 
 
-            <div class="multislide clase-extra">
-                <div class="bloque_cmts">
-                    
-                    <section class="cmt_doble cmt_doble_2_1">
-                        <section class="cmt cmt_2_1">
-                            <section class="datos_cmt">
-                                <p><b>Carla Carvallo</b></p>
-                            </section>
-                            <p>"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation uLorem ipsum dolor sit amet, consectetur ad"</p>
-                        </section>	
-                        
-                        <section class="cmt cmt_2_2">
-                            <section class="datos_cmt">
-                                <p><b>Lia Juarez</b></p>
-                            </section>
-                            <p>"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore"</p>
-                        </section>
-                    </section>
-
-                    <section class="cmt_doble cmt_doble_2_2">
-                        <section class="cmt cmt_2_3">
-                            <section class="datos_cmt">
-                                <p><b>Prof. Pedro Parques</b></p>
-                            </section>
-                            <p>"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed"</p>
-                        </section>	
-
-                        <section class="cmt cmt_2_4">
-                            <section class="datos_cmt">
-                                <p><b>Adrian Villegas</b></p>
-                            </section>
-                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation uLorem ipsum"</p>
-                        </section>
-                    </section>
-                    
-                </div>
-            </div>
-
+       
 
 
             <div class="multislide clase-extra">
@@ -489,24 +569,24 @@ registrar_visita($pdo, $idIP);
                     <section class="cmt_doble cmt_doble_3_1">
                         <section class="cmt cmt_3_1">
                             <section class="datos_cmt">
-                                <p><b>Silvia Suarez</b></p>
+                            	<p><b><?php echo htmlspecialchars($textosLocal['nombre_com4'], ENT_QUOTES, 'UTF-8'); ?></b></p>
                             </section>
-                            <p>"orem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna"</p>
+                        <p><?php echo htmlspecialchars($textosLocal['texto_com4'], ENT_QUOTES, 'UTF-8'); ?></p>
                         </section>	
 
                         <section class="cmt cmt_3_2" >
                             <section class="datos_cmt">
-                                <p><b>Armando Torrealba</b></p>
+                            	<p><b><?php echo htmlspecialchars($textosLocal['nombre_com5'], ENT_QUOTES, 'UTF-8'); ?></b></p>
                             </section>
-                            <p>"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veni"</p>
+                        <p><?php echo htmlspecialchars($textosLocal['texto_com5'], ENT_QUOTES, 'UTF-8'); ?></p>
                         </section>
                     </section>
 
                     <section class="cmt_unitario cmt_unitario_3_1">
                         <section class="datos_cmt">
-                            <p><b>Eduard Padrón</b></p>
+                            	<p><b><?php echo htmlspecialchars($textosLocal['nombre_com6'], ENT_QUOTES, 'UTF-8'); ?></b></p>
                         </section>
-                        <p>"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation u"</p>
+                        <p><?php echo htmlspecialchars($textosLocal['texto_com6'], ENT_QUOTES, 'UTF-8'); ?></p>
                     </section>
                     
                 </div>
@@ -519,23 +599,23 @@ registrar_visita($pdo, $idIP);
                     
                     <section class="cmt_unitario cmt_unitario_4_1">
                         <section class="datos_cmt">
-                            <p><b>Andresio herreira</b></p>
+                            	<p><b><?php echo htmlspecialchars($textosLocal['nombre_com7'], ENT_QUOTES, 'UTF-8'); ?></b></p>
                         </section>
-                        <p>"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim "</p>
+                        <p><?php echo htmlspecialchars($textosLocal['texto_com7'], ENT_QUOTES, 'UTF-8'); ?></p>
                     </section>
 
                     <section class="cmt_unitario cmt_unitario_4_2">
                         <section class="datos_cmt">
-                            <p><b>Olivio del Soto</b></p>
+                            	<p><b><?php echo htmlspecialchars($textosLocal['nombre_com8'], ENT_QUOTES, 'UTF-8'); ?></b></p>
                         </section>
-                        <p>"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation uLorem ipsum dolor sit amet, co"</p>
+                                <p><?php echo htmlspecialchars($textosLocal['texto_com8'], ENT_QUOTES, 'UTF-8'); ?></p>
                     </section>
 
                     <section class="cmt_unitario cmt_unitario_4_3">
                         <section class="datos_cmt">
-                            <p><b>Prof. Ignacio Rosales</b></p>
+                            	<p><b><?php echo htmlspecialchars($textosLocal['nombre_com9'], ENT_QUOTES, 'UTF-8'); ?></b></p>
                         </section>
-                        <p>"Gracias al curso horneo un pan para mi abuela todos los fines de semana."</p>
+                        <p><?php echo htmlspecialchars($textosLocal['texto_com9'], ENT_QUOTES, 'UTF-8'); ?></p>
                     </section>
                     
                 </div>
@@ -549,61 +629,45 @@ registrar_visita($pdo, $idIP);
 
 
 
-
-
-
-
-<!--los profesores-->
 <div class="flex_def div_slider_profes">
     <div class="multislider-container" id="sliderpr" style="width:80%;">
         <div class="multislider-content" style="height:100%;">
-            
             <?php for ($i = 0; $i < count($profesores); $i += 2): ?>
-
-                <div class="multislide">     
+                <div class="multislide">
                     <section class="div_tarjetas_profes">
-
                         <?php if (isset($profesores[$i])): ?>
                             <section class="tarjeta_profe">
-
                                 <section class="datos_profe">
-                                    <img loading="lazy" src="../vistas/<?php echo htmlspecialchars($profesores[$i]['imagen_profesor']); ?>" alt="<?php echo htmlspecialchars($profesores[$i + 1]['nombre_profesor']); ?>">
+                                    <img loading="lazy" src="../vistas/<?php echo htmlspecialchars($profesores[$i]['imagen_profesor']); ?>" alt="<?php echo htmlspecialchars($profesores[$i]['nombre_profesor']); ?>">
                                     <p><b>Prof. <?php echo htmlspecialchars($profesores[$i]['nombre_profesor'] . ' ' . $profesores[$i]['apellido_profesor']); ?></b></p>
                                 </section>
-
                                 <p><?php echo htmlspecialchars($profesores[$i]['descripcion']); ?></p>
-
                                 <section class="contactos_profe">
-                                    <section class="datos_contactos_profe" >
+                                    <section class="datos_contactos_profe">
                                         <i class='bx bx-phone'></i> <p><?php echo htmlspecialchars($profesores[$i]['telefono_profesor']); ?></p>
                                     </section>
-                                    <section class="datos_contactos_profe" >
+                                    <section class="datos_contactos_profe">
                                         <i class='bx bx-envelope'></i> <p><?php echo htmlspecialchars($profesores[$i]['correo']); ?></p>
                                     </section>
                                 </section>
-
                             </section>
                         <?php endif; ?>
 
                         <?php if (isset($profesores[$i + 1])): ?>
-                            <section class="tarjeta_profe" >
-
+                            <section class="tarjeta_profe">
                                 <section class="datos_profe">
                                     <img loading="lazy" src="../vistas/<?php echo htmlspecialchars($profesores[$i + 1]['imagen_profesor']); ?>" alt="<?php echo htmlspecialchars($profesores[$i + 1]['nombre_profesor']); ?>">
                                     <p><b>Prof. <?php echo htmlspecialchars($profesores[$i + 1]['nombre_profesor'] . ' ' . $profesores[$i + 1]['apellido_profesor']); ?></b></p>
                                 </section>
-
                                 <p><?php echo htmlspecialchars($profesores[$i + 1]['descripcion']); ?></p>
-
                                 <section class="contactos_profe">
-                                    <section class="datos_contactos_profe" >
+                                    <section class="datos_contactos_profe">
                                         <i class='bx bx-phone'></i> <p><?php echo htmlspecialchars($profesores[$i + 1]['telefono_profesor']); ?></p>
                                     </section>
-                                    <section class="datos_contactos_profe" >
+                                    <section class="datos_contactos_profe">
                                         <i class='bx bx-envelope'></i> <p><?php echo htmlspecialchars($profesores[$i + 1]['correo']); ?></p>
                                     </section>
                                 </section>
-
                             </section>
                         <?php endif; ?>
                     </section>
@@ -612,14 +676,10 @@ registrar_visita($pdo, $idIP);
         </div>
         <button class="nav-button prev-button" onclick="navigateSlider('sliderpr', -1)">←</button>
         <button class="nav-button next-button" onclick="navigateSlider('sliderpr', 1)">→</button>
-        <br>
-        <br>
+        <br><br>
     </div>
     <br>
-</div><!--aqui terminan los profes-->
-
-
-
+</div>
 
 
 
@@ -638,11 +698,11 @@ registrar_visita($pdo, $idIP);
 <div class="div_contactos">
     <div class="enlaces_div_circulos">
         
-        <div class="boton_contactos btn_contactos_animacion btn_contactos_clr1" onclick="window.open('<?php echo htmlspecialchars($info['link_facebook']); ?>', '_blank');">
+        <div class="boton_contactos btn_contactos_animacion btn_contactos_clr1" onclick="window.open('<?php echo $facebookInicio; ?>', '_blank');">
             <img src="../vistas/assets/img/feici.webp">
         </div>
         
-        <div class="boton_contactos btn_contactos_animacion btn_contactos_clr2" onclick="window.open('<?php echo htmlspecialchars($info['link_instagram']); ?>', '_blank');">
+        <div class="boton_contactos btn_contactos_animacion btn_contactos_clr2" onclick="window.open('<?php echo $instagramInicio; ?>', '_blank');">
             <img src="../vistas/assets/img/insta.webp">
         </div>
         
@@ -651,17 +711,17 @@ registrar_visita($pdo, $idIP);
         </div>
         
         <div class="div_tlfno_correo">
-            <div class="boton_contactos_animacion2 btn_contactos_clr4" onclick="window.open('https://wa.me/<?php echo htmlspecialchars($info['telefono_contacto']); ?>', '_blank')" id="botonTelefono">
+            <div class="boton_contactos_animacion2 btn_contactos_clr4" onclick="window.open('https://wa.me/<?php echo $telefonoInicio; ?>', '_blank')" id="botonTelefono">
                 <img src="../vistas/assets/img/phoni1.webp">
         	</div>
-            <article id="mensajeTelefono" class="hiddenz"><?php echo htmlspecialchars($info['telefono_contacto']); ?></article>
+            <article id="mensajeTelefono" class="hiddenz"><?php echo $telefonoInicio; ?></article>
         </div>
        
         <div class="div_tlfno_correo">    
-            <div class="boton_contactos_animacion2 btn_contactos_animacion btn_contactos_clr5" onclick="window.open('mailto:<?php echo htmlspecialchars($info['correo_contacto']); ?>?subject=Asunto%20predefinido&body=Hola,%20quiero%20contactarte')" id="botonEmail">
+            <div class="boton_contactos_animacion2 btn_contactos_animacion btn_contactos_clr5" onclick="window.open('mailto:<?php echo $correoInicio; ?>?subject=Asunto%20predefinido&body=Hola,%20quiero%20contactarte')" id="botonEmail">
                 <img src="../vistas/assets/img/carta1.webp">
             </div>
-            <article id="mensajeEmail" class="hiddenz"><?php echo htmlspecialchars($info['correo_contacto']); ?></article>
+            <article id="mensajeEmail" class="hiddenz"><?php echo $correoInicio; ?></article>
         </div>   
     
     </div>
@@ -674,24 +734,26 @@ registrar_visita($pdo, $idIP);
             <section class="mapasfotos div_mapas_texto">
                 <section class="mapastexto mapas_texto">
                     <h3>Encuéntranos</h3>
-                    <p ><?php echo htmlspecialchars($info['direccion_local_ciudad']); ?></p>
-                    <p ><?php echo htmlspecialchars($info['direccion_local_pais']); ?></p>
+                    <p ><?php echo $ciudadInicio; ?></p>
+                    <p ><?php echo $paisInicio; ?></p>
                 </section>
-                <img loading="lazy" src="../vistas/<?php echo htmlspecialchars($info['ruta_local']); ?>">
+                <img loading="lazy" src="<?= mainModel::obtenerRutaImagenLocal('local') ?>">
+                <!--?php echo htmlspecialchars($imagenesLocal['loca'], ENT_QUOTES, 'UTF-8'); ?-->
             </section>
                                                            
             <section class="multislider-container flex_def" id="slidiomapas">
   				<section class="multislider-content" style="overflow:visible;">
-                    <!--display:flex;justify-content:center;align-items:center;-->
                     <section class="multislide flex_def" style="overflow:visible;">        
-                        <a style="margin:auto;overflow:visible;" href="../vistas/<?php echo htmlspecialchars($info['ruta_mapa']); ?>" target="_blank">
-                            <img loading="lazy" class="mapa_desplazante" width="91%" src="../vistas/<?php echo htmlspecialchars($info['ruta_mapa']); ?>">
+                        <a style="margin:auto;overflow:visible;" href="<?php echo htmlspecialchars($imagenesLocal['mapa_google'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank">
+                            <img loading="lazy" class="mapa_desplazante" width="91%" src="<?= mainModel::obtenerRutaImagenLocal('mapa_google') ?>">
+                            <!--<c?php echo htmlspecialchars($imagenesLocal['mapa_google'], ENT_QUOTES, 'UTF-8'); ?>-->
                         </a>
                     </section>
-                    <!-- style="display:flex;justify-content:center;align-items:center;"-->
+         
                     <section class="multislide flex_def">
-                        <a style="margin:auto;" href="../vistas/<?php echo htmlspecialchars($info['ruta_satelite']); ?>" target="_blank">
-                            <img loading="lazy" class="mapa_desplazante" width="91%" src="../vistas/<?php echo htmlspecialchars($info['ruta_satelite']); ?>">
+                        <a style="margin:auto;" href="<?php echo htmlspecialchars($imagenesLocal['mapa_vista_satelital'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank">
+                            <img loading="lazy" class="mapa_desplazante" width="91%" src="<?= mainModel::obtenerRutaImagenLocal('mapa_vista_satelital') ?>">
+                            <!--<c?php echo htmlspecialchars($imagenesLocal['mapa_vista_satelital'], ENT_QUOTES, 'UTF-8'); ?>-->
                         </a>
                     </section>            
             	</section>
@@ -712,7 +774,7 @@ registrar_visita($pdo, $idIP);
         <?php foreach ($imgn1 as $image): ?>
             <?php if ($image): ?>
                 <div class="slidio">
-                    <img loading="lazy" src="../vistas/<?php echo htmlspecialchars($image); ?>" alt="Slider Image">
+                    <img loading="lazy" src="<?php echo htmlspecialchars($image); ?>" alt="Slider Image">
                 </div>
             <?php else: ?>
                 <p>No se encontró la imagen <?php echo htmlspecialchars($image); ?></p>
@@ -721,7 +783,7 @@ registrar_visita($pdo, $idIP);
         <?php foreach ($imgn1 as $image): ?>
             <?php if ($image): ?>
                 <div class="slidio">
-                    <img loading="lazy" src="../vistas/<?php echo htmlspecialchars($image); ?>" alt="Slider Image">
+                    <img loading="lazy" src="<?php echo htmlspecialchars($image); ?>" alt="Slider Image">
                 </div>
             <?php else: ?>
                 <p>No se encontró la imagen <?php echo htmlspecialchars($image); ?></p>
@@ -734,48 +796,50 @@ registrar_visita($pdo, $idIP);
 
 
 
-<!--creditos-->
-<div class="footer_fondo" style="background-image: url('../vistas/assets/img/graduacion.webp');">
-	<p>Hoy somos reconocidos como la academia más grande del Estado Guárico, contando con modalidades de estudio permanentes reconocidas nacional e internacionalmente. Tenemos convenios importantes con fundaciones y universidades nacionales como la UPEL, la UNERG, la Fundación Casa Arturo Uslar Prieti y la Fundación Banesco. Estamos registrados formalmente como academia formadora de emprendedores ante el INCES y pertenecemos al Sistema Nacional de Emprendedores e Innovadores.</p>
+<!--creditos <c?php echo htmlspecialchars($imagenesLocal['img_footer'], ENT_QUOTES, 'UTF-8'); ?>-->
+<div class="footer_fondo" style="background-image: url('<?= mainModel::obtenerRutaImagenLocal('img_footer') ?>');">
+    <!--p><c?php echo inicioLocalText('txt_titulo_footer', 'Hoy somos reconocidos como la academia más grande del Estado Guárico,
+ contando con modalidades de estudio permanentes reconocidas nacional e internacionalmente. Tenemos convenios importantes con fundaciones y universidades nacionales como la UPEL,
+ la UNERG, la Fundación Casa Arturo Uslar Prieti y la Fundación Banesco.
+ Estamos registrados formalmente como academia formadora de emprendedores ante el INCES y pertenecemos al Sistema Nacional de Emprendedores e Innovadores.', $textosLocal); ?></p-->
+    <p><?php echo htmlspecialchars($textosLocal['txt_titulo_footer'], ENT_QUOTES, 'UTF-8'); ?></p>
 </div>
 
 <div class="creditos footer">
-	<p>Somos el Centro Educativo Profesional Cecilio Acosta</p>
-    <p>¡Sinónimo de Excelencia!</p>
-    
-    
+    <!--?php echo htmlspecialchars($textosLocal['nombre_completo'], ENT_QUOTES, 'UTF-8'); ?-->
+    <p>RIF: <?php echo $rif; ?></p>
+    <p><?php echo htmlspecialchars($textosLocal['txt_ult_subtitulo_footer'], ENT_QUOTES, 'UTF-8'); ?></p>
+        
     <section class="tlfno_y_correo_footer flex_def">
         <section class="datos_tlfno_y_correo_footer flex_def">
-            <i class='bx bx-phone'></i>    <p><?php echo htmlspecialchars($info['telefono_contacto']); ?></p>
+            <i class='bx bx-phone'></i>    <p><?php echo $telefonoInicio; ?></p>
         </section>
         <section class="datos_tlfno_y_correo_footer flex_def">
-            <i class='bx bx-envelope'></i> <p><?php echo htmlspecialchars($info['correo_contacto']); ?></p>
+            <i class='bx bx-envelope'></i> <p><?php echo $correoInicio; ?></p>
         </section>
     </section>
     
     <div class="footer_creditos">
-    	
         <div class="footer_creditos_imagen">
-            <img src="../vistas/assets/img/logoceprocahd1.webp" alt="porqueno">
+            <img src="<?= mainModel::obtenerRutaImagenLocal('logo') ?>" alt="porqueno"><!--<c?php echo htmlspecialchars($imagenesLocal['logo'], ENT_QUOTES, 'UTF-8'); ?>-->
         </div>
     	
         <div class="footer_creditos_siguenos">
         	<p>Síguenos</p>
             <div class="footer_creditos_siguenos_enlaces">
-                <a class="footer_creditos_siguenos_enlaces1" href="<?php echo htmlspecialchars($info['link_instagram']); ?>" target="_blank">
+                <a class="footer_creditos_siguenos_enlaces1" href="<?php echo $instagramInicio; ?>" target="_blank">
                     <img src="../vistas/assets/img/insta.webp" alt="porqueno" width="20" height="20">
                 </a>
-                <a class="footer_creditos_siguenos_enlaces2"  href="<?php echo htmlspecialchars($info['link_facebook']); ?>" target="_blank">
+                <a class="footer_creditos_siguenos_enlaces2"  href="<?php echo $facebookInicio; ?>" target="_blank">
                     <img src="../vistas/assets/img/feici.webp" alt="porqueno" width="20" height="20">
                 </a>
             </div>
         </div>
     	
         <div class="footer_creditos_copi">
-            <p>© Centro Educativo Profesional Cecilio Acosta.CEPROCA.2024</p>
+            <p>© <?php echo htmlspecialchars($textosLocal['nombre_completo'], ENT_QUOTES, 'UTF-8'); ?>.<?php echo date('Y'); ?></p>
             <p><b class="arroba tooltip" data-tooltip="quaglia.marin.miguel@gmail.com&#10;santiagosan2022@gmail.com">&#128231;</b>  Made by Oliver Martinez and Miguel Quaglia</p>
         </div>
-        
     </div>
 </div><!--creditos-->
 
@@ -785,12 +849,25 @@ registrar_visita($pdo, $idIP);
 <!--script src="./vistas/js/scriptpublic1.js"></script-->
 
 <script>
-function redirigirACurso(idCurso, idBanner,otroValor) {
-   //window.location.href = "aiframemateria3-copia.php?id=" + idCurso + "&banner=" + idBanner + "&valor=" + otroValor;
-   window.location.href = "vistas/contenidos/public/aiframemateria3-copia.php?id=" + idCurso + "&banner=" + idBanner + "&valor=" + otroValor;
+
+
+
+    
+//  registra la interaccion y redirije  
+function registrarYRedirigir(idEncriptado) {
+    fetch('<?= SERVERURL ?>ajax/publicoAjax.php?accion=registrar_interaccion&id=' + encodeURIComponent(idEncriptado))
+        .then(res => res.json())
+        .then(data => {
+            // Redirigir a la vista de detalle con el id encriptado
+            window.location.href = '<?= SERVERURL ?>index.php?views=cursos-detail&id=' + encodeURIComponent(idEncriptado);
+        })
+        .catch(() => {
+            // Si falla el registro, igual redirigimos
+            window.location.href = '<?= SERVERURL ?>index.php?views=cursos-detail&id=' + encodeURIComponent(idEncriptado);
+        });
 }
-
-
+    
+    
 //boton de ir arriba
 var cajax=document.getElementById("ir_arriba");
 cajax.addEventListener("click",function(){

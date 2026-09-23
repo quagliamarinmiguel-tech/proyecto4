@@ -40,7 +40,8 @@
                 }
 
                 // 2. Validar solapamiento de fechas
-                if($_GET['accion'] === 'validar_solapamiento_fechas') {
+            /*    
+            if($_GET['accion'] === 'validar_solapamiento_fechas') {
                     $tipo = mainModel::limpiar_cadena($_GET['tipo']);
                     $fechaInicio = mainModel::limpiar_cadena($_GET['fecha_inicio']);
                     $fechaFin = mainModel::limpiar_cadena($_GET['fecha_fin']);
@@ -50,7 +51,7 @@
                     $fechaSolapada = $controlador->validar_fecha_no_solapada($tipo, $fechaInicio, $fechaFin, $alterno, $excluir);
                     echo json_encode($fechaSolapada);
                     exit();
-                }
+                }*/
 
                 // 3. Obtener último cohorte
                 if ($_GET['accion'] === 'obtener_ultimo_cohorte') {
@@ -62,44 +63,7 @@
                     exit();
                 }            
             
-            
-            /* no tiene lo de cohorte alterno
-            //vigia que no haya un mismo cohorte del mismo numero, anio y tipo
-            //retorna true o false, if true means el cohorte esta duplicado
-            if ($_GET['accion'] === 'validar_cohorte_unico' && isset($_GET['tipo']) && isset($_GET['anio'])) {
-                $numero = mainModel::limpiar_cadena($_GET['numero']);
-                $anio = mainModel::limpiar_cadena($_GET['anio']);
-                $tipo = mainModel::limpiar_cadena($_GET['tipo']);
-                $id = isset($_GET['id']) ? mainModel::limpiar_cadena($_GET['id']) : null;
-
-                $cohorteUnico = $controlador->validar_cohorte_no_duplicado($numero,$anio,$tipo, $id);
-                echo json_encode($cohorteUnico);
-                exit();
-            }
-            
-            //vigila que las fechas no se solapen
-            if($_GET['accion'] === 'validar_solapamiento_fechas' && isset($_GET['tipo']) && isset($_GET['fecha_inicio']) && isset($_GET['fecha_fin'])) {
-                $tipo = mainModel::limpiar_cadena($_GET['tipo']);
-                $fechaInicio = mainModel::limpiar_cadena($_GET['fecha_inicio']);
-                $fechaFin = mainModel::limpiar_cadena($_GET['fecha_fin']);
-                $excluir = isset($_GET['excluir']) ? mainModel::limpiar_cadena($_GET['excluir']) : ''; //es el id
-                
-                $fechaSolapada = $controlador->validar_fecha_no_solapada($tipo, $fechaInicio, $fechaFin,$excluir); //nose si poner $excluir=null
-                echo json_encode($fechaSolapada);
-                exit();
-            }
-            
-            // Obtener último cohorte para mostrar información (para cohorte-new y cohorte-update)
-            if ($_GET['accion'] === 'obtener_ultimo_cohorte' && isset($_GET['tipo']) && isset($_GET['anio'])) {
-                $tipo = mainModel::limpiar_cadena($_GET['tipo']);
- 			    //$anio = mainModel::limpiar_cadena($_GET['anio']);
-    			$excluir = isset($_GET['excluir']) ? mainModel::limpiar_cadena($_GET['excluir']) : '';
-                
-                $contexto = $controlador->validar_traer_ultimo_cohorte($tipo,$excluir); //nose si poner $excluir=null
-                echo json_encode($contexto);
-                exit();
-            }*/
- 
+           
             
         }
 

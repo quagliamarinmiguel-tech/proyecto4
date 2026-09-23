@@ -27,8 +27,8 @@ $carpeta = $carpetasPorCargo[$cargo] ?? "admin";
 
     $datos_curso = $ins_curso->datos_curso_controlador("Unico", $course_id);
 
-    if($datos_curso->rowCount()==1){
-        $campos = $datos_curso->fetch();
+    if(is_array($datos_curso) && !empty($datos_curso)){
+      $campos = $datos_curso;
         $tipoFijo = $ins_curso->verificar_curso_periodo_existente($course_id);
 
 ?>
@@ -89,7 +89,7 @@ button[disabled] {
 
 <div class="full-box page-header">
     <h3 class="text-left">
-        <i class="fas fa-sync-alt fa-fw"></i> &nbsp; ACTUALIZAR CURSO #<?php echo $campos['id_curso']; ?>
+      <i class="fas fa-sync-alt fa-fw"></i> &nbsp; ACTUALIZAR CURSO #<?php echo $campos['id']; ?>
     </h3>
     <p class="text-justify">
         Actualiza la información del curso seleccionado. Todos los campos son obligatorios.
@@ -115,7 +115,7 @@ button[disabled] {
 <div class="container-fluid">
     <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/cursoAjax.php" method="POST" data-form="update" autocomplete="off">
 
-        <input type="hidden" name="curso_id_up" id="curso_id" value="<?php echo $campos['id_curso']; ?>">
+        <input type="hidden" name="curso_id_up" id="curso_id" value="<?php echo $campos['id']; ?>">
 
         <fieldset>
             <legend><i class="fas fa-book fa-fw"></i> &nbsp; Información del curso</legend>
@@ -132,7 +132,7 @@ button[disabled] {
                     <div class="col-12 col-md-6">
                         <div class="form-group">
                             <label for="curso_nombre" class="bmd-label-floating">Nombre del curso</label>
-                            <input type="text" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ](?:[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{0,59})" class="form-control" name="curso_nombre_up" id="curso_nombre" maxlength="100" value="<?php echo htmlspecialchars($campos['nombre_curso']); ?>" required="">
+                            <input type="text" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ](?:[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{0,59})" class="form-control" name="curso_nombre_up" id="curso_nombre" maxlength="100" value="<?php echo htmlspecialchars($campos['name']); ?>" required="">
                         </div>
                     </div>
                     <div class="col-12 col-md-6">
@@ -141,15 +141,15 @@ button[disabled] {
                       
                         <?php if ($tipoFijo): ?>
                             <select class="form-control" name="curso_tipo_up" id="curso_tipo" disabled>
-                                <option value="<?php echo $tipoFijo; ?>" selected><?php echo $tipoFijo; ?></option>
+                                <option value="<?php echo htmlspecialchars($campos['type']); ?>" selected><?php echo htmlspecialchars($campos['type']); ?></option>
                             </select>
                             <input type="hidden" name="curso_tipo_up" value="<?php echo $tipoFijo; ?>">
                             <div class="form-text text-muted">Este curso está vinculado a un periodo intensivo o en un cohorte. No se puede cambiar el tipo.</div>
                         <?php else: ?>
                             <select class="form-control" name="curso_tipo_up" id="curso_tipo" required>
-                                <option value="Intensivo" <?php echo ($campos['tipo_curso']=='Intensivo') ? 'selected' : ''; ?>>Intensivo</option>
-                                <option value="Extendido" <?php echo ($campos['tipo_curso']=='Extendido') ? 'selected' : ''; ?>>Extendido</option>
-                                <option value="Técnico Profesional" <?php echo ($campos['tipo_curso']=='Técnico Profesional') ? 'selected' : ''; ?>>Técnico Profesional</option>
+                                <option value="Intensivo" <?php echo ($campos['type']=='Intensivo') ? 'selected' : ''; ?>>Intensivo</option>
+                                <option value="Extendido" <?php echo ($campos['type']=='Extendido') ? 'selected' : ''; ?>>Extendido</option>
+                                <option value="Técnico Profesional" <?php echo ($campos['type']=='Técnico Profesional') ? 'selected' : ''; ?>>Técnico Profesional</option>
                             </select>
                         <?php endif; ?>
                                   

@@ -3,36 +3,27 @@ if($_SESSION['cargo_spm']!=1 && $_SESSION['cargo_spm']!=4){
     echo $lc->forzar_cierre_sesion_controlador();
     exit();
     
-    
-    
-$cargo = $_SESSION['cargo_spm'] ?? 1;
+    $cargo = $_SESSION['cargo_spm'] ?? 1;
 
-$carpetasPorCargo = [
-    1 => "admin",
-    2 => "Control de estudio",
-    3 => "administrador de pagos",
-    4 => "Supervisor de cursos",
-    5 => "Estudiante"
-];
+    $carpetasPorCargo = [
+        1 => "admin",
+        2 => "Control de estudio",
+        3 => "administrador de pagos",
+        4 => "Supervisor de cursos",
+        5 => "Estudiante"
+    ];
 
-$carpeta = $carpetasPorCargo[$cargo] ?? "admin";
-
-    
-    
+    $carpeta = $carpetasPorCargo[$cargo] ?? "admin";
 }
-$pdo = mainModel::conectar();
-$sql = $pdo->query("
-    SELECT id_curso, nombre_curso, tipo_curso
-    FROM curso
-    WHERE estado_curso = 1
-      AND id_curso NOT IN (
-          SELECT id_curso FROM curso_publicidad
-      )
-    ORDER BY nombre_curso ASC
-");
-$cursos = $sql->fetchAll();
+// Cargar cursos sin publicidad desde el controlador
+require_once "./controladores/cursoPublicidadControlador.php"; // o cursoControlador
+$ctrl = new cursoPublicidadControlador();
+$cursos = $ctrl->obtener_cursos_sin_publicidad_controlador();
 ?>
+
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+
 
 
 
@@ -44,15 +35,15 @@ $cursos = $sql->fetchAll();
 </div>
 
 
-
-
 <div class="container-fluid">
     <ul class="full-box list-unstyled page-nav-tabs">
         <li>
             <a class="active" href="<?php echo SERVERURL . 'index.php?views=' . urlencode($carpeta) . '/cursop-new'; ?>"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVA PUBLICIDAD</a>
+
         </li>
         <li>
             <a href="<?php echo SERVERURL . 'index.php?views=' . urlencode($carpeta) . '/cursop-list'; ?>"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE PUBLICIDADES</a>
+
         </li>
     </ul>
 </div>
@@ -65,18 +56,18 @@ $cursos = $sql->fetchAll();
 
             <div class="form-group">
             <label for="id_curso">Curso</label>
-            <!--select name="id_curso" id="curso_up" class="form-control select2" required>
-                <option value="">Seleccione un curso</option>
-                <php
-                // Suponiendo que $cursos contiene los cursos activos
-                foreach($cursos as $curso){
-                    echo "<option value='{$curso['id_curso']}'>{$curso['nombre_curso']} ({$curso['tipo_curso']})</option>";
-                }
-                ?>
-            </select-->
-                <select name="id_curso" id="curso_up" class="form-control select2-ajax" required>
-                  <option value="">Seleccione un curso</option>
+                <!-- Select2 para seleccionar curso -->
+                <select name="id_curso" id="curso_up" class="form-control select2" required>
+                    <option value="">Seleccione un curso</option>
+                    <?php foreach ($cursos as $curso): ?>
+                        <option value="<?php echo $curso['id_curso']; ?>">
+                            <?php echo htmlspecialchars($curso['nombre_curso'] . ' (' . $curso['tipo_curso'] . ')'); ?>
+                        </option>
+                    <?php endforeach; ?>
                 </select>
+                <!--select name="id_curso" id="curso_up" class="form-control select2-ajax" required>
+                  <option value="">Seleccione un curso</option>
+                </select-->
             </div>
 
 
@@ -273,6 +264,27 @@ $cursos = $sql->fetchAll();
 
 
 
+<div id="modalAyuda" class="modal" tabindex="-1" style="display:none; position:fixed; z-index:9999; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.75);">
+  <div style="position:relative; margin:auto; top:10%; max-width:60%; background:#000; border:3px solid #fff; padding:20px; border-radius:8px;">
+    <img id="imgAyuda" src="" class="img-thumbnail" style="max-width:100%; height:auto; display:block; margin:auto; border:3px solid white;">
+    <button onclick="document.getElementById('modalAyuda').style.display='none'" style="position:absolute; top:10px; right:10px;background-color:red;" class="btn btn-sm btn-light">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+</div>
+
+<script>
+//modal
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".ver-ayuda").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const modal = document.getElementById("modalAyuda");
+      modal.querySelector("#imgAyuda").src = btn.dataset.src;
+      modal.style.display = "block";
+    });
+  });
+});
+</script>
 
 
 <!-- jQuery primero -->
@@ -285,7 +297,7 @@ $cursos = $sql->fetchAll();
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <!-- Inicialización -->
-<script>
+<!--script>
 $(document).ready(function() {
   $('#curso_up').select2({
     placeholder: "Seleccione un curso",
@@ -298,7 +310,7 @@ $(document).ready(function() {
       }
     },
     ajax: {
-      url: "<?php echo SERVERURL; ?>ajax/select2Ajax.php?accion=buscar_curso_publicidad",
+      url: "<c?php echo SERVERURL; ?>ajax/select2Ajax.php?accion=buscar_curso_publicidad",
       dataType: 'json',
       delay: 250,
       data: params => ({ q: params.term }),
@@ -312,25 +324,16 @@ $(document).ready(function() {
     }
   });
 });
+</script-->
+<script>
+    $(document).ready(function() {
+        $('.select2').select2({
+            placeholder: "Seleccione un curso",
+            allowClear: true,
+            width: '100%'
+        });
+    });
 </script>
-<!--script>
-  $(document).ready(function() {
-    $('.select2').select2({
-      placeholder: "Seleccione un curso",
-      allowClear: true,
-      width: '100%'
-    });
-  });
-</script-->
-
-<!--script>
-  $(document).ready(function() {
-    $('#curso_up').on('change', function() {
-      const selectedID = $(this).val();
-      $('#id_curso_seleccionado').val(selectedID);
-    });
-  });
-</script-->
 
 <script>
 //imagen
@@ -366,63 +369,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 </script>
-
-
-
-
-
-<!--
-contenidos sin required
--->
-            <!--div class="row">
-                <php
-                for($i = 1; $i <= 10; $i++){
-                    echo '
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Contenido '.$i.'</label>
-                        <input type="text" class="form-control" name="cont'.$i.'" maxlength="79">
-                    </div>';
-                }
-                ?>
-            </div-->
-
-<!---
-filas de aqui obtendras
--->
-
-            <!--div class="row">
-                <div class="col-md-4 mb-3 text-center">
-                    <label class="form-label">¿Es un curso Técnico Profesional?</label><br>
-                    <input type="checkbox" name="icono1" value="1">
-                </div>
-                <div class="col-md-4 mb-3 text-center">
-                    <label class="form-label">¿Se colabora con negocios y empresas?</label><br>
-                    <input type="checkbox" name="icono2" value="1">
-                </div>
-                <div class="col-md-4 mb-3 text-center">
-                    <label class="form-label">¿Hay prácticas y proyectos dentro y fuera de la institución?</label><br>
-                    <input type="checkbox" name="icono3" value="1">
-                </div>
-            </div-->
-
-
-
-            <!--div class="row">
-            <div class="col-md-4 mb-3 text-center">
-                <i class='bx bx-buildings' style="font-size: 2rem; color: #007bff;"></i><br>
-                <label class="form-label mt-2 fw-bold">¿Es un curso Técnico Profesional?</label><br>
-                <input type="checkbox" name="icono1" value="1">
-            </div>
-
-            <div class="col-md-4 mb-3 text-center">
-                <i class='bx bxs-wrench' style="font-size: 2rem; color: #28a745;"></i><br>
-                <label class="form-label mt-2 fw-bold">¿Se colabora con negocios y empresas?</label><br>
-                <input type="checkbox" name="icono2" value="1">
-            </div>
-
-            <div class="col-md-4 mb-3 text-center">
-                <i class='bx bx-bookmark-alt-minus' style="font-size: 2rem; color: #ffc107;"></i><br>
-                <label class="form-label mt-2 fw-bold">¿Hay prácticas y proyectos dentro y fuera de la institución?</label><br>
-                <input type="checkbox" name="icono3" value="1">
-            </div>
-            </div-->

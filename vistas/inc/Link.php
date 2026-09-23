@@ -37,6 +37,9 @@
 <link rel="stylesheet" href="<?php echo SERVERURL; ?>vistas/css/style.css"><!-- Normalize V8.0.1 -->
 <link rel="stylesheet" href="<?php echo SERVERURL; ?>vistas/css/normalize.css">
 
+<!--modo oscuro-->
+<link rel="stylesheet" href="<?php echo SERVERURL; ?>vistas/css/darkmode.css">
+
 <!-- Bootstrap V4.3 -->
 <link rel="stylesheet" href="<?php echo SERVERURL; ?>vistas/css/bootstrap.min.css">
 

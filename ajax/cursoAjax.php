@@ -7,6 +7,8 @@ ini_set('display_errors', 1);
 
 try {
     require_once "../config/APP.php";
+
+    session_start(['name' => 'SPM']);
     
     
     
@@ -22,21 +24,30 @@ try {
         
         // Llamar al controlador (el id puede ser null)
         $controlador = new cursoControlador();
-        $duplicado = $controlador->validar_curso_no_duplicado($nombre, $tipo, $id);
+        $accessToken = $_SESSION['auth_access_token'] ?? null;
+
+        if (!$accessToken) {
+            http_response_code(401);
+            echo json_encode(['ok' => false, 'message' => 'Sesión de Supabase no disponible.']);
+            exit();
+        }
+
+        $resultado = $controlador->validar_curso_no_duplicado_supabase($nombre, $tipo, $accessToken, $id);
+
+        if (!$resultado['ok']) {
+            http_response_code($resultado['status'] ?: 500);
+            echo json_encode(['ok' => false, 'message' => $resultado['message']]);
+            exit();
+        }
         
         // Devolver true si NO está duplicado (válido), false si está duplicado
-        echo json_encode(!$duplicado);
+        echo json_encode(empty($resultado['data']));
         exit();
     }
     
 
 
-    
-    
-    
-    
-
-    // 🔹 Acciones por POST
+    // Acciones por POST
     else if (isset($_POST['curso_nombre_reg']) || isset($_POST['curso_id_del']) || isset($_POST['curso_id_up']) || isset($_POST['curso_id_restore']) || isset($_POST['curso_id_archive'])) {
         require_once "../controladores/cursoControlador.php";
         $ins_curso = new cursoControlador();
@@ -85,106 +96,6 @@ try {
 
 
 
-
-
-
-
-    
-    
-    
-    
-    
-    
-    
-    
-
-    // 🔹 Validación en tiempo real (GET)
-    /*
-    if (isset($_GET['accion']) && $_GET['accion'] === 'validar_curso' && isset($_GET['nombre']) && isset($_GET['tipo'])) {
-        header('Content-Type: application/json');
-        require_once "../modelos/mainModel.php";
-
-        $nombre = mainModel::limpiar_cadena($_GET['nombre']);
-        $tipo = mainModel::limpiar_cadena($_GET['tipo']);
-
-        // Validar formato del nombre
-        if (mainModel::verificar_datos("[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ().,#\- ]{4,60}", $nombre)) {
-            echo json_encode([
-                "valido" => false,
-                "mensaje" => "El nombre no cumple con el formato requerido."
-            ]);
-            exit();
-        }
-
-        // Validar duplicado con parámetros seguros
-        $pdo = mainModel::conectar();
-        $sql = $pdo->prepare("SELECT id_curso FROM curso WHERE nombre_curso = :nombre AND estado_curso != 0 AND tipo_curso = :tipo");
-        $sql->bindParam(":nombre", $nombre);
-        $sql->bindParam(":tipo", $tipo);
-        $sql->execute();
-
-        if ($sql->rowCount() > 0) {
-            echo json_encode([
-                "valido" => false,
-                "mensaje" => "Ya existe un curso con ese nombre y tipo."
-            ]);
-            exit();
-        }
-
-        echo json_encode(["valido" => true]);
-        exit();
-    }
-
-    if (
-        isset($_GET['accion']) &&
-        $_GET['accion'] === 'validar_curso_edicion' &&
-        isset($_GET['nombre']) &&
-        isset($_GET['tipo']) &&
-        isset($_GET['id'])
-    ) {
-        header('Content-Type: application/json');
-        require_once "../modelos/mainModel.php";
-
-        $nombre = mainModel::limpiar_cadena($_GET['nombre']);
-        $tipo = mainModel::limpiar_cadena($_GET['tipo']);
-        $id    = mainModel::limpiar_cadena($_GET['id']);
-
-        
-        
-        // Validar formato                            pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ](?:[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{0,59}) aparte de q el patron original esta mal este no es necesario debido a q esto es mejor validalo en controlador directo
-
-        /*if (mainModel::verificar_datos("[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ().,#\- ]{4,60}", $nombre)) {
-            echo json_encode([
-                "valido" => false,
-                "mensaje" => "El nombre no cumple con el formato requerido."
-            ]);
-            exit();
-        }*
-
-        // Validar duplicado excluyendo el curso actual
-        $pdo = mainModel::conectar();
-        $sql = $pdo->prepare("
-            SELECT id_curso FROM curso
-            WHERE nombre_curso = :nombre AND tipo_curso = :tipo AND estado_curso != 0 AND id_curso != :id
-        ");
-        $sql->bindParam(":nombre", $nombre);
-        $sql->bindParam(":tipo", $tipo);
-        $sql->bindParam(":id", $id);
-        $sql->execute();
-
-        if ($sql->rowCount() > 0) {
-            echo json_encode([
-                "valido" => false,
-                "mensaje" => "Ya existe otro curso con ese nombre y tipo."
-            ]);
-            exit();
-        }
-
-        echo json_encode(["valido" => true]);
-        exit();
-    }
-
-*/
 
 
 

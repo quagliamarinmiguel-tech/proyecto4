@@ -63,9 +63,9 @@ $carpeta = $carpetasPorCargo[$cargo] ?? "admin";
 
     <div class="col-md-4">
       <label for="filtro_nombre">Nombre y Apellido</label>
-      <select name="filtro_nombre" id="filtro_nombre" class="form-control select2">
+      <!--select name="filtro_nombre" id="filtro_nombre" class="form-control select2">
         <option value="">Todos los profesores</option>
-        <?php
+        <php
           $conexion = mainModel::conectar();
           $profesores = $conexion->query("SELECT id_profesor, nombre_profesor, apellido_profesor FROM profesor WHERE estado_profesor = 0 ORDER BY nombre_profesor ASC");
           foreach ($profesores as $prof) {
@@ -75,7 +75,7 @@ $carpeta = $carpetasPorCargo[$cargo] ?? "admin";
               echo '<option value="' . $id . '" ' . $selected . '>' . $nombreCompleto . '</option>';
           }
         ?>
-      </select>
+      </select-->
     </div>
 
     <div class="col-md-3">
@@ -94,8 +94,8 @@ $carpeta = $carpetasPorCargo[$cargo] ?? "admin";
   </div>
 </form>
 <!-- 📋 Tabla de resultados -->
-<div class="container-fluid">
-    <?php
+<!--div class="container-fluid">
+    <php
         require_once "./controladores/profesorControlador.php";
         $ins_profesor = new profesorControlador();
 
@@ -103,7 +103,25 @@ $carpeta = $carpetasPorCargo[$cargo] ?? "admin";
 
         echo $ins_profesor->paginador_profesor_archivado_controlador($pagina_actual, 15, "profesor-list-archived", "");
     ?>
+</div-->
+
+
+
+<div class="container-fluid">
+    <?php
+        require_once "./controladores/profesorControlador.php";
+        $ins_profesor = new profesorControlador();
+        $pagina = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        //echo $ins_profesor->paginador_profesor_controlador($pagina, 10, "profesor-list", "");
+        echo $ins_profesor->paginador_profesor_controlador($pagina, 15, 'profesor-list-archived', $_GET['busqueda'] ?? '',0);
+    ?>
 </div>
+
+
+
+
+
+
 
 <!-- Select2 -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

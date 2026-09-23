@@ -1,47 +1,32 @@
 <?php
 
-	// Credenciales de Supabase
-//	const SERVER="https://uxzthiwwpxurhlcbecwh.supabase.com"; // Reemplaza con el host que te da Supabase en los settings de tu base de datos
-//	const PORT="6543"; // Generalmente Supabase recomienda el puerto 6543 para conexiones desde aplicaciones (Connection Pooler) o 5432.
-//	const DB="postgres"; // La base de datos por defecto en Supabase casi siempre es "postgres"
-	
-//	const USER="postgres.quagliamarinmiguel-tech"; // Tu usuario de Supabase (reemplaza las x con tu id de proyecto)
-//	const PASS="1234"; // La contraseña de la base de datos de tu proyecto
+/**
+ * Configuración principal del sistema.
+ * Para Supabase REST/PostgREST usando la clave anon.
+ */
 
-	// ⚠️ IMPORTANTE: Cambiamos "mysql" por "pgsql" y añadimos el puerto
-//	const SGBD="pgsql:host=".SERVER.";port=".PORT.";dbname=".DB;
+// URL del proyecto Supabase
+const SUPABASE_URL = "https://uxzthiwwpxurhlcbecwh.supabase.co";
 
+// Clave anon para consultas desde PHP/backend de confianza
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV4enRoaXd3cHh1cmhsY2JlY3doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Nzg4NjgsImV4cCI6MjEwMjM1NDg2OH0.RgUH1FBCv3uZx4dLAi1oRoB-1UQLx4xC7R9ewofi938";
 
-//	const METHOD="AES-256-CBC";
-//	const SECRET_KEY='$CEPROCA@2020';
-//	const SECRET_IV='037970';
+const SUPABASE_SECRET_KEY = "sb_secret_NwSXIBwWJWglNWJKvqv68g_RKUPcaez";
 
+// Alias compatible con la estructura actual del proyecto
+const SUPABASE_KEY = SUPABASE_ANON_KEY;
+const SUPABASE_REST_URL = SUPABASE_URL . "/rest/v1";
 
-
-
-// ////// aqui intente pero parece q hay un errorde uso devariables y constantes
-
-//const SERVER = "db.uxzthiwwpxurhlcbecwh.supabase.co"; // Host
-//const PORT   = "5432";
-//const DB     = "postgres";
-//const USER   = "postgres";
-//const PASS   = "1234";
-
-// DSN PDO
-//$dsn = "pgsql:host=" . SERVER . ";port=" . PORT . ";dbname=" . DB . ";sslmode=require";
-
-//$pdo = new PDO($dsn, USER, PASS, [
-//  PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-//  PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-//]);
-
-
-
-//aqui toy intentando pero ahora usando const SGBD
+// Mantener compatibilidad con la conexión previa si se reutiliza en algún punto
 const HOST = "db.uxzthiwwpxurhlcbecwh.supabase.co";
 const PORT = "5432";
 const DB   = "postgres";
 const USER = "postgres";
 const PASS = "1234";
 
+// Definición antigua, solo por compatibilidad hacia atrás
 const SGBD = "pgsql:host=" . HOST . ";port=" . PORT . ";dbname=" . DB . ";sslmode=require";
+// Constantes de encriptación requeridas por mainModel
+const METHOD = "AES-256-CBC";
+const SECRET_KEY = '$CEPROCA@2020';
+const SECRET_IV = '037970';

@@ -1,464 +1,367 @@
 <?php
-require_once __DIR__ . "/../../../modelos/mainModel.php";
+require_once "./controladores/publicoControlador.php";
+$localCtrl = new publicoControlador();
 
-// ID recibido por GET (si existe) - este es el id_curso
-$idSeleccionado = isset($_GET['id']) ? intval($_GET['id']) : null;
+// ID recibido por GET (course_id, plano)
+$courseIdRecibido = isset($_GET['id']) ? (int) $_GET['id'] : null;
 
-// Si hay un id_curso específico, buscar solo sus curso_vigente
-if ($idSeleccionado) {
-    $sql = "
-    SELECT 
-        cv.id_curso_vigente,
-        c.id_curso,
-        c.nombre_curso,
-        c.tipo_curso,
-        
-        -- Datos de COHORTE (si existe)
-        co.id_cohorte,
-        co.numero_cohorte,
-        co.anio_cohorte,
-        co.pago_inscripcion AS pago_cohorte,
-        co.pago_modulo,
-        co.fecha_inicio AS fecha_inicio_cohorte,
-        co.fecha_fin AS fecha_fin_cohorte,
-        co.estado_cohorte,
-        
-        -- Datos de PERIODO INTENSIVO (si existe)
-        pi.id_periodo_intensivo,
-        pi.pago_inscripcion_int,
-        pi.pago_encuentro_int,
-        pi.fecha_inicio_int,
-        pi.fecha_fin_int,
-        pi.estado_periodo,
-        
-        -- Determinar tipo de CV
-        CASE 
-            WHEN co.id_cohorte IS NOT NULL THEN 'cohorte'
-            WHEN pi.id_periodo_intensivo IS NOT NULL THEN 'intensivo'
-            ELSE 'desconocido'
-        END AS tipo_cv,
-        
-        -- Estado actual
-        CASE 
-            WHEN co.estado_cohorte IN ('Vigente', 'Próximo') THEN co.estado_cohorte
-            WHEN pi.estado_periodo IN ('Vigente', 'Próximo') THEN pi.estado_periodo
-            ELSE 'Inactivo'
-        END AS estado_actual
-
-    FROM curso_vigente cv
-    INNER JOIN curso c ON cv.id_curso_fk = c.id_curso
-    LEFT JOIN cohorte co ON cv.id_cohorte_fk = co.id_cohorte AND co.estado_cohorte IN ('Vigente', 'Próximo')
-    LEFT JOIN periodo_intensivo pi ON cv.id_curso_vigente = pi.id_curso_vigente_fk AND pi.estado_periodo IN ('Vigente', 'Próximo')
-
-    -- Verificar que tenga sección activa
-    INNER JOIN seccion s ON cv.id_curso_vigente = s.id_curso_vigente_fk 
-        AND s.nombre_seccion = 'A' 
-        AND s.archivar_seccion = 1
-    INNER JOIN profesor p ON s.ci_profesor = p.id_profesor AND p.estado_profesor = 1
- --   INNER JOIN curso_publicidad m ON c.id_curso = m.id_curso AND m.estado_curso_publicidad = 1
-
-    WHERE 
-        cv.estado_curso_vigente = 1 
-        AND c.estado_curso = 1
-        AND c.id_curso = :id_curso
-        AND (co.id_cohorte IS NOT NULL OR pi.id_periodo_intensivo IS NOT NULL)
-
-    ORDER BY 
-        -- Priorizar vigentes primero
-        CASE 
-            WHEN co.estado_cohorte = 'Vigente' OR pi.estado_periodo = 'Vigente' THEN 1
-            WHEN co.estado_cohorte = 'Próximo' OR pi.estado_periodo = 'Próximo' THEN 2
-            ELSE 3
-        END ASC,
-        co.numero_cohorte DESC,
-        pi.fecha_inicio_int DESC
-    ";
-
-    $stmt = mainModel::conectar()->prepare($sql);
-    $stmt->bindValue(':id_curso', $idSeleccionado, PDO::PARAM_INT);
-    $stmt->execute();
-    $cursosVigentes = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-} else {
-    // Si no hay id específico, traer todos los cursos vigentes (tu consulta original)
-    $sql = "
-    SELECT 
-        cv.id_curso_vigente,
-        c.id_curso,
-        c.nombre_curso,
-        c.tipo_curso,
-        
-        -- Datos de COHORTE (si existe)
-        co.id_cohorte,
-        co.numero_cohorte,
-        co.anio_cohorte,
-        co.pago_inscripcion AS pago_cohorte,
-        co.pago_modulo,
-        co.fecha_inicio AS fecha_inicio_cohorte,
-        co.fecha_fin AS fecha_fin_cohorte,
-        co.estado_cohorte,
-        
-        -- Datos de PERIODO INTENSIVO (si existe)
-        pi.id_periodo_intensivo,
-        pi.pago_inscripcion_int,
-        pi.pago_encuentro_int,
-        pi.fecha_inicio_int,
-        pi.fecha_fin_int,
-        pi.estado_periodo,
-        
-        -- Determinar tipo de CV
-        CASE 
-            WHEN co.id_cohorte IS NOT NULL THEN 'cohorte'
-            WHEN pi.id_periodo_intensivo IS NOT NULL THEN 'intensivo'
-            ELSE 'desconocido'
-        END AS tipo_cv,
-        
-        -- Estado actual
-        CASE 
-            WHEN co.estado_cohorte IN ('Vigente', 'Próximo') THEN co.estado_cohorte
-            WHEN pi.estado_periodo IN ('Vigente', 'Próximo') THEN pi.estado_periodo
-            ELSE 'Inactivo'
-        END AS estado_actual
-
-    FROM curso_vigente cv
-    INNER JOIN curso c ON cv.id_curso_fk = c.id_curso
-    LEFT JOIN cohorte co ON cv.id_cohorte_fk = co.id_cohorte AND co.estado_cohorte IN ('Vigente', 'Próximo')
-    LEFT JOIN periodo_intensivo pi ON cv.id_curso_vigente = pi.id_curso_vigente_fk AND pi.estado_periodo IN ('Vigente', 'Próximo')
-
-    -- Verificar que tenga sección activa
-    INNER JOIN seccion s ON cv.id_curso_vigente = s.id_curso_vigente_fk 
-        AND s.nombre_seccion = 'A' 
-        AND s.archivar_seccion = 1
-    INNER JOIN profesor p ON s.ci_profesor = p.id_profesor AND p.estado_profesor = 1
-  --  INNER JOIN curso_publicidad m ON c.id_curso = m.id_curso AND m.estado_curso_publicidad = 1
-
-    WHERE 
-        cv.estado_curso_vigente = 1 
-        AND c.estado_curso = 1
-        AND (co.id_cohorte IS NOT NULL OR pi.id_periodo_intensivo IS NOT NULL)
-
-    ORDER BY 
-        -- Priorizar vigentes primero
-        CASE 
-            WHEN co.estado_cohorte = 'Vigente' OR pi.estado_periodo = 'Vigente' THEN 1
-            WHEN co.estado_cohorte = 'Próximo' OR pi.estado_periodo = 'Próximo' THEN 2
-            ELSE 3
-        END ASC,
-        c.nombre_curso ASC,
-        co.numero_cohorte DESC,
-        pi.fecha_inicio_int DESC
-    ";
-
-    $stmt = mainModel::conectar()->prepare($sql);
-    $stmt->execute();
-    $cursosVigentes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// Obtener todas las opciones de inscripción
+$respuesta = $localCtrl->opciones_inscripcion_controlador();
+if (!$respuesta['ok']) {
+    echo '<div class="alert alert-danger text-center">' . htmlspecialchars($respuesta['message']) . '</div>';
+    exit;
 }
+$cursosDisponibles = $respuesta['data'];
+//var_dump($cursosDisponibles);die();
 
-$cursos = $cursosVigentes;
 
-// Debug
-echo "<script>console.log('Cursos encontrados para ID $idSeleccionado:', " . json_encode(array_map(function($cv) {
-    return [
-        'id_curso_vigente' => $cv['id_curso_vigente'],
-        'nombre_curso' => $cv['nombre_curso'],
-        'tipo_cv' => $cv['tipo_cv'],
-        'estado_actual' => $cv['estado_actual']
-    ];
-}, $cursosVigentes)) . ");</script>";
+// Debug opcional
+//echo "<script>console.log('Cursos disponibles:', " . json_encode(array_map(function($c) {
+//    return [
+       // 'course_id' => $c['course_id'],
+      //  'course_name' => $c['course_name'],
+    //    'estado' => $c['period']['current_state'] ?? 'N/A'
+  //  ];
+//}, $cursosDisponibles)) . ");</script>";
+
+
+//datos visuales de la paigna
+$configVisual = mainModel::obtener_config_visual();
+$coloresInicio = mainModel::obtener_colores_config();
+
+$nombreCorto    = $configVisual['nombre_corto'];
+$nombreCompleto = $configVisual['nombre_completo'];
+$rutaIcono      = $configVisual['icono'];
+$rutaLogo       = $configVisual['logo'];
+$paletaInicioId = $configVisual['paleta_id'];
+
+
+//var_dump($nombreCorto,$nombreCompleto,$rutaIcono,$rutaLogo,$paletaInicioId);die();
+
+$primario = $coloresInicio[0];
+$secundario = $coloresInicio[1];
+//$c1 = mainModel::hex2rgba($primario, 1);      // 100%
+//$c2 = mainModel::hex2rgba($primario, 0.85);   // 85%
+//$c3 = mainModel::hex2rgba($primario, 0.7);    // 70%
+$c1 = mainModel::hex2rgba($primario, 0.85);      
+$c2 = mainModel::hex2rgba($primario, 1);    
+$c3 = mainModel::hex2rgba($secundario, 1);   
+
 ?>
-
-<!-- Select2 para elegir curso_vigente ->
-<select name="id_curso_vigente" id="curso_vigente_select" class="form-control select2" required>
-    <option value="">Seleccione un curso disponible</option>
-    <?php foreach($cursosVigentes as $cv): ?>
-        <option value="<?= $cv['id_curso_vigente'] ?>" 
-                <?= ($cv['id_curso_vigente'] == $idSeleccionado) ? 'selected' : '' ?> 
-                data-pago="<?= $cv['pago_inscripcion'] ?>"
-                data-tipo="<?= $cv['tipo_cv'] ?>"
-                data-estado="<?= $cv['estado_actual'] ?>">
-            <?= htmlspecialchars($cv['texto_mostrar']) ?>
-        </option>
-    <?php endforeach; ?>
-</select>-->
-
-
-
-
-
+<script>window.DARK_MODE_BLOQUEADO = true;</script>
 
 <style>
 body {
-//  background-color: #e3f2fd; /* Azul claro */
- // min-height: 100vh;
-  padding: 30px 0;
-background: #0440cc;
-background: linear-gradient(90deg, rgba(4, 64, 204, 1) 0%, rgba(0, 141, 241, 1) 50%, rgba(16, 78, 179, 1) 99%);
+  min-height: 100vh;
+/*  //  max-height:300vh;*/
+    height:auto;
+  padding: 30px 0px;
+    margin:0px;
+    width:100%;
+    /*  background-color: #e3f2fd; 
+//background: #0440cc;
+//background: linear-gradient(90deg, rgba(4, 64, 204, 1) 0%, rgba(0, 141, 241, 1) 50%, rgba(16, 78, 179, 1) 99%);*/
+     overflow-x: hidden;
+     overflow-y:hidden;
+/*  scrollbar-gutter: stable;   */
+    background: <?= $c2 ?>; /* fallback: color intermedio */
+    background: linear-gradient(90deg,
+        <?= $c1 ?> 0%,
+        <?= $c2 ?> 50%,
+        <?= $c3 ?> 99%
+    );
+    background-size: cover;
+
+}
+    
+html {
+    overflow-y: auto;
+    overflow-x: hidden;
+/*  overflow-y: auto;*
+  scrollbar-gutter: stable;*/
 }
 </style>
 
-<div class="container fondo-azul mt-2">
-			<a href="<?php echo SERVERURL; ?>index.php" style="color:white;"><i class="fas fa-arrow-left"></i> Volver al inicio</a>
-  <h4 class="text-center mb-2" style="color:white;"><i class="fas fa-user-plus"></i> Registro de pago y datos personales
-      <button type="button" class="btn btn-sm ver-ayuda-texto"
-            data-text="Por favor, complete el formulario para iniciar el proceso de inscripción. Se solicitarán datos personales del estudiante, así como la realización de una transacción para el pago de la inscripción. Una vez que el personal reciba esta información y verifique su validez, se procederá a registrar al estudiante en el sistema y a crearle una cuenta de acceso con la clave registrada."
-            title="Ver explicación"
-            style="background-color: #FF4221; color: #fff; border: none; padding: 4px 8px; border-radius: 4px;">
-      <i class="fas fa-question"></i>
-      </button>
-  </h4>
 
-  <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/recuperarAjax.php" method="POST" enctype="multipart/form-data" autocomplete="off">
 
-    <fieldset>
-      <!--legend><i class="fas fa-id-card"></i> &nbsp; Datos personales</legend-->
-      <legend style="font-size: 1rem;"><i class="fas fa-id-card"></i> &nbsp; Datos personales</legend>
-    <div class="row">
-        <div class="col-md-3 form-group">
-          <label for="nombre">Nombre</label>
-          <input type="text" class="form-control" name="nombre" id="nombre" maxlength="30" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ][a-zA-ZáéíóúÁÉÍÓÚñÑ ]{0,29}"  required>
+
+
+
+
+<div class="container fondo-azul mt-2" style="height:100%;max-width:80vw;">
+
+
+            <br>
+        <h4 class="text-center mb-2" style="color:white;"><i class="fas fa-user-plus"></i> Registro de pago y datos personales
+            <button type="button" class="btn btn-sm btn-ayuda" data-target="p1"style="background-color:#ff4221; color:#fff; border:none; padding:6px 10px; border-radius:50%; margin-right:10px;">
+               <i class="fas fa-question"></i>
+            </button>
+        </h4>
+
+                <br>
+
+    
+    
+    <!--IMPORTANTE-->
+    <!--El form apunta a login ajax porque es el ajax encargado de todas las peticiones de la vista publica-->
+    <!--IMPORTANTE-->
+    <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/loginAjax.php" method="POST" enctype="multipart/form-data" data-form="save" autocomplete="off">
+    <!--form class="form-neon FormularioAjax" action="<c?php echo SERVERURL; ?>ajax/recuperarAjax.php" method="POST" enctype="multipart/form-data" autocomplete="off"-->
+
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <a href="<?php echo SERVERURL; ?>index.php" style="padding:0 5px;">
+                <i class="fas fa-info-circle fa-fw"></i> - Volver al inicio
+            </a>
+            
+            	<!--img src="<c?php echo SERVERURL; ?>vistas/<c?= htmlspecialchars($rutaLogo) ?>"-->
+            <img src="<?= mainModel::obtenerRutaImagenLocal('logo') ?>"
+                 alt="Logo" 
+                 style="width: 80px; height: auto;padding:0 5px;">
         </div>
-        <div class="col-md-3 form-group">
-          <label for="apellido">Apellido</label>
-          <input type="text" class="form-control" name="apellido" id="apellido" maxlength="30" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ][a-zA-ZáéíóúÁÉÍÓÚñÑ ]{0,29}"  required>
-        </div>
 
-
-
-        <div class="col-md-6 form-group">
-          <label for="id_curso">Curso</label>
-         
+        <br>
             
-
-<!-- Select2 para elegir curso_vigente  -- curso_vigente_select ->
-<select name="id_curso_vigente" id="curso_up" class="form-control select2" required>
-    <option value="">Seleccione un curso disponible</option>
-    <php foreach($cursosVigentes as $cv): ?>
-        <php
-        // Armar el texto según el tipo de CV
-        if ($cv['tipo_cv'] == 'cohorte') {
-            $textoMostrar = sprintf(
-                '%s (co. %s.%s %s) F.inicio: %s / F.fin: %s',
-                $cv['nombre_curso'],
-                $cv['numero_cohorte'],
-                $cv['anio_cohorte'],
-                $cv['tipo_curso'],
-                date('d-m-y', strtotime($cv['fecha_inicio_cohorte'])),
-                date('d-m-y', strtotime($cv['fecha_fin_cohorte']))
-            );
-            $pago = $cv['pago_cohorte'];
-        } elseif ($cv['tipo_cv'] == 'intensivo') {
-            $textoMostrar = sprintf(
-                '%s (%s) F.inicio: %s / F.fin: %s',
-                $cv['nombre_curso'],
-                $cv['tipo_curso'],
-                date('d-m-y', strtotime($cv['fecha_inicio_int'])),
-                date('d-m-y', strtotime($cv['fecha_fin_int']))
-            );
-            $pago = $cv['pago_inscripcion_int'];
-        } else {
-            $textoMostrar = $cv['nombre_curso'] . ' (' . $cv['tipo_curso'] . ')';
-            $pago = 0;
-        }
-        ?>
-        <option value="<?= $cv['id_curso_vigente'] ?>" 
-                <?= ($cv['id_curso_vigente'] == $idSeleccionado) ? 'selected' : '' ?> 
-                data-pago="<?= $pago ?> ?? '0'">
-            <?= htmlspecialchars($textoMostrar) ?>
-        </option>
-    <php endforeach; ?>
-</select-->            
-     
-            
-            
-            
-            
-            
-            
-            
-            <select name="id_curso" id="curso_up" class="form-control select2" required>
-    <option value="">Seleccione un curso disponible</option>
-    <?php foreach($cursosVigentes as $cv): ?>
-        <?php
-        // 🔹 Abreviaciones de tipo_curso
-        $abreviaciones = [
-            'Intensivo' => 'INT',
-            'Extendido' => 'EXT', 
-            'Técnico Profesional' => 'Téc'
-        ];
-        $tipoCursoAbrev = $abreviaciones[$cv['tipo_curso']] ?? $cv['tipo_curso'];
-
-        // 🔹 Armar el texto según el tipo de CV
-        if ($cv['tipo_cv'] == 'cohorte') {
-            $textoMostrar = sprintf(
-                '%s (co. %s.%s %s) F.inicio: %s / F.fin: %s',
-                $cv['nombre_curso'],
-                $cv['numero_cohorte'],
-                $cv['anio_cohorte'],
-                $tipoCursoAbrev,
-                date('d-m-y', strtotime($cv['fecha_inicio_cohorte'])),
-                date('d-m-y', strtotime($cv['fecha_fin_cohorte']))
-            );
-            $pago = $cv['pago_cohorte'] ?? 0;
-        } elseif ($cv['tipo_cv'] == 'intensivo') {
-            $textoMostrar = sprintf(
-                '%s (%s) F.inicio: %s / F.fin: %s',
-                $cv['nombre_curso'],
-                $tipoCursoAbrev,
-                date('d-m-y', strtotime($cv['fecha_inicio_int'])),
-                date('d-m-y', strtotime($cv['fecha_fin_int']))
-            );
-            $pago = $cv['pago_inscripcion_int'] ?? 0;
-        } else {
-            $textoMostrar = $cv['nombre_curso'] . ' (' . $tipoCursoAbrev . ')';
-            $pago = 0;
-        }
-        ?>
-        <option value="<?= $cv['id_curso_vigente'] ?>"
-                <?= ($cv['id_curso_vigente'] == $idSeleccionado) ? 'selected' : '' ?>
-                data-pago="<?= $pago ?>">
-            <?= htmlspecialchars($textoMostrar) ?>
-        </option>
-    <?php endforeach; ?>
-</select>
-            
-            
-            
-            
-            
-            
-            
-            <!--select name="id_curso" id="curso_up" class="form-control select2" required>
-            <option value="">Seleccione un curso</option>
-            <php foreach($cursos as $curso): ?>
-          <option value="<?= $curso['id_curso'] ?>" 
-          <?= ($curso['id_curso'] == $idSeleccionado) ? 'selected' : '' ?> 
-          data-pago="<?= $curso['pago_inscripcion'] ?? '0' ?>">
-    <?= htmlspecialchars($curso['nombre_curso']) ?> (<?= htmlspecialchars($curso['tipo_curso']) ?>)
-  </option>
-            <php endforeach; ?>
-          </select-->
-       
         
-        
-        
-        </div>
-    </div>
+        <fieldset>
+           <legend style="font-size: 1rem;"><i class="fas fa-money-check-alt"></i> &nbsp; Datos personales</legend>
+            <div class="row">
+                <div class="col-md-3 form-group">
+                  <label for="nombre">Nombre</label>
+                  <input type="text" class="form-control" name="nombre" id="nombre" maxlength="30" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ][a-zA-ZáéíóúÁÉÍÓÚñÑ ]{0,29}"  required>
+                </div>
+                <div class="col-md-3 form-group">
+                  <label for="apellido">Apellido</label>
+                  <input type="text" class="form-control" name="apellido" id="apellido" maxlength="30" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ][a-zA-ZáéíóúÁÉÍÓÚñÑ ]{0,29}"  required>
+                </div>
+
+               <div class="col-md-6 form-group">
+                    <label for="curso_up">Curso</label>
+                    <select name="id_curso" id="curso_up" class="form-control select2" required>
+                        <option value="">Seleccione un curso disponible</option>
+                        <?php foreach ($cursosDisponibles as $c): ?>
+                            <?php
+                            $periodo = $c['period'] ?? null;
+                            $estado = $periodo['current_state'] ?? '';
+                            $inscripcion = (float) ($periodo['costs']['pago_inscripcion'] ?? 0);
+                            $nombrePeriodo = $periodo['name'] ?? '';
+                        	$periodCourseId = (int) ($c['period_course_id'] ?? 0);
+                        	$periodCourseId = (int) ($periodo['period_course_id'] ?? 0);   // AQUÍ
+
+                            $abreviaciones = [
+                                'Intensivo' => 'INT',
+                                'Extendido' => 'EXT',
+                                'Técnico Profesional' => 'Téc',
+                            ];
+                            $tipoAbrev = $abreviaciones[$c['course_type']] ?? $c['course_type'];
+
+                            $textoMostrar = sprintf(
+                                '%s (%s, %s)',
+                                $c['course_name'],
+                                $tipoAbrev,
+                                $estado
+                            );
+                            ?><!--value="<?= (int) $c['course_id'] ?>"-->
+                        <option value="<?= $periodCourseId ?>"
+                                data-inscripcion="<?= $inscripcion ?>"
+                                data-tipo="<?= htmlspecialchars($c['course_type']) ?>"
+                                data-estado="<?= htmlspecialchars($estado) ?>"
+                                data-periodo="<?= htmlspecialchars($nombrePeriodo) ?>"
+                                <?= ($c['course_id'] === $courseIdRecibido) ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($textoMostrar) ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
 
 
-        
-        
-    <div class="row">
-        <div class="col-md-2 form-group">
-          <label for="fecha_nacimiento">Fecha de nacimiento</label>
-          <!--input type="date" class="form-control" name="fecha_nacimiento" id="fecha_nacimiento" min="1900-01-01" max="<?= date('Y-m-d') ?>"  required-->
-          <input type="date" class="form-control" name="fecha_nacimiento" min="1920-01-01" max="<?= date('Y-m-d') ?>" id="fecha_nac" required>
-        </div>
-        <div class="col-md-2 form-group">
-          <label for="cedula">Cédula</label>
-            
-          <input type="text" class="form-control" name="cedula" id="cedula" maxlength="10" pattern="[VE]{1}[1-9]{1}[0-9]{6,7}" placeholder="ej:V12345678"  required>
-        </div>
-        <div class="col-md-2 form-group">
-          <label for="telefono">Teléfono</label>
-          <input type="text" class="form-control" name="telefono" id="telefono" pattern="[0-9]{10,13}" maxlength="11" required>
-        </div>
-        <div class="col-md-3 form-group" style="display:flex;justify-content:center;align-items:center;padding-top:10px;">
-        	<p>Solo se registran dígitos de números telefónicos, no caracteres como " _ ", "()", " - ". Ej: "04123334444".</p>
-        </div>
-        <div class="col-md-3 form-group">
-          <label for="correo">Correo electrónico</label>
-          <input type="text" class="form-control" name="correo" id="correo" maxlength="60" required>
-        </div>
 
-        <!-- Escriba el número de teléfono común (0412-123-1234) de esta manera: 04123334444. En el caso de que sea un número de Whatsapp (+58 412-123...) escríbalo así: 584123334444.-->
-        
-        <!--div class="col-md-4 form-group">
-          <label for="direccion">Dirección</label>
-          <input type="text" class="form-control" name="direccion" id="direccion" maxlength="150" required>
-        </div-->
-      </div>
-    </fieldset>
+            <div class="row">
+                <div class="col-md-3 form-group">
+                    <label for="fecha_nacimiento">Fecha de nacimiento</label>
+                    <div class="text-success small mt-1" id="alerta-fecha" style="font-weight:bold;">
+                        <i class="fas fa-check-circle"></i> Debe tener al menos 9 años
+                    </div>
 
-    <br>
+                    <!--input type="date" class="form-control" name="fecha_nacimiento" id="fecha_nacimiento" min="1900-01-01" max="<?= date('Y-m-d') ?>"  required-->
+                    <input type="date" class="form-control" name="fecha_nacimiento" min="1920-01-01" max="<?= date('Y-m-d') ?>" id="fecha_nac" required>
+                </div>
+
+                <div class="col-md-3 form-group">
+                    <div class="text-success small mt-1" id="alerta-cedula" style="font-weight:bold;">
+                        <i class="fas fa-check-circle"></i> Formato: V12345678
+                    </div>
+                    <label for="cedula">Cédula</label>
+                    <input type="text" class="form-control" name="cedula" id="cedula" maxlength="10" pattern="[VE]{1}[1-9]{1}[0-9]{6,7}" placeholder="ej:V12345678" required>
+                </div>
+
+
+                <div class="col-md-3 form-group">
+                      <div class="text-success small mt-1" id="alerta-telefono" style="font-weight:bold;">
+                          <i class="fas fa-check-circle"></i> 11 dígitos con código de operadora válido
+                      </div>
+                      <label for="telefono">Teléfono</label>
+
+                      <div style="display:flex; align-items:center;">
+                          <!--input type="text" class="form-control" name="telefono" id="telefono"pattern="[0-9]{10,13}" maxlength="11" required style="flex:1; margin-right:8px;"-->
+                          <input type="text" class="form-control" name="telefono" id="telefono" pattern="[0-9]{10,13}" maxlength="11" style="flex:1; margin-right:5px;" required>        
+                          <button type="button" class="btn btn-sm btn-ayuda" data-target="p2" style="background-color:#9F27F5; color:#fff; border:none; border-radius:50%; padding:6px 10px;">
+                               <i class="fas fa-question"></i>
+                          </button>
+                      </div>
+                </div>
+
+
+                <div class="col-md-3 form-group">
+                      <label for="telefono">WhatsApp</label>
+                      <div class="text-success small mt-1" id="alerta-wsp" style="font-weight:bold;">
+                            <i class="fas fa-check-circle"></i> 12 dígitos: 58 + código + número
+                      </div>
+
+                      <div style="display:flex; align-items:center;">
+                          <input type="text" class="form-control" name="wsp" id="wsp" pattern="[0-9]{10,13}" maxlength="12" required style="flex:1; margin-right:5px;">
+                          <!--input type="text" class="form-control" name="wsp" id="wsp" pattern="[0-9]{10,13}" maxlength="12" required-->
+
+                          <button type="button" class="btn btn-sm btn-ayuda" data-target="p3" style="background-color:#28a745; color:#fff; border:none; border-radius:50%; padding:6px 10px;">
+                              <i class="fas fa-question"></i>
+                          </button>
+                      </div>
+                </div>
+
+            </div>
+        </fieldset>
+        <br>
+
+
+
+
 
       
-      <div id="alerta-general" class="alert alert-danger" style="display:none;"></div>
-<div class="row">
-  <div class="col-md-8">
-    <fieldset>
-      <legend style="font-size: 1rem;"><i class="fas fa-money-check-alt"></i> &nbsp; Información de pago</legend>
-      <div class="row">
-        <!--div class="col-md-2 form-group">
-          <label for="monto">Monto</label>
-          <input type="number" class="form-control" name="monto" id="monto" min="0" step="0.01" required>
-        </div-->
+            <div class="row">
+                    <div class="col-md-4 form-group">
+                        <label for="correo">Correo electrónico</label>
+                        <input type="text" class="form-control" name="correo" id="correo" maxlength="60" required>
+                    </div>
 
-                  <div class="col-md-2 form-group">
-          <!--label>Pago de inscripción</label-->
-          <p id="pagoInscripcionTexto" style="font-weight:bold; margin-top:8px;">Pago de inscripción: —</p>
-        </div>
-          
-          <div class="col-md-2 form-group">
-              <label for="monto">Monto</label>
-              <input type="number" class="form-control" name="monto" id="monto" min="0" step="0.01" required>
-              <small id="montoError" class="text-danger" style="display:none;">⚠️ El monto no puede exceder el pago de inscripción.</small>
-            </div>
-          
-          
-          
-        <div class="col-md-3 form-group">
-          <label for="fecha_pago">Fecha de pago</label>
-          <input type="date" class="form-control" name="fecha_pago" min="2025-01-01" max="<?= date('Y-m-d') ?>" id="fecha_pago" required>
-        </div>
-        <div class="col-md-2 form-group" >
-          <label for="metodo_pago">Método de pago</label>
-          <select class="form-control" name="metodo_pago" id="metodo_pago" required>
-            <option value="" disabled selected>Seleccione</option>
-            <option value="Transferencia">Transferencia</option>
-            <option value="Pago móvil">Pago móvil</option>
-            <option value="Efectivo">Efectivo</option>
-            <option value="Otro">Otro</option>
-          </select>
-        </div>
-        <div class="col-md-3 form-group">
-          <label for="captura_pago" style="font-size: 0.85rem;">Captura o imagen del pago</label>
-          <input type="file" style="font-size: 0.85rem;" class="form-control-file" name="captura_pago" id="captura_pago" accept="image/*" required>
-          <small id="nombre-archivo" class="form-text text-muted"></small>
-        </div>
-      </div>
-    </fieldset>
-  </div><!--row1-->
-    
-  <div class="col-md-4">
-    <fieldset>
-      <legend style="font-size: 1rem;"><i class="fas fa-lock"></i> &nbsp; Seguridad de acceso (mínimo 7 caracteres)</legend>
-      <div class="text-danger small mt-1" id="alerta-clave" style="display:none;"></div>
-      <div class="row">
-        <div class="col-md-6 form-group">
-          <label for="clave">Clave de acceso</label>
-          <input type="password" class="form-control" name="clave" id="clave"required pattern="[^ ].*" title="El nombre no debe comenzar con espacio." minlength="7" maxlength="100" required>
-        </div>
-        <div class="col-md-6 form-group">
-          <label for="confirmar_clave">Confirmar clave</label>
-          <input type="password" class="form-control" name="confirmar_clave" required pattern="[^ ].*" title="El nombre no debe comenzar con espacio." id="confirmar_clave" minlength="7" maxlength="100" required>
-        </div>
-      </div>
-      <div class="text-danger small mt-1" id="alerta-clave" style="display:none;"></div>
-    </fieldset>
-  </div><!--row2-->
-    
+
+                    <div class="col-md-4 form-group">
+                        <label for="correo">Dirección</label>
+                        <input type="text" class="form-control" name="direccion" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ][a-zA-ZáéíóúÁÉÍÓÚñÑ ,._°]{0,79}" id="direccion" maxlength="79" required>
+                    </div>
+
+                    <div class="col-md-4 form-group">
+                        <label for="correo">Lugar de nacimiento</label>
+                        <input type="text" class="form-control" name="lugar_n" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ][a-zA-ZáéíóúÁÉÍÓÚñÑ ,._°]{0,79}" id="lugar_n" maxlength="79" required>
+                    </div>
+            </div>      
+
+           <div class="row">
+                   <div class="col-md-3 form-group">
+                       <label for="correo">Nivel de estudio</label>
+                       <input type="text" class="form-control" name="nivel_est" id="nivel_est" maxlength="29" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ][a-zA-ZáéíóúÁÉÍÓÚñÑ ]{0,29}" required>
+                    </div>
+
+                    <div class="col-md-3 form-group">
+                        <label for="correo">Oficio actual</label>
+                        <input type="text" class="form-control" name="oficio" id="oficio" maxlength="29" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ][a-zA-ZáéíóúÁÉÍÓÚñÑ ]{0,29}" required>
+                    </div>
+
+                    <div class="col-md-2 form-group">
+                        <label for="trabajo">Trabaja?</label>
+                        <input type="checkbox" name="trabajo" value="1">
+                    </div>
+           </div>
+      
+
+          <div id="alerta-general" class="alert alert-danger" style="display:none;"></div>
+
+
+          <div class="row">
+
+              <div class="col-md-6">
+                  <fieldset>
+                            <legend style="font-size: 1rem;"><i class="fas fa-money-check-alt"></i> &nbsp; Información de pago</legend>
+                            <div class="row">
+                                <!--div class="col-md-2 form-group">
+                                  <label for="monto">Monto</label>
+                                  <input type="number" class="form-control" name="monto" id="monto" min="0" step="0.01" required>
+                                </div-->
+
+                                 <div class="col-md-4 form-group">
+                                     <p id="pagoInscripcionTexto" style="font-weight:bold; margin-top:8px;">Pago de inscripción: $</p>
+                                 </div>
+                                 <input type="hidden" name="monto" id="monto">
+
+                                 <div class="col-md-4 form-group">
+                                     <label for="fecha_pago">Fecha de pago</label>
+                                     <input type="date" class="form-control" name="fecha_pago" min="2025-01-01" max="<?= date('Y-m-d') ?>" id="fecha_pago" required>
+                                 </div>
+                                 <div class="col-md-4 form-group" >
+                                     <label for="metodo_pago">Método de pago</label>
+                                     <select class="form-control" name="metodo_pago" id="metodo_pago" required>
+                                        <option value="" disabled selected>Seleccione</option>
+                                        <option value="Transferencia">Transferencia</option>
+                                        <option value="Pago móvil">Pago móvil</option>
+                                        <option value="Efectivo">Efectivo</option>
+                                        <option value="Otro">Otro</option>
+                                     </select>
+                                 </div>
+                            </div>
+                    </fieldset>
+                </div><!--aqui se cierra el colmd 6-->
 
     
+                <div class="col-md-6">
+                    <fieldset>
+                        <legend style="font-size: 1rem;"><i class="fas fa-lock"></i> &nbsp; Seguridad de acceso
+                            <button type="button" class="btn btn-sm btn-ayuda" data-target="p4"
+                                style="background-color:#007bff; color:#fff; border:none; padding:6px 10px; border-radius:50%; margin-right:10px;">
+                                <i class="fas fa-question"></i>
+                            </button>
+                        </legend>
+
+                        <div class="row">
+                            <div class="col-md-6 form-group">
+                                <div class="text-success small mt-1" id="alerta-clave" style="font-weight:bold;">
+                                    <i class="fas fa-check-circle"></i> Mínimo 7 caracteres
+                                </div>
+                                <label for="clave">Clave de acceso</label>
+                                <input type="password" class="form-control" name="clave" id="clave" pattern="[^ ].*" minlength="7" maxlength="100" required>
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <div class="text-success small mt-1" id="alerta-confirmar-clave" style="font-weight:bold;">
+                                    <i class="fas fa-check-circle"></i> Debe coincidir con la clave
+                                </div>
+                                <label for="confirmar_clave">Confirmar clave</label>
+                                <input type="password" class="form-control" name="confirmar_clave" id="confirmar_clave" pattern="[^ ].*" minlength="7" maxlength="100" required>
+                            </div>
+                        </div>
+    				</fieldset>
+  				</div>
+          </div><!--fin row de pagos y claves-->
     
     
-    
-    
-    
-    
-    
-    
-    
-</div> <!--padre-->
+                <div class="row">
+                        <div class="col-md-6 form-group">
+                           <label for="captura_pago" style="font-size: 0.85rem;">Captura o imagen del pago</label>
+                            <input type="file" style="font-size: 0.85rem;" class="form-control-file" name="captura_pago" id="captura_pago" accept="image/*" required>
+                            <small id="nombre-archivo" class="form-text text-muted"></small>
+                        </div>
+                    
+                    	<div class="col-md-6 form-group">
+                           <label for="Referencia" style="font-size: 0.85rem;">Referencia(opcional)</label>
+							<input type="text" class="form-control" name="referencia" pattern="^[A-Za-z0-9-]{1,20}$" title="Introduce un número de referencia de pagomovil (opcional)">
+                        </div>
+                    
+<!--por el momento no se incluye (a alguien se le olvido implementar funciones para guardar esto en el backend)-->
+                        <!--div class="col-md-6 form-group">
+                            <label for="captura_ci" style="font-size: 0.85rem;">Imagen de la cédula de indentidad</label>
+                            <input type="file" style="font-size: 0.85rem;" class="form-control-file" name="captura_ci" id="captura_ci" accept="image/*" required>
+                            <small id="nombre-ci-archivo" class="form-text text-muted"></small>
+                        </div-->
+                </div>
+          
+<!--/div> <!--padre--><!--no tengo idea de q hace esto pero nose-->
 
     <br>
       
@@ -468,23 +371,66 @@ background: linear-gradient(90deg, rgba(4, 64, 204, 1) 0%, rgba(0, 141, 241, 1) 
   </form>
 </div>
 
-<div id="modalTextoAyuda" class="modal" tabindex="-1" style="display:none; position:fixed; z-index:9999; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.75);">
-  <div style="position:relative; margin:auto; top:10%; max-width:60%; background:#000; border:3px solid #fff; padding:20px; border-radius:8px; color:white;">
-    <p id="textoAyuda" style="font-size:1.2rem; line-height:1.6; text-align:center;">Por favor, complete el formulario para iniciar el proceso de inscripción. Se solicitarán datos personales del estudiante, así como la realización de una transacción para el pago de la inscripción. Una vez que el personal reciba esta información y verifique su validez, se procederá a registrar al estudiante en el sistema y a crearle una cuenta de acceso con la clave registrada.</p>
-    <button onclick="document.getElementById('modalTextoAyuda').style.display='none'" style="position:absolute; top:10px; right:10px;" class="btn btn-sm btn-light">
+
+
+
+<!-- Modal con 3 párrafos -->
+<div id="modalAyuda" class="modal" tabindex="-1" 
+     style="display:none; position:fixed; z-index:9999; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75);">
+  <div style="position:relative; margin:auto; top:20%; max-width:60%; background:#000; border:3px solid #fff; padding:20px; border-radius:8px; color:white; text-align:center;">
+    
+    <p id="p1" style="display:none; font-size:1.2rem; line-height:1.6;">
+        Por favor, complete el formulario para iniciar el proceso de inscripción. Se solicitarán datos personales del estudiante, así como la realización de una transacción para el pago de la inscripción. Una vez que el personal reciba esta información y verifique su validez, se procederá a registrar al estudiante en el sistema y a crearle una cuenta de acceso con la clave registrada."
+    </p>
+    
+    <p id="p2" style="display:none; font-size:1.2rem; line-height:1.6;">
+        Solo se registran dígitos de números telefónicos, no caracteres como " _ ", "()", " - ". Ej: "04123334444".
+    </p>
+    
+    <p id="p3" style="display:none; font-size:1.2rem; line-height:1.6;">
+        Solo se registran dígitos de números de WhatsApp, no caracteres como " _ ", "()", " - ", " + ". Ej: "584123334444".
+    </p>
+
+    <p id="p4" style="display:none; font-size:1.2rem; line-height:1.6;">
+		Al concretar la solicitud de inscripción se creará también un usuario con el cual el estudiante podrá entrar en nuestra página web donde podrá registrar sus pagos y consultar sus calificaciones.
+      </p>
+    <button onclick="document.getElementById('modalAyuda').style.display='none'" 
+            style="position:absolute; top:10px; right:10px;" class="btn btn-sm btn-light">
       <i class="fas fa-times"></i>
     </button>
   </div>
 </div>
 
+
+<!-- Librerías CSS y JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
-//modal
+// Inicializar Select2 (Asegúrate de que tu <select> tenga la clase "select2")
+$(document).ready(function() {
+    if (window.jQuery && $('.select2').length) {
+        $('.select2').select2({
+            placeholder: "Seleccione un curso",
+            allowClear: true,
+            width: '100%'
+        });
+    }
+});
+</script>
+
+<script>
+// Script para abrir el modal mostrando el párrafo correcto
 document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll(".ver-ayuda-texto").forEach(btn => {
+  const modal = document.getElementById("modalAyuda");
+
+  document.querySelectorAll(".btn-ayuda").forEach(btn => {
     btn.addEventListener("click", () => {
-      const modal = document.getElementById("modalTextoAyuda");
-      const texto = btn.dataset.text || "No hay ayuda disponible.";
-      modal.querySelector("#textoAyuda").textContent = texto;
+      modal.querySelectorAll("p").forEach(p => p.style.display = "none");
+      const target = btn.dataset.target;
+      const parrafo = document.getElementById(target);
+      if (parrafo) parrafo.style.display = "block";
       modal.style.display = "block";
     });
   });
@@ -492,222 +438,274 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 
 <script>
-//imagen
+// Imagen comprobante de pago
 document.addEventListener("DOMContentLoaded", () => {
   const input = document.getElementById("captura_pago");
   const nombreArchivo = document.getElementById("nombre-archivo");
-
-  input.addEventListener("change", () => {
-    const archivo = input.files[0];
-    if (archivo) {
-      nombreArchivo.textContent = `Archivo seleccionado: ${archivo.name}`;
-    } else {
-      nombreArchivo.textContent = "";
-    }
-  });
+  if (input) {
+    input.addEventListener("change", () => {
+      const archivo = input.files[0];
+      nombreArchivo.textContent = archivo ? `Archivo seleccionado: ${archivo.name}` : "";
+    });
+  }
 });
 </script>
 
+<!--script>
+// Imagen CI
+document.addEventListener("DOMContentLoaded", () => {
+  const input = document.getElementById("captura_ci");
+  const nombreArchivo = document.getElementById("nombre-ci-archivo");
+  if (input) {
+    input.addEventListener("change", () => {
+      const archivo = input.files[0];
+      nombreArchivo.textContent = archivo ? `Archivo seleccionado: ${archivo.name}` : "";
+    });
+  }
+});
+</script-->
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   const selectCurso = document.getElementById("curso_up");
   const pagoTexto = document.getElementById("pagoInscripcionTexto");
-  const montoInput = document.getElementById("monto");
-  const montoError = document.getElementById("montoError");
+  const btnGuardar = document.getElementById("btn-guardar");
+
+  const cedulaInput = document.getElementById("cedula");
+  const telefonoInput = document.getElementById("telefono");
+  const wspInput = document.getElementById("wsp");
+  const fechaInput = document.getElementById("fecha_nac");
   const claveInput = document.getElementById("clave");
   const confirmarInput = document.getElementById("confirmar_clave");
-  const alertaClave = document.getElementById("alerta-clave");
-  const btnGuardar = document.getElementById("btn-guardar");
-  const correoInput = document.getElementById("correo");
-  const telefonoInput = document.getElementById("telefono");
-  const fechaInput = document.getElementById("fecha_nac");
 
-  const alertaGeneral = document.getElementById("alerta-general");
+  const estados = {
+    cedula: false,
+    telefono: false,
+    wsp: false,
+    fecha: false,
+    clave: false,
+    confirmar: false
+  };
 
-  let pagoActual = null;
-
-  // Estados individuales
-  let estadoMontoValido = false;
-  let estadoClaveValida = false;
-  let estadoCorreoValido = false;
-  let estadoTelefonoValido = false;
-  let estadoFechaValida = false;
-
-  function actualizarEstadoBoton() {
-    const todoValido = estadoMontoValido && estadoClaveValida && estadoCorreoValido && estadoTelefonoValido && estadoFechaValida;
-    btnGuardar.disabled = !todoValido;
-    btnGuardar.style.opacity = todoValido ? "1" : "0.6";
-    btnGuardar.style.cursor = todoValido ? "pointer" : "not-allowed";
+  function actualizarAlerta(idAlerta, hayError, mensajeError, mensajeOk) {
+    const div = document.getElementById(idAlerta);
+    if (!div) return;
+    div.classList.remove("text-success", "text-danger");
+    div.classList.add(hayError ? "text-danger" : "text-success");
+    div.innerHTML = hayError
+      ? `<i class="fas fa-times-circle"></i> ${mensajeError}`
+      : `<i class="fas fa-check-circle"></i> ${mensajeOk}`;
   }
 
-  function mostrarError(mensaje) {
-    alertaGeneral.textContent = mensaje;
-    alertaGeneral.style.display = "block";
+  function verificarEstadoBoton() {
+    if (!btnGuardar) return;
+    const hayError = Object.values(estados).some(v => v === true);
+    btnGuardar.disabled = hayError;
+    btnGuardar.style.opacity = hayError ? "0.5" : "1";
+    btnGuardar.style.cursor = hayError ? "not-allowed" : "pointer";
   }
 
-  function limpiarError() {
-    alertaGeneral.textContent = "";
-    alertaGeneral.style.display = "none";
-  }
-
-  function validarFechaNacimiento() {
-    const fechaIngresada = new Date(fechaInput.value);
-    const hoy = new Date();
-    const fechaLimite = new Date(hoy.getFullYear() - 9, hoy.getMonth(), hoy.getDate());
-
-    if (fechaIngresada > fechaLimite) {
-      mostrarError("⚠️ Debe tener al menos 9 años cumplidos.");
-      estadoFechaValida = false;
-    } else {
-      limpiarError();
-      estadoFechaValida = true;
-    }
-    actualizarEstadoBoton();
-  }
-
-  function actualizarPago() {
-    const selected = selectCurso.options[selectCurso.selectedIndex];
-    const pagoStr = selected.dataset.pago;
-    const pago = parseFloat(pagoStr);
-
-    if (!isNaN(pago) && pago > 0) {
-      pagoTexto.textContent = `Pago de inscripción: ${pago.toFixed(2)}$`;
-      pagoActual = pago;
-    } else {
-      pagoTexto.textContent = "Pago de inscripción: No definido";
-      pagoActual = 0;
-    }
-
-    validarMonto();
-  }
-
-  function validarMonto() {
-    const monto = parseFloat(montoInput.value);
-
-    if (!isNaN(monto) && monto > 0) {
-      if (pagoActual > 0 && monto > pagoActual) {
-        montoError.textContent = `⚠️ El monto no puede exceder ${pagoActual.toFixed(2)}$`;
-        montoError.style.display = "block";
-        estadoMontoValido = false;
-      } else {
-        montoError.style.display = "none";
-        estadoMontoValido = true;
-      }
-    } else {
-      montoError.style.display = "none";
-      estadoMontoValido = false;
-    }
-
-    actualizarEstadoBoton();
-  }
-
-  function validarClaves() {
-    const clave = claveInput.value.trim();
-    const confirmar = confirmarInput.value.trim();
-
-    if (clave.length >= 7 && confirmar.length >= 7) {
-      if (clave !== confirmar) {
-        alertaClave.textContent = "⚠️ Las claves no coinciden.";
-        alertaClave.style.display = "block";
-        estadoClaveValida = false;
-      } else {
-        alertaClave.style.display = "none";
-        estadoClaveValida = true;
-      }
-    } else {
-      alertaClave.style.display = "none";
-      estadoClaveValida = false;
-    }
-
-    actualizarEstadoBoton();
-  }
-
-  function validarCorreo() {
-    const correo = correoInput.value.trim().toLowerCase();
-    const correoValido = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}$/.test(correo);
-    const dominiosPermitidos = [
-      "@gmail.com", "@yahoo.com", "@hotmail.com", "@outlook.com",
-      "@live.com", "@icloud.com", "@aol.com", "@protonmail.com",
-      "@gmx.com", "@zoho.com"
-    ];
-    const dominioValido = dominiosPermitidos.some(d => correo.endsWith(d));
-
-    if (!correoValido || !dominioValido) {
-      mostrarError("⚠️ Correo inválido o no permitido.");
-      estadoCorreoValido = false;
-    } else {
-      limpiarError();
-      estadoCorreoValido = true;
-    }
-
-    actualizarEstadoBoton();
+  function validarCedula() {
+    if (!cedulaInput) return;
+    const valor = cedulaInput.value.trim().toUpperCase();
+    if (!valor) { estados.cedula = false; actualizarAlerta("alerta-cedula", false, "", "Formato: V12345678 (V o E + 7-8 dígitos)"); verificarEstadoBoton(); return; }
+    const ok = /^[VE][1-9][0-9]{6,7}$/.test(valor);
+    estados.cedula = !ok;
+    actualizarAlerta("alerta-cedula", !ok, "Formato inválido. Ej: V12345678", "Cédula válida");
+    verificarEstadoBoton();
   }
 
   function validarTelefono() {
-    const telefono = telefonoInput.value.trim();
-    const prefijosValidos = [
-      "0212","0412","0414","0415","0416","0417","0418",
-      "0424","0426","0246","0247","0235","0238","0239"
-    ];
-    const prefijo = telefono.substring(0, 4);
-    const sufijo = telefono.substring(4);
+    if (!telefonoInput) return;
+    const valor = telefonoInput.value.trim();
+    if (!valor) { estados.telefono = false; actualizarAlerta("alerta-telefono", false, "", "11 dígitos con código de operadora válido"); verificarEstadoBoton(); return; }
+    const prefijos = ["0212","0412","0414","0415","0416","0417","0418","0424","0426","0246","0247","0235","0238","0239"];
+    const prefijo = valor.substring(0, 4);
+    const sufijo = valor.substring(4);
+    const ok = /^[0-9]{11}$/.test(valor) && prefijos.includes(prefijo) && !/^0+$/.test(sufijo);
+    estados.telefono = !ok;
+    actualizarAlerta("alerta-telefono", !ok, "Debe tener 11 dígitos y código válido (ej: 04123334444)", "Teléfono válido");
+    verificarEstadoBoton();
+  }
 
-    const telefonoValido = /^[0-9]{11}$/.test(telefono);
-    const sufijoValido = !/^0+$/.test(sufijo);
+  function validarWsp() {
+    if (!wspInput) return;
+    const valor = wspInput.value.trim();
+    if (!valor) { estados.wsp = false; actualizarAlerta("alerta-wsp", false, "", "12 dígitos: 58 + código + número"); verificarEstadoBoton(); return; }
+    const codigos = ["212","412","414","415","416","417","418","424","426","235"];
+    const ok = /^\d{12}$/.test(valor)
+      && /[1-9]/.test(valor.charAt(0))
+      && codigos.includes(valor.substring(2, 5))
+      && !/^0{7}$/.test(valor.substring(5));
+    estados.wsp = !ok;
+    actualizarAlerta("alerta-wsp", !ok, "Debe ser 58 + código (ej: 584123334444)", "WhatsApp válido");
+    verificarEstadoBoton();
+  }
 
-    if (!telefonoValido || !prefijosValidos.includes(prefijo) || !sufijoValido) {
-      mostrarError("⚠️ Teléfono inválido o no permitido.");
-      estadoTelefonoValido = false;
-    } else {
-      limpiarError();
-      estadoTelefonoValido = true;
+  function validarFecha() {
+    if (!fechaInput) return;
+    const valor = fechaInput.value;
+    if (!valor) { estados.fecha = false; actualizarAlerta("alerta-fecha", false, "", "Debe tener al menos 9 años"); verificarEstadoBoton(); return; }
+    const fechaIngresada = new Date(valor);
+    const hoy = new Date();
+    const limite = new Date(hoy.getFullYear() - 9, hoy.getMonth(), hoy.getDate());
+    const ok = fechaIngresada <= limite;
+    estados.fecha = !ok;
+    actualizarAlerta("alerta-fecha", !ok, "Debe tener al menos 9 años cumplidos", "Fecha válida");
+    verificarEstadoBoton();
+  }
+
+  function validarClave() {
+    if (!claveInput) return;
+    const valor = claveInput.value;
+    if (!valor) { estados.clave = false; actualizarAlerta("alerta-clave", false, "", "Mínimo 7 caracteres"); verificarEstadoBoton(); return; }
+    const ok = valor.length >= 7 && !valor.startsWith(" ");
+    estados.clave = !ok;
+    actualizarAlerta("alerta-clave", !ok, "Mínimo 7 caracteres, sin espacios al inicio", "Clave válida");
+    verificarEstadoBoton();
+  }
+
+  function validarConfirmar() {
+    if (!confirmarInput) return;
+    const confirmar = confirmarInput.value;
+    if (!confirmar) { estados.confirmar = false; actualizarAlerta("alerta-confirmar-clave", false, "", "Debe coincidir con la clave"); verificarEstadoBoton(); return; }
+    const ok = confirmar.length >= 7 && confirmar === claveInput.value;
+    estados.confirmar = !ok;
+    actualizarAlerta("alerta-confirmar-clave", !ok, "Las claves no coinciden", "Las claves coinciden");
+    verificarEstadoBoton();
+  }
+
+  // ==============================================
+  // ACTUALIZAR PAGO (Versión Segura con jQuery)
+  // ==============================================
+  function actualizarPago() {
+    if (!selectCurso) return;
+    
+    // Obtenemos el option seleccionado usando jQuery y los elementos nativos de forma segura
+    let pago = 0;
+    const selectedOption = selectCurso.options[selectCurso.selectedIndex];
+    
+    if (selectedOption && selectedOption.hasAttribute('data-inscripcion')) {
+        pago = parseFloat(selectedOption.getAttribute('data-inscripcion')) || 0;
     }
 
-    actualizarEstadoBoton();
+    if (pagoTexto) {
+        pagoTexto.textContent = pago > 0
+            ? `Pago de inscripción: ${pago.toFixed(2)}$`
+            : "Pago de inscripción: No definido";
+    }
+      
+    const montoInput = document.getElementById("monto");
+    if (montoInput) {
+        montoInput.value = pago > 0 ? pago.toFixed(2) : "0";
+    }
   }
 
-  // Eventos
-  if (window.jQuery) {
-    $('#curso_up').on('select2:select', actualizarPago);
-  } else {
-    selectCurso.addEventListener("change", actualizarPago);
+  // Eventos para Select2 y Select Nativo sincronizados
+  if (window.jQuery && $('#curso_up').length) {
+      $('#curso_up').on('change select2:select select2:clear', function () {
+          actualizarPago();
+      });
+  } else if (selectCurso) {
+      selectCurso.addEventListener("change", actualizarPago);
   }
 
-  montoInput.addEventListener("input", validarMonto);
-  claveInput.addEventListener("input", validarClaves);
-  confirmarInput.addEventListener("input", validarClaves);
-  correoInput.addEventListener("input", validarCorreo);
-  telefonoInput.addEventListener("input", validarTelefono);
-  fechaInput.addEventListener("change", validarFechaNacimiento);
+  // Listeners de los demás campos
+  if (cedulaInput) cedulaInput.addEventListener("input", validarCedula);
+  if (telefonoInput) telefonoInput.addEventListener("input", validarTelefono);
+  if (wspInput) wspInput.addEventListener("input", validarWsp);
+  if (fechaInput) fechaInput.addEventListener("change", validarFecha);
+  if (claveInput) claveInput.addEventListener("input", validarClave);
+  if (confirmarInput) confirmarInput.addEventListener("input", validarConfirmar);
 
-  // Inicializar al cargar
+  // Inicialización de estados
   actualizarPago();
-  validarClaves();
-  validarCorreo();
+  validarCedula();
   validarTelefono();
-  validarFechaNacimiento();
+  validarWsp();
+  validarFecha();
+  validarClave();
+  validarConfirmar();
+  verificarEstadoBoton();
 });
 </script>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<!-- Inicialización -->
+
+<!--limpiar cache-->
 <script>
-  $(document).ready(function() {
-    $('.select2').select2({
-      placeholder: "Seleccione un curso",
-      allowClear: true,
-      width: '100%'
-    });
-  });
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.querySelector('form.FormularioAjax');
+    if (!form) return;
+
+    const STORAGE_KEY = 'solicitud_inscripcion_cache';
+
+    // CAMPOS QUE SÍ SE GUARDAN
+    // (excluye contraseñas y archivos)
+    const camposAGuardar = [
+        'nombre', 'apellido',
+        'fecha_nacimiento', 'cedula', 'telefono', 'wsp',
+        'correo', 'direccion', 'lugar_n',
+        'nivel_est', 'oficio', 'trabajo',
+        'monto', 'fecha_pago', 'metodo_pago'
+    ];
+
+    function guardarCache() {
+        const datos = {};
+
+        camposAGuardar.forEach(nombre => {
+            const input = form.querySelector(`[name="${nombre}"]`);
+            if (!input) return;
+
+            if (input.type === 'checkbox') {
+                datos[nombre] = input.checked;
+            } else {
+                datos[nombre] = input.value;
+            }
+        });
+
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(datos));
+        } catch (e) {
+            console.warn('No se pudo guardar en localStorage:', e);
+        }
+    }
+
+
+    function restaurarCache() {
+        let datos = null;
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return;
+            datos = JSON.parse(raw);
+        } catch (e) {
+            return;
+        }
+
+        if (!datos || typeof datos !== 'object') return;
+
+        camposAGuardar.forEach(nombre => {
+            const input = form.querySelector(`[name="${nombre}"]`);
+            if (!input || datos[nombre] === undefined) return;
+
+            if (input.type === 'checkbox') {
+                input.checked = !!datos[nombre];
+            } else {
+                input.value = datos[nombre];
+            }
+
+            // Disparar eventos para que las validaciones se actualicen
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+    }
+
+    // ============================================
+    // LISTENERS
+    // ============================================
+    form.addEventListener('input', guardarCache);
+    form.addEventListener('change', guardarCache);
+
+    // Restaurar al cargar
+    restaurarCache();
+});
 </script>
-
-
-
-
-
-
-
-

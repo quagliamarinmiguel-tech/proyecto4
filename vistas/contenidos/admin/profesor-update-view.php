@@ -24,14 +24,18 @@ $carpeta = $carpetasPorCargo[$cargo] ?? "admin";
 $idEnc = $_GET['profesor_id_up'] ?? '';
 require_once "./controladores/profesorControlador.php";
 $ctrl = new profesorControlador();
-$datos = $ctrl->datos_profesor_controlador("Unico", $idEnc);
+$idReal = mainModel::decryption($idEnc); 
+$resultado = $ctrl->datos_profesor_controlador($idEnc);
 
-if($datos->rowCount() != 1){
+if (!$resultado['ok'] || empty($resultado['data'][0])) {
     echo '<div class="alert alert-danger text-center">No se encontró el profesor.</div>';
     exit();
 }
+
+$profesor = $resultado['data'][0];
+//var_dump($profesor);
+//die();
 $idReal = mainModel::decryption($idEnc); 
-$profesor = $datos->fetch();
 ?>
 
 
@@ -68,54 +72,26 @@ select {
     <h3 class="text-left"><i class="fas fa-chalkboard-teacher fa-fw"></i> &nbsp; ACTUALIZAR PROFESOR</h3>
 </div>
 
-<!--div class="container-fluid">
-    <ul class="full-box list-unstyled page-nav-tabs">
-        <li>
-            <a href="<?php echo SERVERURL; ?>index.php?views=cohorte-new"><i class="fas fa-calendar-plus fa-fw"></i> &nbsp; NUEVO PROFESOR</a>
-        </li>
-        <li>
-            <a href="<?php echo SERVERURL; ?>index.php?views=cohorte-list"><i class="fas fa-calendar-alt fa-fw"></i> &nbsp; LISTA DE PROFESORES</a>
-        </li>
-                <li>
-            <a class="active" href="<?php echo SERVERURL; ?>index.php?views=cohorte-new"><i class="fas fa-calendar-plus fa-fw"></i> &nbsp; ACTUALIZAR PROFESOR</a>
-        </li>
-    </ul>   
-</div-->
-
-
-
 <div class="container-fluid">
     <ul class="full-box list-unstyled page-nav-tabs">
         <li>
-            <a href="<?php echo SERVERURL . 'index.php?views=' . urlencode($carpeta) . '/profesor-new'; ?>"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO PROFESOR</a>
-            <!--a href="<?php echo SERVERURL; ?>professor-new/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO PROFESOR</a-->
+            <a href="<?php echo SERVERURL; ?>index.php?views=profesor-new"><i class="fas fa-calendar-plus fa-fw"></i> &nbsp; NUEVO PROFESOR</a>
         </li>
         <li>
-            <a href="<?php echo SERVERURL . 'index.php?views=' . urlencode($carpeta) . '/profesor-list'; ?>"><i class="fas fa-chalkboard-teacher fa-fw"></i> &nbsp; LISTA DE PROFESORES</a>
-            <!--a href="<?php echo SERVERURL; ?>professor-list/"><i class="fas fa-chalkboard-teacher fa-fw"></i> &nbsp; LISTA DE PROFESORES</a-->
+            <a href="<?php echo SERVERURL; ?>index.php?views=profesor-list"><i class="fas fa-calendar-alt fa-fw"></i> &nbsp; LISTA DE PROFESORES</a>
         </li>
 
-        <li>
-            <a class="active" href="<?php echo SERVERURL . 'index.php?views=' . urlencode($carpeta) . '/profesor-update'; ?>"><i class="fas fa-calendar-plus fa-fw"></i> &nbsp; ACTUALIZAR PROFESOR</a>
-            <!--a class="active" href="<?php echo SERVERURL; ?>index.php?views=cohorte-new"><i class="fas fa-calendar-plus fa-fw"></i> &nbsp; ACTUALIZAR PROFESOR</a-->
-        </li>
-        
-        
-      </ul>
+    </ul>   
 </div>
-
-
-
-
 
 
 <div class="container-fluid">
     <form id="form-update-profesor" class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/profesorAjax.php" method="POST" data-form="update" enctype="multipart/form-data" autocomplete="off">
 
         <input type="hidden" name="profesor_id_up" value="<?php echo $idEnc; ?>">
-        <input type="hidden" name="estado_profesor" value="<?php echo $profesor['estado_profesor']; ?>">
-        <!--input type="hidden" name="profe_mostrar" value="<?php echo $profesor['profe_mostrar']; ?>"-->
-        <input type="hidden" name="imagen_fk" value="<?php echo $profesor['imagen_profesor_fk']; ?>">
+        <input type="hidden" name="estado_profesor" value="<?php echo $profesor['state']; ?>">
+        <!--input type="hidden" name="profe_mostrar" value="<?php echo $profesor['show_teacher']; ?>"-->
+        <input type="hidden" name="imagen_fk" value="<?php echo $profesor['img_id']; ?>">
         <fieldset>
             <legend><i class="far fa-id-card"></i> &nbsp; Datos personales</legend>
             <div class="text-danger fw-bold" id="alerta-profesor" style="display:none; font-size: 1rem; margin-top: 0.5rem;"></div>
@@ -126,20 +102,14 @@ select {
                 <div class="col-md-6 mb-3">
                     <!--label class="form-label">Cédula</label-->
                     <div class="input-group">
-                        <!-- Cédula completa -->
-                                        <!--div class="col-md-6 mb-3">
-                                            <label class="form-label">Cédula</label>
-                                        <input type="text" id="ci_input" name="ci_reg" class="form-control" maxlength="10" pattern="[VEve]{1}[0-9]{5,9}" 
-                                        placeholder="V12345678" required value="<?php echo htmlspecialchars($profesor['ci_profesor']); ?>">
-                                            <small class="text-muted">Debe comenzar con V o E seguido de hasta 9 dígitos.</small>
-                                        </div-->
-
-
+                      
                         <!-- Cédula completa -->
                         <div class="col-md-6 mb-3">
+                            <div class="text-success small mt-1" id="alerta-cedula-repetida" style="font-weight: bold;">
+                                <i class="fas fa-check-circle"></i> La cédula no debe repetirse en el sistema
+                            </div>
                             <label class="form-label fw-bold text-primary">Cédula</label>
-                            <!-- pattern="[VE]{1}[0-9]{5,8}"-->
-                            <input type="text" id="ci_input" name="ci_reg" class="form-control" maxlength="10" pattern="[VEve]{1}[1-9]{1}[0-9]{6,7}" placeholder="ej:V12345678" value="<?php echo htmlspecialchars($profesor['ci_profesor']); ?>" required>
+                            <input type="text" id="ci_input" name="ci_reg" class="form-control" maxlength="10" pattern="[VEve]{1}[1-9]{1}[0-9]{6,7}" placeholder="ej:V12345678" value="<?php echo htmlspecialchars($profesor['ci']); ?>" required>
                             <small class="text-muted">Debe comenzar con V o E seguido de hasta 8 dígitos.</small>
                         </div>
 
@@ -151,40 +121,49 @@ select {
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold text-primary">Nombre</label>
                     <input type="text" class="form-control" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ][a-zA-ZáéíóúÁÉÍÓÚñÑ ]{0,19}" name="nombre_reg" maxlength="20" required
-                        value="<?php echo htmlspecialchars($profesor['nombre_profesor']); ?>">
+                        value="<?php echo htmlspecialchars($profesor['name']); ?>">
                 </div>
 
                 <!-- Apellido -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold text-primary">Apellido</label>
                     <input type="text" class="form-control" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ][a-zA-ZáéíóúÁÉÍÓÚñÑ ]{0,19}" name="apellido_reg" maxlength="20" required
-                        value="<?php echo htmlspecialchars($profesor['apellido_profesor']); ?>">
+                        value="<?php echo htmlspecialchars($profesor['last_name']); ?>">
                 </div>
 
                 <!-- Correo -->
                 <div class="col-md-6 mb-3">
+                    <div class="text-success small mt-1" id="alerta-correo-repetido" style="font-weight: bold;">
+                        <i class="fas fa-check-circle"></i> El correo no debe repetirse en el sistema
+                    </div>
                     <label class="form-label fw-bold text-primary">Correo electrónico</label>
                     <input type="text" class="form-control" name="correo_reg" maxlength="60" required
-                        value="<?php echo htmlspecialchars($profesor['correo']); ?>">
+                        value="<?php echo htmlspecialchars($profesor['email']); ?>">
                 </div>
 
                 <!-- Teléfono -->
                 <div class="col-md-6 mb-3">
+                    <div class="text-success small mt-1" id="alerta-telefono-repetido" style="font-weight: bold;">
+                        <i class="fas fa-check-circle"></i> El teléfono no debe repetirse en el sistema
+                    </div>
+                    <div class="text-success small mt-1" id="alerta-telefono-formato" style="font-weight: bold;">
+                        <i class="fas fa-check-circle"></i> El teléfono debe tener 11 caracteres y prefijo válido
+                    </div>
                     <label class="form-label fw-bold text-primary">Teléfono</label>
                     <input type="tel" class="form-control" name="telefono_reg" maxlength="12"
-                        pattern="[0-9]{7,12}" value="<?php echo htmlspecialchars($profesor['telefono_profesor']); ?>">
+                        pattern="[0-9]{7,12}" value="<?php echo htmlspecialchars($profesor['phone']); ?>">
                 </div>
 
                 <!-- Descripción -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold text-primary">Descripción profesional</label>
-                    <textarea name="descripcion_reg" class="form-control" rows="3" maxlength="120"><?php echo htmlspecialchars($profesor['descripcion']); ?></textarea>
+                    <textarea name="descripcion_reg" class="form-control" rows="3" maxlength="120"><?php echo htmlspecialchars($profesor['description'] ?? ''); ?></textarea>
                 </div>
 
                 <!-- Imagen actual -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold text-primary">Imagen actual</label><br>
-                    <img src="<?php echo SERVERURL.'vistas/'.$profesor['ruta']; ?>" alt="Imagen actual" class="img-thumbnail" style="max-width:200px;">
+                    <img src="<?php echo SERVERURL.'vistas/'.$profesor['img']['route']; ?>" alt="Imagen actual" class="img-thumbnail" style="max-width:200px;">
                 </div>
 
                 <!-- Imagen nueva -->
@@ -219,8 +198,8 @@ select {
                 </label>
 
                 <select name="profe_mostrar" class="form-select" required>
-                    <option value="1" <?php echo ($profesor['profe_mostrar'] == 1) ? 'selected' : ''; ?>>Sí</option>
-                    <option value="0" <?php echo ($profesor['profe_mostrar'] == 0) ? 'selected' : ''; ?>>No</option>
+                    <option value="1" <?php echo ($profesor['show_teacher'] == 1) ? 'selected' : ''; ?>>Sí</option>
+                    <option value="0" <?php echo ($profesor['show_teacher'] == 0) ? 'selected' : ''; ?>>No</option>
                 </select>
 
                 <div class="form-text text-muted mt-1">
@@ -252,35 +231,11 @@ select {
 </div>
 
 
-<!--
 
 
 
-    // 🧠 Validar y transformar la cédula antes de enviar
-    form.addEventListener("submit", (e) => {
-        const ciVal = ciInput.value.trim().toUpperCase();
-        const regex = /^[VE]{1}[0-9]{5,9}$/;
 
-        if (!regex.test(ciVal)) {
-            e.preventDefault();
-            alert("La cédula debe comenzar con V o E seguida de 5 a 9 dígitos.");
-            return;
-        }
-
-        ciInput.value = ciVal;
-    });
-
-    // 🔠 Autotransformar la cédula a mayúscula + dígitos válidos
-    ciInput.addEventListener("input", () => {
-        if (ciInput.value.length >= 1) {
-            const prefix = ciInput.value.charAt(0).toUpperCase();
-            const digits = ciInput.value.slice(1).replace(/[^0-9]/g, '');
-            ciInput.value = prefix + digits;
-        }
-    });
-
--->
-
+   
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
@@ -337,62 +292,230 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 </script>
-
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const ciInput = document.getElementById("ci_input");
-  const correoInput = document.querySelector("input[name='correo_reg']");
-  const telefonoInput = document.querySelector("input[name='telefono_reg']");
-  const alerta = document.getElementById("alerta-profesor");
-  const btnSubmit = document.querySelector("button[type='submit']");
-  const SERVERURL = "<?php echo SERVERURL; ?>";
-  //const profesorId = "<hp echo $idEnc; >";
-  const profesorId = "<?php echo $idReal; ?>";
+document.addEventListener("DOMContentLoaded", function () {
+    // ==============================================
+    // REFERENCIAS A ELEMENTOS
+    // ==============================================
+    const ciInput = document.getElementById("ci_input");
+    const correoInput = document.querySelector("input[name='correo_reg']");
+    const telefonoInput = document.querySelector("input[name='telefono_reg']");
+    const btnSubmit = document.querySelector("button[type='submit']");
+    const SERVERURL = window.SERVERURL || "<?php echo SERVERURL; ?>";
+    const profesorId = <?php echo $idReal; ?>; // 🔥 ID REAL del profesor en edición
 
-console.log(profesorId);
-  function mostrarError(mensaje) {
-    alerta.textContent = mensaje;
-    alerta.style.display = "block";
-    btnSubmit.disabled = true;
-  }
+    // IDs de los divs de alerta (deben existir en el HTML)
+    const ALERTAS = {
+        CI: "alerta-cedula-repetida",
+        CORREO: "alerta-correo-repetido",
+        TELEFONO: "alerta-telefono-repetido",
+        TELEFONO_FORMATO: "alerta-telefono-formato"
+    };
 
-  function limpiarError() {
-    alerta.textContent = "";
-    alerta.style.display = "none";
-    btnSubmit.disabled = false;
-  }
+    // ==============================================
+    // ESTADO DE VALIDACIONES
+    // ==============================================
+    let estadoValidaciones = {
+        ci: false,
+        correo: false,
+        telefono_duplicado: false,
+        telefono_formato: false
+    };
 
-  function validarProfesorEdicion() {
-    const ci = ciInput.value.trim();
-    const correo = correoInput.value.trim();
-    const telefono = telefonoInput.value.trim();
+    // ==============================================
+    // FUNCIÓN PARA ACTUALIZAR ALERTA (color, ícono, texto)
+    // ==============================================
+    function actualizarAlerta(idAlerta, hayError, mensaje = null) {
+        const div = document.getElementById(idAlerta);
+        if (!div) return;
 
-    if (ci === "" || correo === "" || telefono === "") {
-      mostrarError("Complete todos los campos obligatorios.");
-      return;
+        if (!div.getAttribute("data-mensaje-original")) {
+            const textoOriginal = div.textContent.trim();
+            div.setAttribute("data-mensaje-original", textoOriginal);
+        }
+
+        div.classList.remove("text-success", "text-danger");
+        div.classList.add(hayError ? "text-danger" : "text-success");
+
+        if (hayError) {
+            div.innerHTML = `<i class="fas fa-times-circle"></i> ${mensaje || "Error"}`;
+        } else {
+            const mensajeOriginal = div.getAttribute("data-mensaje-original") || "Campo válido";
+            div.innerHTML = `<i class="fas fa-check-circle"></i> ${mensajeOriginal}`;
+        }
     }
 
-    fetch(`${SERVERURL}ajax/profesorAjax.php?accion=validar_profesor_edicion&id=${encodeURIComponent(profesorId)}&ci=${encodeURIComponent(ci)}&telefono=${encodeURIComponent(telefono)}&correo=${encodeURIComponent(correo)}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data && typeof data === "object" && "valido" in data) {
-          if (!data.valido) {
-            mostrarError(data.mensaje || "Hay un error en los datos.");
-          } else {
-            limpiarError();
-          }
+    // ==============================================
+    // FUNCIÓN PARA BLOQUEAR/DESBLOQUEAR BOTÓN
+    // ==============================================
+    function verificarEstadoBoton() {
+        const hayError = Object.values(estadoValidaciones).some(valor => valor === true);
+        
+        btnSubmit.disabled = hayError;
+        if (hayError) {
+            btnSubmit.classList.add("btn-disabled");
+            btnSubmit.style.opacity = "0.5";
+            btnSubmit.style.cursor = "not-allowed";
         } else {
-          mostrarError("Respuesta inesperada del servidor.");
+            btnSubmit.classList.remove("btn-disabled");
+            btnSubmit.style.opacity = "1";
+            btnSubmit.style.cursor = "pointer";
         }
-      })
-      .catch(err => {
-        console.error("Error al validar profesor:", err);
-        mostrarError("Error de conexión con el servidor.");
-      });
-  }
+    }
 
-  ciInput.addEventListener("input", validarProfesorEdicion);
-  correoInput.addEventListener("input", validarProfesorEdicion);
-  telefonoInput.addEventListener("input", validarProfesorEdicion);
+    // ==============================================
+    // FUNCIÓN PARA LIMPIAR ERRORES DE UN CAMPO
+    // ==============================================
+    function limpiarErrorCampo(campo) {
+        estadoValidaciones[campo] = false;
+        if (campo === 'ci') actualizarAlerta(ALERTAS.CI, false);
+        if (campo === 'correo') actualizarAlerta(ALERTAS.CORREO, false);
+        if (campo === 'telefono_duplicado') actualizarAlerta(ALERTAS.TELEFONO, false);
+        if (campo === 'telefono_formato') actualizarAlerta(ALERTAS.TELEFONO_FORMATO, false);
+        verificarEstadoBoton();
+    }
+
+    // ==============================================
+    // VALIDACIÓN INDIVIDUAL: CÉDULA (con ID)
+    // ==============================================
+    let timeoutCI = null;
+    function validarCI() {
+        clearTimeout(timeoutCI);
+        const valor = ciInput.value.trim();
+
+        if (!valor) {
+            limpiarErrorCampo('ci');
+            return;
+        }
+
+        timeoutCI = setTimeout(() => {
+            fetch(`${SERVERURL}ajax/profesorAjax.php?accion=validar_cedula_duplicada&ci=${encodeURIComponent(valor)}&excluir=${profesorId}`)
+                .then(res => res.json())
+                .then(data => {
+                    const duplicado = data.duplicado === true;
+                    estadoValidaciones.ci = duplicado;
+                    actualizarAlerta(ALERTAS.CI, duplicado, duplicado ? "La cédula ya está registrada" : null);
+                    verificarEstadoBoton();
+                })
+                .catch(err => {
+                    console.error("Error validando cédula:", err);
+                    estadoValidaciones.ci = false;
+                    verificarEstadoBoton();
+                });
+        }, 2000);
+    }
+
+    // ==============================================
+    // VALIDACIÓN INDIVIDUAL: CORREO (con ID)
+    // ==============================================
+    let timeoutCorreo = null;
+    function validarCorreo() {
+        clearTimeout(timeoutCorreo);
+        const valor = correoInput.value.trim();
+
+        if (!valor) {
+            limpiarErrorCampo('correo');
+            return;
+        }
+
+        timeoutCorreo = setTimeout(() => {
+            fetch(`${SERVERURL}ajax/profesorAjax.php?accion=validar_correo_duplicado&correo=${encodeURIComponent(valor)}&excluir=${profesorId}`)
+                .then(res => res.json())
+                .then(data => {
+                    const duplicado = data.duplicado === true;
+                    estadoValidaciones.correo = duplicado;
+                    actualizarAlerta(ALERTAS.CORREO, duplicado, duplicado ? "El correo ya está registrado" : null);
+                    verificarEstadoBoton();
+                })
+                .catch(err => {
+                    console.error("Error validando correo:", err);
+                    estadoValidaciones.correo = false;
+                    verificarEstadoBoton();
+                });
+        }, 2000);
+    }
+
+    // ==============================================
+    // VALIDACIÓN INDIVIDUAL: TELÉFONO (formato + duplicado con ID)
+    // ==============================================
+    let timeoutTelefono = null;
+    function validarTelefono() {
+        clearTimeout(timeoutTelefono);
+        const valor = telefonoInput.value.trim();
+
+        if (!valor) {
+            limpiarErrorCampo('telefono_formato');
+            limpiarErrorCampo('telefono_duplicado');
+            return;
+        }
+
+        timeoutTelefono = setTimeout(() => {
+            // 1. Validar formato (sin ID)
+            fetch(`${SERVERURL}ajax/profesorAjax.php?accion=validar_telefono_formato&telefono=${encodeURIComponent(valor)}`)
+                .then(res => res.json())
+                .then(data => {
+                    const formatoValido = data.formato_valido === true;
+                    estadoValidaciones.telefono_formato = !formatoValido;
+                    actualizarAlerta(ALERTAS.TELEFONO_FORMATO, !formatoValido, !formatoValido ? "El teléfono no tiene un formato válido" : null);
+                    verificarEstadoBoton();
+
+                    // 2. Si el formato es válido, validar duplicado (con ID)
+                    if (formatoValido) {
+                        fetch(`${SERVERURL}ajax/profesorAjax.php?accion=validar_telefono_duplicado&telefono=${encodeURIComponent(valor)}&excluir=${profesorId}`)
+                            .then(res => res.json())
+                            .then(data => {
+                                const duplicado = data.duplicado === true;
+                                estadoValidaciones.telefono_duplicado = duplicado;
+                                actualizarAlerta(ALERTAS.TELEFONO, duplicado, duplicado ? "El teléfono ya está registrado" : null);
+                                verificarEstadoBoton();
+                            })
+                            .catch(err => {
+                                console.error("Error validando teléfono duplicado:", err);
+                                estadoValidaciones.telefono_duplicado = false;
+                                verificarEstadoBoton();
+                            });
+                    } else {
+                        // Si formato inválido, limpiar error de duplicado
+                        estadoValidaciones.telefono_duplicado = false;
+                        actualizarAlerta(ALERTAS.TELEFONO, false);
+                        verificarEstadoBoton();
+                    }
+                })
+                .catch(err => {
+                    console.error("Error validando formato de teléfono:", err);
+                    estadoValidaciones.telefono_formato = false;
+                    verificarEstadoBoton();
+                });
+        }, 2000);
+    }
+
+    // ==============================================
+    // EVENTOS: cada campo tiene su propio listener
+    // ==============================================
+    ciInput.addEventListener("input", validarCI);
+    correoInput.addEventListener("input", validarCorreo);
+    telefonoInput.addEventListener("input", validarTelefono);
+
+    // ==============================================
+    // INICIALIZAR
+    // ==============================================
+    Object.values(ALERTAS).forEach(id => {
+        const div = document.getElementById(id);
+        if (div) {
+            const textoOriginal = div.textContent.trim();
+            div.setAttribute("data-mensaje-original", textoOriginal);
+        }
+    });
+
+    // Si hay valores precargados, validar al inicio
+    if (ciInput.value) setTimeout(validarCI, 500);
+    if (correoInput.value) setTimeout(validarCorreo, 500);
+    if (telefonoInput.value) setTimeout(validarTelefono, 500);
+
+    // Asegurar que los divs de alerta muestren mensajes originales (verde)
+    Object.values(ALERTAS).forEach(id => {
+        actualizarAlerta(id, false);
+    });
+    verificarEstadoBoton();
 });
 </script>

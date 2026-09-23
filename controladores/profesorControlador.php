@@ -9,419 +9,527 @@ if($peticionAjax){
 
 class profesorControlador extends profesorModelo{
 
-public function agregar_profesor_controlador2(){
-    // Obtener y validar campos básicos
-    $ci = strtoupper(mainModel::limpiar_cadena($_POST['ci_reg'] ?? ''));
-    $nombre = mainModel::limpiar_cadena($_POST['nombre_reg']);
-    $apellido = mainModel::limpiar_cadena($_POST['apellido_reg']);
-    $correo = mainModel::limpiar_cadena($_POST['correo_reg']);
-    $telefono = mainModel::limpiar_cadena($_POST['telefono_reg']);
-    $mostrar = mainModel::limpiar_cadena($_POST['profe_mostrar'] ?? "1");
     
-    // Campos condicionales
-    $descripcion = ($mostrar == "1") ? mainModel::limpiar_cadena($_POST['descripcion_reg'] ?? '') : '';
-    $imagen_fk = "0"; // Valor por defecto
-
-    // Validaciones comunes
-    if($ci == "" || $nombre == "" || $apellido == "" || $correo == ""){
-        return json_encode([
-            "Alerta" => "simple",
-            "Titulo" => "Campos incompletos",
-            "Texto" => "Debes completar los campos obligatorios",
-            "Tipo" => "error"
-        ]);
+    
+    public function validar_cedula_no_duplicado(string $ci, ?int $id_excluir = null): array{
+        $accessToken = $_SESSION['auth_access_token'] ?? null;
+        return mainModel::verificar_cedula_duplicada_supabase($ci, "teacher", $accessToken, $id_excluir);
     }
 
-    // Usar la validación universal para CI, Correo y Teléfono
-    $val_ci = mainModel::validar_cedula_universal($ci, 'profesor', 'ci_profesor', null, null);
-    if($val_ci['Tipo'] == 'error'){
-        return json_encode($val_ci);
+    public function validar_correo_no_duplicado(string $correo, ?int $id_excluir = null): array{
+        $accessToken = $_SESSION['auth_access_token'] ?? null;
+        return mainModel::verificar_correo_duplicado_supabase($correo, "teacher", $accessToken, $id_excluir);
     }
 
-    $val_correo = mainModel::validar_correo_universal($correo, 'profesor', 'correo', null, null);
-    if($val_correo['Tipo'] == 'error'){
-        return json_encode($val_correo);
+    public function validar_telefono_no_duplicado(string $telefono, ?int $id_excluir = null): array{
+        $accessToken = $_SESSION['auth_access_token'] ?? null;
+        return mainModel::verificar_telefono_duplicado_supabase($telefono, "teacher", $accessToken, $id_excluir);
     }
-
-    if($telefono != ""){
-        $val_tel = mainModel::validar_telefono_universal($telefono, 'profesor', 'telefono_profesor', null, null);
-        if($val_tel['Tipo'] == 'error'){
-            return json_encode($val_tel);
+    
+    public function validar_telefono_formato($telefono) {
+        return mainModel::validar_telefono_universal($telefono);
+    }
+    
+    //de profe update para traer sus datos
+    public function datos_profesor_controlador($id){
+        //$tipo = mainModel::limpiar_cadena($tipo);
+        $id = mainModel::decryption($id);
+        $id = mainModel::limpiar_cadena($id);
+		$intid = (int)$id;
+        $accessToken = $_SESSION['auth_access_token'] ?? null;
+        if (!$accessToken) {
+            echo json_encode (mainModel::generarAlertaSimple('La sesión de Supabase no está disponible.', 'error', 'simple'));
+            return;
         }
-    }
+        return profesorModelo::obtener_profesor_con_imagen_supabase($intid,$accessToken);
+    }  
 
-    // Validar nombre/apellido
-    if(mainModel::verificar_datos('[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{1,20}', $nombre)){
-        return json_encode([
-            "Alerta" => "simple",
-            "Titulo" => "Nombre inválido",
-            "Texto" => "Solo se permiten letras en el nombre.",
-            "Tipo" => "error"
-        ]);
-    }
-    if(mainModel::verificar_datos('[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{1,20}', $apellido)){
-        return json_encode([
-            "Alerta" => "simple",
-            "Titulo" => "Apellido inválido",
-            "Texto" => "Solo se permiten letras en el apellido.",
-            "Tipo" => "error"
-        ]);
-    }
+    
+    public function obtener_nombre_profesor_para_filtro_controlador($id_profesor){
+        $id_profesor = mainModel::limpiar_cadena($id_profesor);
+        if (!is_numeric($id_profesor)) {return false;}
 
-    // Lógica condicional según $mostrar
-    if($mostrar == "1") {
-        // Validar y procesar imagen
-        if(isset($_FILES['archivo_imagen']) && $_FILES['archivo_imagen']['error'] === 0){
-            $archivo = $_FILES['archivo_imagen'];
-            $nombreTemp = $archivo['tmp_name'];
-            $nombreOriginal = basename($archivo['name']);
-            $ext = strtolower(pathinfo($nombreOriginal, PATHINFO_EXTENSION));
-            $permitidas = ['jpg','jpeg','png','webp'];
+        $token = $_SESSION['auth_access_token'] ?? null;
+        if ($token) {
+            $resultado = profesorModelo::obtener_profesor_supabase((int) $id_profesor, $token);
+            return $resultado['ok'] && !empty($resultado['data'][0]) ? $resultado['data'][0] : false;
+        }
+        return false;
+    }
+    
+    
+    
+    
+    
+    
 
-            if(!in_array($ext, $permitidas)){
-                return json_encode([
-                    "Alerta" => "simple",
-                    "Titulo" => "Imagen inválida",
-                    "Texto" => "Formato no permitido.",
-                    "Tipo" => "error"
-                ]);
+    public function agregar_profesor_controlador()
+    {
+        // 1. Validar campos obligatorios
+        $ci = strtoupper(mainModel::limpiar_cadena($_POST['ci_reg'] ?? ''));
+        $nombre = mainModel::limpiar_cadena($_POST['nombre_reg'] ?? '');
+        $apellido = mainModel::limpiar_cadena($_POST['apellido_reg'] ?? '');
+        $correo = mainModel::limpiar_cadena($_POST['correo_reg'] ?? '');
+        $telefono = mainModel::limpiar_cadena($_POST['telefono_reg'] ?? '');
+        $mostrar = (int) ($_POST['profe_mostrar'] ?? 0);
+        $descripcion = ($mostrar == 1) ? mainModel::limpiar_cadena($_POST['descripcion_reg'] ?? '') : '';
+
+        if ($ci == '' || $nombre == '' || $apellido == '' || $correo == '') {
+            echo json_encode (mainModel::generarAlertaSimple('Todos los campos obligatorios deben estar llenos.', 'error', 'simple'));
+            return;
+        }
+
+        if (!preg_match('/^[VE]{1}[0-9]{5,9}$/', $ci)) {
+            echo json_encode (mainModel::generarAlertaSimple('La cédula debe comenzar con V o E seguida de 5 a 9 números.', 'error', 'simple'));
+            return;
+        }
+
+        if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+            echo json_encode (mainModel::generarAlertaSimple('El correo electrónico no es válido.', 'error', 'simple'));
+            return;
+        }
+
+        if ($telefono != '' && !preg_match('/^[0-9]{7,12}$/', $telefono)) {
+            echo json_encode (mainModel::generarAlertaSimple('El teléfono debe tener entre 7 y 12 dígitos.', 'error', 'simple'));
+            return;
+        }
+        
+        if ($telefono != '') {
+            $tlfnoformato=self::validar_telefono_formato($telefono);
+			if($tlfnoformato){
+                echo json_encode (mainModel::generarAlertaSimple('Teléfono debe tener 11 digitos y la compañía movil o zona geográfica del número deben ser de u operar en Guárico.', 'error', 'simple'));
+            	return;
+            }        
+        }
+
+        $accessToken = $_SESSION['auth_access_token'] ?? null;
+        if (!$accessToken) {
+            echo json_encode (mainModel::generarAlertaSimple('La sesión de Supabase no está disponible.', 'error', 'simple'));
+            return;
+        }
+   		        
+        $this->validar_cedula_no_duplicado($ci); 
+        if (!empty($this->data)) {
+            echo json_encode(mainModel::generarAlertaSimple("Ya existe un profesor con esa cédula", "error", "simple"));
+            return;
+        }
+        
+        $this->validar_correo_no_duplicado($correo); 
+        if (!empty($this->data)) {
+            echo json_encode(mainModel::generarAlertaSimple("Ya existe un profesor con ese correo", "error", "simple"));
+            return;
+        }
+        
+        $this->validar_telefono_no_duplicado($telefono); 
+        if (!empty($this->data)) {
+            echo json_encode(mainModel::generarAlertaSimple("Ya existe un profesor con ese teléfono", "error", "simple"));
+            return;
+        }
+        
+        // --- SUBIR IMAGEN ---
+        $rutaImagen = null;
+        $archivoSubido = false;
+        $rutaAbsoluta = null;
+
+        if ($mostrar == 1) {
+            // Validar que se haya enviado imagen
+            if (!isset($_FILES['archivo_imagen']) || $_FILES['archivo_imagen']['error'] !== 0) {
+                echo json_encode (mainModel::generarAlertaSimple('Debes seleccionar una imagen válida.', 'error', 'simple'));
+                return;
             }
 
+            // Subir imagen
             $carpetaDestino = "../vistas/cm/prof/";
-            if(!file_exists($carpetaDestino)){
+            $resultadoImagen = mainModel::subir_imagen_fisica($_FILES['archivo_imagen'], $carpetaDestino, 'prof_');
+
+            if (!$resultadoImagen['ok']) {
+                echo json_encode (mainModel::generarAlertaSimple('Error al subir la imagen: ' . $resultadoImagen['mensaje'], 'error', 'simple'));
+                return;
+            }
+
+            $rutaImagen = $resultadoImagen['ruta'];
+            $archivoSubido = true;
+            $rutaAbsoluta = $resultadoImagen['ruta_absoluta'];
+        } else {
+            // Caso: show_teacher = 0 → usar imagen por defecto
+            $rutaOrigen = "../vistas/assets/img/default.webp";
+            $carpetaDestino = "../vistas/cm/prof/";
+
+            if (!file_exists($rutaOrigen)) {
+                echo json_encode (mainModel::generarAlertaSimple('No se encontró la imagen por defecto.', 'error', 'simple'));
+                return;
+            }
+
+            if (!file_exists($carpetaDestino)) {
                 mkdir($carpetaDestino, 0777, true);
             }
 
-            $nombreFinal = uniqid("prof_").".".$ext;
-            $rutaCompleta = $carpetaDestino.$nombreFinal;
+            $nombreCopia = uniqid('prof_default_') . '.webp';
+            $rutaCompleta = $carpetaDestino . $nombreCopia;
 
-            if(move_uploaded_file($nombreTemp, $rutaCompleta)){
-                $rutaRelativa = "cm/prof/".$nombreFinal;
-                $id_imagen = (new imagenModelo())->guardar_imagen_modelo2($rutaRelativa, "prof");
-
-                if(intval($id_imagen) > 0){
-                    $imagen_fk = $id_imagen;
-                } else {
-                    return json_encode([
-                        "Alerta" => "simple",
-                        "Titulo" => "Error al guardar imagen",
-                        "Texto" => "La imagen no pudo registrarse en BD.",
-                        "Tipo" => "error"
-                    ]);
-                }
+            if (copy($rutaOrigen, $rutaCompleta)) {
+                $rutaImagen = "cm/prof/" . $nombreCopia;
+                $archivoSubido = true;
+                $rutaAbsoluta = $rutaCompleta;
             } else {
-                return json_encode([
-                    "Alerta" => "simple",
-                    "Titulo" => "Error al mover imagen",
-                    "Texto" => "No se pudo almacenar la imagen en el servidor.",
-                    "Tipo" => "error"
-                ]);
+                echo json_encode (mainModel::generarAlertaSimple('No se pudo copiar la imagen por defecto.', 'error', 'simple'));
+                return;
             }
-        } else {
-            return json_encode([
-                "Alerta" => "simple",
-                "Titulo" => "Imagen faltante",
-                "Texto" => "Debes seleccionar una imagen válida.",
-                "Tipo" => "error"
-            ]);
         }
+        
+        $params = [
+            'ci' => $ci,
+            'nombre' => $nombre,
+            'apellido' => $apellido,
+            'telefono' => $telefono,
+            'correo' => $correo,
+            'descripcion' => $descripcion,
+            'mostrar' => $mostrar, 
+            'ruta_imagen' => $rutaImagen
+        ];
+		$guardar= profesorModelo::guardar_profesor_con_imagen_supabase($params, $accessToken);
 
-        // Validar descripción (solo cuando mostrar = 1)
-        if(empty($descripcion)){
-            return json_encode([
-                "Alerta" => "simple",
-                "Titulo" => "Descripción requerida",
-                "Texto" => "La descripción es obligatoria cuando el profesor se muestra.",
-                "Tipo" => "error"
-            ]);
-        }
-    } else {
-        // Cuando mostrar = 0, usar imagen default
-        $descripcion = ''; // Forzar vacío
-        
-        // Copiar imagen default y crear nuevo registro
-        $rutaOrigen = "../vistas/assets/img/default.webp";
-        $carpetaDestino = "../vistas/cm/prof/";
-        
-        // Verificar que existe la imagen default
-        if(!file_exists($rutaOrigen)){
-            return json_encode([
-                "Alerta" => "simple",
-                "Titulo" => "Imagen default no encontrada",
-                "Texto" => "No se encontró la imagen default en: assets/img/default.webp",
-                "Tipo" => "error"
-            ]);
-        }
-        
-        // Crear carpeta si no existe
-        if(!file_exists($carpetaDestino)){
-            mkdir($carpetaDestino, 0777, true);
-        }
-        
-        // Generar nombre único para la copia
-        $nombreCopia = uniqid("prof_default_") . ".webp";
-        $rutaCompleta = $carpetaDestino . $nombreCopia;
-        
-        // Copiar la imagen
-        if(copy($rutaOrigen, $rutaCompleta)){
-            $rutaRelativa = "cm/prof/" . $nombreCopia;
-            
-            // Guardar en tabla imagen
-            $id_imagen = (new imagenModelo())->guardar_imagen_modelo2($rutaRelativa, "prof");
-            
-            if(intval($id_imagen) > 0){
-                $imagen_fk = $id_imagen;
-            } else {
-                return json_encode([
-                    "Alerta" => "simple",
-                    "Titulo" => "Error al guardar imagen default",
-                    "Texto" => "No se pudo registrar la imagen default en la base de datos.",
-                    "Tipo" => "error"
-                ]);
-            }
+        if ($guardar['ok']) {
+            echo json_encode (mainModel::generarAlertaSimple('Profesor registrado exitosamente.', 'success', 'recargar'));
         } else {
-            return json_encode([
-                "Alerta" => "simple",
-                "Titulo" => "Error al copiar imagen",
-                "Texto" => "No se pudo copiar la imagen default a la carpeta de profesores.",
-                "Tipo" => "error"
-            ]);
+            if ($archivoSubido && isset($rutaAbsoluta) && file_exists($rutaAbsoluta)) {
+                unlink($rutaAbsoluta);
+            }
+            echo json_encode (mainModel::generarAlertaSimple('Error al guardar el profesor: ' . ($guardar['message'] ?? 'Error desconocido'), 'error', 'simple'));
         }
     }
-        // Cuando mostrar = 0, no se requiere imagen ni descripción
-      //  $descripcion = ''; // Forzar vacío
-    //    $imagen_fk = "148"; // Valor por defecto para no mostrar
+    
+    
+    
+    
+    public function actualizar_profesor_controlador(){
+        // 1. Validar ID
+        $idEnc = $_POST['profesor_id_up'] ?? '';
+        $idDec = mainModel::decryption($idEnc);
+        if (!is_numeric($idDec) || $idDec <= 0) {
+            echo json_encode(mainModel::generarAlertaSimple('ID inválido.', 'error', 'simple'));
+            return;
+        }
+
+        // 2. Obtener y limpiar datos
+        $ci = strtoupper(mainModel::limpiar_cadena($_POST['ci_reg'] ?? ''));
+        $nombre = mainModel::limpiar_cadena($_POST['nombre_reg'] ?? '');
+        $apellido = mainModel::limpiar_cadena($_POST['apellido_reg'] ?? '');
+        $correo = mainModel::limpiar_cadena($_POST['correo_reg'] ?? '');
+        $telefono = mainModel::limpiar_cadena($_POST['telefono_reg'] ?? '');
+        $mostrar = (bool) ($_POST['profe_mostrar'] ?? false);
+        $descripcion = ($mostrar == 1) ? mainModel::limpiar_cadena($_POST['descripcion_reg'] ?? '') : '';
+        $imagenCambiada = isset($_POST['imagen_cambiada']) ? (int) $_POST['imagen_cambiada'] : 0;
+       // var_dump($mostrar,$descripcion);die();
+
+        // 3. Validar campos obligatorios
+        if ($ci == '' || $nombre == '' || $apellido == '' || $correo == '') {
+            echo json_encode(mainModel::generarAlertaSimple('Todos los campos obligatorios deben estar llenos.', 'error', 'simple'));
+            return;
+        }
+
+        // 4. Validar formatos
+        if (!preg_match('/^[VE]{1}[0-9]{5,9}$/', $ci)) {
+            echo json_encode(mainModel::generarAlertaSimple('La cédula debe comenzar con V o E seguida de 5 a 9 números.', 'error', 'simple'));
+            return;
+        }
+
+        if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+            echo json_encode(mainModel::generarAlertaSimple('El correo electrónico no es válido.', 'error', 'simple'));
+            return;
+        }
+
+        if ($telefono != '' && !preg_match('/^[0-9]{7,12}$/', $telefono)) {
+            echo json_encode(mainModel::generarAlertaSimple('El teléfono debe tener entre 7 y 12 dígitos.', 'error', 'simple'));
+            return;
+        }
+
+        // 5. Token Supabase
+        $accessToken = $_SESSION['auth_access_token'] ?? null;
+        if (!$accessToken) {
+            echo json_encode(mainModel::generarAlertaSimple('La sesión de Supabase no está disponible.', 'error', 'simple'));
+            return;
+        }
+
+        // 6. Obtener profesor actual (para saber ruta anterior y comprobar existencia)
+        $profesorActual = profesorModelo::obtener_profesor_con_imagen_supabase($idDec, $accessToken);
+        if (!$profesorActual['ok'] || empty($profesorActual['data'][0])) {
+            echo json_encode(mainModel::generarAlertaSimple('No se encontró el profesor.', 'error', 'simple'));
+            return;
+        }
+        $profe = $profesorActual['data'][0];
+        $rutaImagenAnterior = $profe['img']['route'] ?? null;
+
+        $this->validar_cedula_no_duplicado($ci); 
+        if (!empty($this->data)) {
+            echo json_encode(mainModel::generarAlertaSimple("Ya existe un profesor con esa cédula", "error", "simple"));
+            return;
+        }
         
+        $this->validar_correo_no_duplicado($correo); 
+        if (!empty($this->data)) {
+            echo json_encode(mainModel::generarAlertaSimple("Ya existe un profesor con ese correo", "error", "simple"));
+            return;
+        }
         
-          
+        $this->validar_telefono_no_duplicado($telefono); 
+        if (!empty($this->data)) {
+            echo json_encode(mainModel::generarAlertaSimple("Ya existe un profesor con ese teléfono", "error", "simple"));
+            return;
+        }
+
+        // 8. Procesar imagen nueva (solo si se cambió)
+        $nuevaRutaImagen = null;
+        $archivoSubido = false;
+        $rutaAbsolutaNueva = null;
+
+        if ($imagenCambiada == 1 && isset($_FILES['archivo_imagen']) && $_FILES['archivo_imagen']['error'] === 0) {
+            $carpetaDestino = "../vistas/cm/prof/";
+            $resultadoImagen = mainModel::subir_imagen_fisica($_FILES['archivo_imagen'], $carpetaDestino, 'prof_');
+            if (!$resultadoImagen['ok']) {
+                echo json_encode(mainModel::generarAlertaSimple('Error al subir la imagen: ' . $resultadoImagen['mensaje'], 'error', 'simple'));
+                return;
+            }
+            $nuevaRutaImagen = $resultadoImagen['ruta'];
+            $rutaAbsolutaNueva = $resultadoImagen['ruta_absoluta'];
+            $archivoSubido = true;
+        }
+
+        // 9. Preparar datos para la RPC
+        $datosActualizar = [
+            'id' => $idDec,
+            'ci' => $ci,
+            'nombre' => $nombre,
+            'apellido' => $apellido,
+            'correo' => $correo,
+            'telefono' => $telefono,
+            'descripcion' => $descripcion,
+            'mostrar' => $mostrar,
+            'nueva_ruta_imagen' => $nuevaRutaImagen, 
+        ];
+       //var_dump($datosActualizar);die();
+
+        // 10. Llamar a la RPC
+        $resultado = profesorModelo::actualizar_profesor_con_imagen_supabase($datosActualizar, $accessToken);
+
+        // 11. Manejar respuesta
+        if ($resultado['ok']) {
+            // Éxito: si se cambió la imagen, eliminar la anterior del disco
+            if ($archivoSubido && $rutaImagenAnterior && file_exists("../vistas/" . $rutaImagenAnterior)) {
+                unlink("../vistas/" . $rutaImagenAnterior);
+            }
+            echo json_encode(mainModel::generarAlertaSimple('Profesor actualizado exitosamente.', 'success', 'recargar'));
+        } else {
+            // Fallo: eliminar la imagen nueva subida (si existe)
+            if ($archivoSubido && $rutaAbsolutaNueva && file_exists($rutaAbsolutaNueva)) {
+                unlink($rutaAbsolutaNueva);
+            }
+            echo json_encode(mainModel::generarAlertaSimple('Error al actualizar el profesor: ' . ($resultado['message'] ?? 'Error desconocido'), 'error', 'simple'));
+        }
+    }
+  
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    public function paginador_profesor_controlador($pagina, $registros, $vista, $busqueda, $state) {
+    $pagina = max(1, (int) $pagina);
+    $registros =15;
+//    $registros = max(1, (int) $registros);
+    $token = $_SESSION['auth_access_token'] ?? null;
+
+    if (!$token) {
+        return '<div class="alert alert-danger">La sesión de Supabase no está disponible.</div>';
+    }
+
+    // Preparar parámetros para la RPC
+    $params = [
+        'p_state' => (int) $state,  // 1 o 0 según la vista
+        'p_busqueda' => trim($busqueda) ?: null,
+//        'p_id' => isset($_GET['filtro_id']) && $_GET['filtro_id'] !== '' ? (int) $_GET['filtro_id'] : null,
+        'p_id' => isset($_GET['filtro_nombre']) && $_GET['filtro_nombre'] !== '' ? (int) $_GET['filtro_nombre'] : null,
+        'p_ci' => trim($_GET['filtro_ci'] ?? '') ?: null,
+        'p_orden' => $_GET['orden'] ?? 'default',
+        'p_limit' => $registros,
+        'p_offset' => ($pagina - 1) * $registros,
+    ];
+//var_dump($params);
+  //      die();
+    // Llamar directamente a la RPC (sin pasar por el modelo, como en cursos)
+    $resultado = SupabaseApi::rpcWithToken('listar_profesores', $params, $token);
+
+    if (!$resultado['ok']) {
+        return '<div class="alert alert-danger">No se pudo cargar la lista de profesores.</div>';
+    }
+
+    $profesores = $resultado['data']['data'] ?? [];
+    $total = (int) ($resultado['data']['total'] ?? 0);
+    $paginas = max(1, (int) ceil($total / $registros));
+
+    $cargo = (int) ($_SESSION['cargo_spm'] ?? 0);
+    $carpetas = [1 => 'admin', 2 => 'Control de estudio', 3 => 'administrador de pagos', 4 => 'Supervisor de cursos', 5 => 'Estudiante'];
+    $carpeta = $carpetas[$cargo] ?? 'admin';
+    $vistaCompleta = urlencode($carpeta) . '/' . urlencode($vista);
+
+    $tabla = '<div class="table-responsive"><table class="table table-dark table-sm"><thead><tr class="text-center roboto-medium"><th>Id</th><th>Cédula</th><th>Nombre</th><th>Imagen</th>';
+    if (in_array($cargo, [1, 4], true)) {      
+        if($state==1){$tabla .= '<th>Actualizar</th><th>Archivar</th>';}
+        if($state==0){$tabla .= '<th>Restaurar</th>';}        
+    }
+    $tabla .= '</tr></thead><tbody>';
+
+    if ($total > 0) {
+        $regInicio = ($pagina - 1) * $registros + 1;
+        foreach ($profesores as $profe) {
+            $id = (int) $profe['id'];
+            $ci = htmlspecialchars($profe['ci'] ?? '', ENT_QUOTES, 'UTF-8');
+            $nombreCompleto = htmlspecialchars(($profe['name'] ?? '') . ' ' . ($profe['last_name'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $imgRoute = $profe['route'] ?? 'assets/img/default.webp';
+            $idEnc = mainModel::encryption($id);
+
+            $tabla .= '<tr class="text-center">';
+            $tabla .= '<td>' . $id . '</td>';
+            $tabla .= '<td>' . $ci . '</td>';
+            $tabla .= '<td>' . $nombreCompleto . '</td>';
+            $tabla .= '<td><button type="button" class="btn btn-info btn-sm ver-imagen" data-src="' . SERVERURL . 'vistas/' . $imgRoute . '"><i class="fas fa-eye"></i></button></td>';
+            if (in_array($cargo, [1, 4], true)) {
+                
+                
+                if($state==1){
+                    $tabla .= '<td><a href="' . SERVERURL . 'index.php?views=' . urlencode($carpeta) . '/profesor-update&profesor_id_up=' . $idEnc . '" class="btn btn-success btn-sm"><i class="fas fa-sync-alt"></i></a></td>';
+                    $tabla .= '<td>
+                        <form class="FormularioAjax" action="' . SERVERURL . 'ajax/profesorAjax.php" method="POST" data-form="delete" data-entity="profesor" autocomplete="off">
+                            <input type="hidden" name="profesor_id_archive" value="' . $idEnc . '">
+                            <button type="submit" class="btn btn-warning btn-sm"><i class="fas fa-archive"></i></button>
+                        </form>
+                    </td>';
+            	}
+                
+                if($state==0){
+                    $tabla .= '<td>
+                            <form class="FormularioAjax" action="' . SERVERURL . 'ajax/profesorAjax.php" method="POST" data-form="restore" autocomplete="off">
+                                <input type="hidden" name="profesor_id_restore" value="' . $idEnc . '">
+                                <button type="submit" class="btn btn-info btn-sm">
+                                    <i class="fas fa-undo"></i> Restaurar
+                                </button>
+                            </form>
+                    </td>';
+            	}
+            }
+            $tabla .= '</tr>';
+        }
+        $regFinal = $regInicio + count($profesores) - 1;
+    } else {
+        $columnas = in_array($cargo, [1, 4]) ? 6 : 4;
+        $tabla .= '<tr class="text-center"><td colspan="' . $columnas . '">No hay profesores registrados.</td></tr>';
+    }
+    $tabla .= '</tbody></table></div>';
+
+    // Paginador
+    if ($total > 0) {
+        $tabla .= '<p class="text-right">Mostrando profesor ' . $regInicio . ' al ' . $regFinal . ' de un total de ' . $total . '</p>';
+        $paramsGet = array_filter([
+            'busqueda' => $busqueda,
+            'filtro_id' => $_GET['filtro_id'] ?? '',
+            'filtro_ci' => $_GET['filtro_ci'] ?? '',
+            'filtro_nombre' => $_GET['filtro_nombre'] ?? '',
+            'orden' => $_GET['orden'] ?? ''
+        ]);
+        $queryString = http_build_query($paramsGet);
+        if ($queryString) {
+            $queryString = '&' . $queryString;
+        }
+        $tabla .= mainModel::paginador_tablas($pagina, $paginas, SERVERURL . 'index.php?views=' . $vistaCompleta . $queryString . '&page=', 7);
+    }
+
+    // Modal de imagen (igual que antes)
+    $tabla .= '
+    <div id="modalImagen" class="modal" tabindex="-1" style="display:none; position:fixed; z-index:9999; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.75);">
+        <div style="position:relative; margin:auto; top:10%; max-width:60%; background:#000; border:3px solid #fff; padding:20px; border-radius:8px;">
+            <img id="imgPreview" src="" class="img-thumbnail" style="max-width:400px; width:80%; height:auto; display:block; margin:auto; border:3px solid white;">
+            <button onclick="document.getElementById(\'modalImagen\').style.display=\'none\'" style="position:absolute; top:10px; right:10px;" class="btn btn-sm btn-light"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+    <script>
+    document.querySelectorAll(".ver-imagen").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const modal = document.getElementById("modalImagen");
+            modal.querySelector("#imgPreview").src = btn.dataset.src;
+            modal.style.display = "block";
+        });
+    });
+    </script>';
+
+    return $tabla;
+}
+    
+    
+    
+    
     
 
-    // Preparar datos para el modelo
-    $datos = [
-        "CI" => $ci,
-        "Nombre" => $nombre,
-        "Apellido" => $apellido,
-        "Correo" => $correo,
-        "Telefono" => $telefono,
-        "Descripcion" => $descripcion,
-        "Imagen" => $imagen_fk,
-        "Estado" => "1",
-        "Mostrar" => $mostrar
-    ];
 
-    // Guardar en base de datos
-    $guardar = profesorModelo::agregar_profesor_modelo($datos);
-    if($guardar->rowCount() == 1){
-        return json_encode([
-            "Alerta" => "recargar",
-            "Titulo" => "Profesor registrado",
-            "Texto" => "Los datos se guardaron correctamente.",
-            "Tipo" => "success"
-        ]);
-    } else {
-        return json_encode([
-            "Alerta" => "simple",
-            "Titulo" => "Error inesperado",
-            "Texto" => "No se pudo guardar el registro.",
-            "Tipo" => "error"
-        ]);
-    }
-}
-
-    
-public function agregar_profesor_controlador(){
-    $ci = mainModel::limpiar_cadena($_POST['ci_reg']);
-    $nombre = mainModel::limpiar_cadena($_POST['nombre_reg']);
-    $apellido = mainModel::limpiar_cadena($_POST['apellido_reg']);
-    $correo = mainModel::limpiar_cadena($_POST['correo_reg']);
-    $telefono = mainModel::limpiar_cadena($_POST['telefono_reg']);
-    $descripcion = mainModel::limpiar_cadena($_POST['descripcion_reg']);
-    $imagen_fk = mainModel::limpiar_cadena($_POST['imagen_fk']);
-    $estado = "1";
-    $mostrar = mainModel::limpiar_cadena($_POST['profe_mostrar'] ?? "1");
-
-        if(!is_numeric($imagen_fk) || intval($imagen_fk) <= 0){
-            return json_encode([
-                "Alerta"=>"simple",
-                "Titulo"=>"Imagen no asociada",
-                "Texto"=>"No se ha recibido correctamente el ID de la imagen. Espera unos segundos tras subir la imagen antes de guardar.",
-                "Tipo"=>"error"
-            ]);
+    public function archivar_profesor_controlador(){
+        $idEnc = $_POST['profesor_id_archive'] ?? '';
+        $idDec = mainModel::decryption($idEnc);
+        if (!is_numeric($idDec) || $idDec <= 0) {
+            echo json_encode(mainModel::generarAlertaSimple('ID inválido.', 'error', 'simple'));
+            return;
         }
 
-        $verif_img = mainModel::ejecutar_consulta_simple("SELECT id_imagen FROM imagen WHERE id_imagen = '$imagen_fk'");
-        if($verif_img->rowCount() == 0){
-            return json_encode([
-                "Alerta"=>"simple",
-                "Titulo"=>"Imagen no encontrada",
-                "Texto"=>"El ID de imagen enviado no coincide con ninguna imagen guardada.",
-                "Tipo"=>"error"
-            ]);
+        $token = $_SESSION['auth_access_token'] ?? null;
+        if (!$token) {
+            echo json_encode(mainModel::generarAlertaSimple('Sesión no disponible.', 'error', 'simple'));
+            return;
         }
 
-
-    $datos = [
-        "CI"=>$ci,
-        "Nombre"=>$nombre,
-        "Apellido"=>$apellido,
-        "Correo"=>$correo,
-        "Telefono"=>$telefono,
-        "Descripcion"=>$descripcion,
-        "Imagen"=>$imagen_fk,
-        "Estado"=>$estado,
-        "Mostrar"=>$mostrar
-    ];
-
-    $guardar = profesorModelo::agregar_profesor_modelo($datos);
-    if($guardar->rowCount() == 1){
-        return json_encode([
-            "Alerta"=>"recargar",
-            "Titulo"=>"Profesor registrado",
-            "Texto"=>"Los datos se guardaron correctamente.",
-            "Tipo"=>"success"
-        ]);
-    } else {
-        return json_encode([
-            "Alerta"=>"simple",
-            "Titulo"=>"Error inesperado",
-            "Texto"=>"No se pudo guardar el registro.",
-            "Tipo"=>"error"
-        ]);
-    }
-}
-
-
-
-
-public function agregar_profesor_con_imagen_controlador(){
-
-    // Validar todos los campos primero
-    //$ci = mainModel::limpiar_cadena($_POST['ci_reg']);
-    $ci = strtoupper(mainModel::limpiar_cadena($_POST['ci_reg'] ?? ''));
-    $nombre = mainModel::limpiar_cadena($_POST['nombre_reg']);
-    $apellido = mainModel::limpiar_cadena($_POST['apellido_reg']);
-    $correo = mainModel::limpiar_cadena($_POST['correo_reg']);
-    $telefono = mainModel::limpiar_cadena($_POST['telefono_reg']);
-    $descripcion = mainModel::limpiar_cadena($_POST['descripcion_reg']);
-
-
-
-
-
-        // Campos obligatorios
-        if($ci=="" || $nombre=="" || $apellido=="" || $correo==""){
-            return json_encode([
-                "Alerta"=>"simple",
-                "Titulo"=>"Campos incompletos",
-                "Texto"=>"Debes completar los campos obligatorios",
-                "Tipo"=>"error"
-            ]);
-        }
-
-        // Usar la validación universal para CI, Correo y Teléfono
-        $val_ci = mainModel::validar_cedula_universal($ci, 'profesor', 'ci_profesor', null, null);
-        if($val_ci['Tipo'] == 'error'){
-            return json_encode($val_ci);
-        }
-
-        $val_correo = mainModel::validar_correo_universal($correo, 'profesor', 'correo', null, null);
-        if($val_correo['Tipo'] == 'error'){
-            return json_encode($val_correo);
-        }
-
-        if($telefono != ""){
-            $val_tel = mainModel::validar_telefono_universal($telefono, 'profesor', 'telefono_profesor', null, null);
-            if($val_tel['Tipo'] == 'error'){
-                return json_encode($val_tel);
-            }
-        }
-
-        // Validar nombre/apellido
-        if(mainModel::verificar_datos('[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{1,20}', $nombre)){
-            return json_encode([
-                "Alerta"=>"simple",
-                "Titulo"=>"Nombre inválido",
-                "Texto"=>"Solo se permiten letras en el nombre.",
-                "Tipo"=>"error"
-            ]);
-        }
-        if(mainModel::verificar_datos('[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{1,20}', $apellido)){
-            return json_encode([
-                "Alerta"=>"simple",
-                "Titulo"=>"Apellido inválido",
-                "Texto"=>"Solo se permiten letras en el apellido.",
-                "Tipo"=>"error"
-            ]);
-        }
-
-
-    // Subir imagen primero
-    if(isset($_FILES['archivo_imagen']) && $_FILES['archivo_imagen']['error'] === 0){
-        $archivo = $_FILES['archivo_imagen'];
-        $nombreTemp = $archivo['tmp_name'];
-        $nombreOriginal = basename($archivo['name']);
-        $ext = strtolower(pathinfo($nombreOriginal, PATHINFO_EXTENSION));
-        $permitidas = ['jpg','jpeg','png','webp'];
-
-        if(!in_array($ext, $permitidas)){
-            return json_encode([
-                "Alerta"=>"simple",
-                "Titulo"=>"Imagen inválida",
-                "Texto"=>"Formato no permitido.",
-                "Tipo"=>"error"
-            ]);
-        }
-
-        $carpetaDestino = "../vistas/cm/prof/";
-        if(!file_exists($carpetaDestino)){
-            mkdir($carpetaDestino, 0777, true);
-        }
-
-        $nombreFinal = uniqid("prof_").".".$ext;
-        $rutaCompleta = $carpetaDestino.$nombreFinal;
-
-        if(move_uploaded_file($nombreTemp, $rutaCompleta)){
-            $rutaRelativa = "cm/prof/".$nombreFinal;
-            $id_imagen = (new imagenModelo())->guardar_imagen_modelo2($rutaRelativa, "prof");
-
-            if(intval($id_imagen) > 0){
-
-                // Ejecutar flujo tradicional con imagen_fk ya disponible
-                $_POST['imagen_fk'] = strval($id_imagen); 
-                return $this->agregar_profesor_controlador();
-            } else {
-                return json_encode([
-                    "Alerta"=>"simple",
-                    "Titulo"=>"Error al guardar imagen",
-                    "Texto"=>"La imagen no pudo registrarse en BD.",
-                    "Tipo"=>"error"
-                ]);
-            }
+        $resultado = profesorModelo::archivar_profesor_supabase($idDec, $token);
+        if ($resultado['ok']) {
+            echo json_encode(mainModel::generarAlertaSimple('Profesor archivado correctamente.', 'success', 'recargar'));
         } else {
-            return json_encode([
-                "Alerta"=>"simple",
-                "Titulo"=>"Error al mover imagen",
-                "Texto"=>"No se pudo almacenar la imagen en el servidor.",
-                "Tipo"=>"error"
-            ]);
+            echo json_encode(mainModel::generarAlertaSimple('Error al archivar: ' . ($resultado['message'] ?? ''), 'error', 'simple'));
         }
-    } else {
-        return json_encode([
-            "Alerta"=>"simple",
-            "Titulo"=>"Imagen faltante",
-            "Texto"=>"Debes seleccionar una imagen válida.",
-            "Tipo"=>"error"
-        ]);
     }
 
+    public function restaurar_profesor_controlador(){
+        $idEnc = $_POST['profesor_id_restore'] ?? '';
+        $idDec = mainModel::decryption($idEnc);
+        if (!is_numeric($idDec) || $idDec <= 0) {
+            echo json_encode(mainModel::generarAlertaSimple('ID inválido.', 'error', 'simple'));
+            return;
+        }
 
+        $token = $_SESSION['auth_access_token'] ?? null;
+        if (!$token) {
+            echo json_encode(mainModel::generarAlertaSimple('Sesión no disponible.', 'error', 'simple'));
+            return;
+        }
 
-
-}
-
-
-
-
+        $resultado = profesorModelo::restaurar_profesor_supabase($idDec, $token);
+        if ($resultado['ok']) {
+            echo json_encode(mainModel::generarAlertaSimple('Profesor restaurado correctamente.', 'success', 'recargar'));
+        } else {
+            echo json_encode(mainModel::generarAlertaSimple('Error al restaurar: ' . ($resultado['message'] ?? ''), 'error', 'simple'));
+        }
+    }    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+/*
 public function paginador_profesor_controlador($pagina, $registros, $vista, $busqueda){
     $pagina    = (int) mainModel::limpiar_cadena($pagina);
     $registros = (int) mainModel::limpiar_cadena($registros);
@@ -513,17 +621,7 @@ if ($cargo == 1 || $cargo == 4) {
 $tabla .= '
             </tr>
         </thead>
-        <tbody>';
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+        <tbody>'; 
 
     if ($total >= 1 && $pagina <= $Npaginas) {
         $reg_inicio = $inicio + 1;
@@ -646,7 +744,7 @@ $tabla .= '</tr>';
     </script>';
 
     return $tabla;
-}
+}*/
 
 
 
@@ -825,64 +923,7 @@ document.querySelectorAll(".ver-imagen").forEach(btn => {
 
 
 
-
-
-
-
-
-    /*--------- Datos profesor ---------*/
-    public function datos_profesor_controlador($tipo, $id){
-        $tipo = mainModel::limpiar_cadena($tipo);
-        $id = mainModel::decryption($id);
-        $id = mainModel::limpiar_cadena($id);
-        return profesorModelo::datos_profesor_modelo($tipo, $id);
-    }
-
-    /*--------- Eliminar profesor ---------*/
-    public function eliminar_profesor_controlador(){
-        $id = mainModel::decryption($_POST['profesor_id_del']);
-        $id = mainModel::limpiar_cadena($id);
-
-        $check = mainModel::ejecutar_consulta_simple("SELECT id_profesor FROM profesor WHERE id_profesor='$id'");
-        if($check->rowCount()<=0){
-            return json_encode([
-                "Alerta"=>"simple",
-                "Titulo"=>"No existe",
-                "Texto"=>"Este profesor no se encuentra registrado.",
-                "Tipo"=>"error"
-            ]);
-        }
-
-        session_start(['name'=>'SPM']);
-        if($_SESSION['cargo_spm']!=1 && $_SESSION['cargo_spm']!=4){
-            return json_encode([
-                "Alerta"=>"simple",
-                "Titulo"=>"Sin permisos",
-                "Texto"=>"No estás autorizado para eliminar profesores.",
-                "Tipo"=>"error"
-            ]);
-        }
-
-        $eliminar = profesorModelo::eliminar_profesor_modelo($id);
-        if($eliminar->rowCount()==1){
-            return json_encode([
-                "Alerta"=>"recargar",
-                "Titulo"=>"Profesor eliminado",
-                "Texto"=>"El registro se eliminó correctamente.",
-                "Tipo"=>"success"
-            ]);
-        }else{
-            return json_encode([
-                "Alerta"=>"simple",
-                "Titulo"=>"Error",
-                "Texto"=>"No se pudo eliminar el profesor.",
-                "Tipo"=>"error"
-            ]);
-        }
-    }
-
-
-
+/*
 public function actualizar_profesor_con_imagen_controlador(){
     try {
         $idEnc = $_POST['profesor_id_up'] ?? '';
@@ -1205,6 +1246,7 @@ public function actualizar_profesor_controlador(){
 
 }
 
+*/
 
 
 
@@ -1224,8 +1266,7 @@ public function actualizar_profesor_controlador(){
 
 
 
-
-
+/*
 public function archivar_profesor_controlador() {
     $id = mainModel::decryption($_POST['profesor_id_archive']);
     $id = mainModel::limpiar_cadena($id);
@@ -1449,6 +1490,7 @@ public function restaurar_profesor_controlador() {
             "Tipo" => "error"
         ]);
     }
-}
+}*/
 
+    
 }

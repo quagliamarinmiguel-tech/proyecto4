@@ -39,7 +39,6 @@ $carpeta = $carpetasPorCargo[$cargo] ?? "admin";
         </li>
         <li>
             <a class="active" href="<?php echo SERVERURL . 'index.php?views=' . urlencode($carpeta) . '/course-list-archived'; ?>"><i class="fas fa-archive fa-fw"></i> &nbsp; CURSOS ARCHIVADOS</a>
-            <!--a class="active" href="<?php echo SERVERURL; ?>index.php?views=course-list-archived"><i class="fas fa-archive fa-fw"></i> &nbsp; CURSOS ARCHIVADOS</a-->
         </li>
     </ul>   
     
@@ -63,14 +62,14 @@ $carpeta = $carpetasPorCargo[$cargo] ?? "admin";
       <label for="filtro_nombre">Nombre del curso</label>
       <select name="filtro_nombre" id="filtro_nombre" class="form-control select2">
         <option value="">Todos los cursos</option>
-        <?php
+        <!--php
           $conexion = mainModel::conectar();
           $cursos = $conexion->query("SELECT id_curso, nombre_curso FROM curso WHERE estado_curso = 0 ORDER BY nombre_curso ASC");
           foreach ($cursos as $curso) {
               $selected = (isset($_GET['filtro_nombre']) && $_GET['filtro_nombre'] == $curso['id_curso']) ? "selected" : "";
               echo '<option value="' . $curso['id_curso'] . '" ' . $selected . '>' . $curso['nombre_curso'] . '</option>';
           }
-        ?>
+        ?-->
       </select>
     </div>
 
@@ -110,8 +109,8 @@ $carpeta = $carpetasPorCargo[$cargo] ?? "admin";
     </div>
   </div>
 </form>
-<div class="container-fluid">
-    <?php
+<!--div class="container-fluid">
+    <php
         require_once "./controladores/cursoControlador.php";
         $ins_curso = new cursoControlador();
 
@@ -119,8 +118,19 @@ $carpeta = $carpetasPorCargo[$cargo] ?? "admin";
 
         echo $ins_curso->paginador_curso_archivado_controlador($pagina_actual, 15, "course-list-archived", "");
     ?>
-</div>
+</div-->
 
+<div class="container-fluid">
+    <?php
+        require_once "./controladores/cursoControlador.php";
+        $ins_curso = new cursoControlador();
+
+        // Obtener el número de página actual
+        $pagina_actual = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        
+        echo $ins_curso->paginador_curso_supabase_controlador($pagina_actual, 15, "course-list-archived","", 0);
+    ?>
+</div>
 
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

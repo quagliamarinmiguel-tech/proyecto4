@@ -1,14 +1,10 @@
 <?php
-// Limpiar buffer de salida
-while (ob_get_level()) {
-    ob_end_clean();
-}
+while (ob_get_level()) { ob_end_clean(); }
 
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
-// HEADERS CORS - PRIMERO
 header("Access-Control-Allow-Origin: http://www.cecilioceproca.wuaze.com");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
@@ -19,72 +15,74 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit();
 }
 
-// Recibir datos por POST
-$action = $_POST['action'] ?? '';
-$id_usuario = $_POST['id_usuario'] ?? null;
+$action        = $_POST['action'] ?? '';
 $id_estudiante = $_POST['id_estudiante'] ?? null;
-$cargo_spm = $_POST['cargo_spm'] ?? null;
+$cargo_spm     = $_POST['cargo_spm'] ?? null;
 
-// Verificar que tenemos todos los datos necesarios
 if ($action !== 'get_profile') {
-    echo json_encode(['success' => false, 'message' => 'Acción no válida: ' . $action]);
+    echo json_encode(['success' => false, 'message' => 'Acción no válida']);
     exit;
 }
 
-if (!$id_usuario || !$id_estudiante || !$cargo_spm) {
-    echo json_encode([
-        'success' => false, 
-        'message' => 'Datos de sesión incompletos'
-    ]);
+if (!$id_estudiante || !$cargo_spm) {
+    echo json_encode(['success' => false, 'message' => 'Datos de sesión incompletos']);
     exit;
 }
 
-// Verificar permisos
 if ($cargo_spm != 5) {
-    echo json_encode([
-        'success' => false, 
-        'message' => 'No tienes permisos de estudiante. Rol: ' . $cargo_spm
-    ]);
+    echo json_encode(['success' => false, 'message' => 'No tienes permisos de estudiante']);
     exit;
 }
 
 try {
-    // Incluir mainModel
-    $ruta_modelo = __DIR__ . '/../modelos/mainModel.php';
-    if (!file_exists($ruta_modelo)) {
-        throw new Exception("No se encuentra mainModel.php en: " . $ruta_modelo);
-    }
-    require_once $ruta_modelo;
-    
-    $pdo = mainModel::conectar();
-    
-    // Obtener datos del estudiante
-    $sql = $pdo->prepare("SELECT correo_estudiante, telefono_estudiante FROM estudiante WHERE id_estudiante = :id_estudiante");
-    $sql->bindParam(":id_estudiante", $id_estudiante, PDO::PARAM_INT);
-    $sql->execute();
-    
-    $estudiante = $sql->fetch(PDO::FETCH_ASSOC);
-    
-    if ($estudiante) {
+    require_once __DIR__ . '/../modelos/mainModel.php';
+
+    // 🎯 Buscar estudiante SIN token (funciona sin RLS)
+    $resStudent = mainModel::supabaseQuery(
+        'student',
+        'id,name,last_name,email,phone',
+        ['id' => 'eq.' . $id_estudiante, 'state' => 'eq.1']
+    );
+
+    if (empty($resStudent['data']) || !is_array($resStudent['data'])) {
         echo json_encode([
-            'success' => true, 
-            'data' => [
-                'correo_estudiante' => $estudiante['correo_estudiante'],
-                'telefono_estudiante' => $estudiante['telefono_estudiante']
-            ]
+            'success' => false,
+            'message' => 'Estudiante no encontrado'
         ]);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Estudiante no encontrado en la base de datos']);
+        exit;
     }
-    
-} catch (Exception $e) {
-    // Log del error (para debugging del servidor)
-    error_log("Error en obtenerPerfilEstudiante: " . $e->getMessage());
-    
-    // Respuesta de error para el cliente
+
+    $student = $resStudent['data'][0];
+
+    // Descifrar email y phone
+    $emailDescifrado = '';
+    $phoneDescifrado = '';
+
+    if (!empty($student['email'])) {
+        $tmp = mainModel::decryption($student['email']);
+        $emailDescifrado = ($tmp !== false) ? $tmp : $student['email'];
+    }
+
+    if (!empty($student['phone'])) {
+        $tmp = mainModel::decryption($student['phone']);
+        $phoneDescifrado = ($tmp !== false) ? $tmp : $student['phone'];
+    }
+
     echo json_encode([
-        'success' => false, 
-        'message' => 'Error en el servidor: ' . $e->getMessage()
+        'success' => true,
+        'data' => [
+            'id_estudiante' => $student['id'],
+            'nombre' => $student['name'],
+            'apellido' => $student['last_name'],
+            'correo_estudiante' => $emailDescifrado,
+            'telefono_estudiante' => $phoneDescifrado
+        ]
+    ]);
+
+} catch (Exception $e) {
+    error_log("Error en obtenerPerfilEstudiante: " . $e->getMessage());
+    echo json_encode([
+        'success' => false,
+        'message' => 'Error: ' . $e->getMessage()
     ]);
 }
-?>

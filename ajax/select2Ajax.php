@@ -2,9 +2,149 @@
 require_once "../config/APP.php";
 require_once "../modelos/mainModel.php";
 
-$pdo = mainModel::conectar();
+session_start(['name' => 'SPM']);
 
-// Buscar profesor
+if (isset($_GET['accion']) && $_GET['accion'] === 'buscar_curso') {
+    header('Content-Type: application/json; charset=utf-8');
+    $token = $_SESSION['auth_access_token'] ?? null;
+    $term = trim(mainModel::limpiar_cadena($_GET['q'] ?? ''));
+
+    if (!$token || mb_strlen($term) < 2) {
+        echo json_encode([]);
+        exit();
+    }
+
+    $resultado = SupabaseApi::getWithToken('course', [
+        'select' => 'id,name,type',
+        'state' => 'neq.0',
+        'name' => 'ilike.*' . $term . '*',
+        'order' => 'name.asc',
+        'limit' => '10',
+    ], $token);
+
+    $cursos = [];
+    foreach (($resultado['data'] ?? []) as $curso) {
+        $cursos[] = [
+            'id_curso' => $curso['id'],
+            'nombre_curso' => $curso['name'],
+            'tipo_curso' => $curso['type'],
+        ];
+    }
+
+    echo json_encode($cursos, JSON_UNESCAPED_UNICODE);
+    exit();
+}
+
+if (isset($_GET['accion']) && $_GET['accion'] === 'buscar_curso_archivado') {
+    header('Content-Type: application/json; charset=utf-8');
+    $token = $_SESSION['auth_access_token'] ?? null;
+    $term = trim(mainModel::limpiar_cadena($_GET['q'] ?? ''));
+
+    if (!$token || mb_strlen($term) < 2) {
+        echo json_encode([]);
+        exit();
+    }
+
+    $resultado = SupabaseApi::getWithToken('course', [
+        'select' => 'id,name,type',
+        'state' => 'neq.1',
+        'name' => 'ilike.*' . $term . '*',
+        'order' => 'name.asc',
+        'limit' => '10',
+    ], $token);
+
+    $cursos = [];
+    foreach (($resultado['data'] ?? []) as $curso) {
+        $cursos[] = [
+            'id_curso' => $curso['id'],
+            'nombre_curso' => $curso['name'],
+            'tipo_curso' => $curso['type'],
+        ];
+    }
+
+    echo json_encode($cursos, JSON_UNESCAPED_UNICODE);
+    exit();
+}
+
+
+if (isset($_GET['accion']) && $_GET['accion'] === 'buscar_profesor') {
+    header('Content-Type: application/json; charset=utf-8');
+    $token = $_SESSION['auth_access_token'] ?? null;
+    $term = trim(mainModel::limpiar_cadena($_GET['q'] ?? ''));
+
+    if (!$token || mb_strlen($term) < 2) {
+        echo json_encode([]);
+        exit();
+    }
+
+    $resultado = SupabaseApi::getWithToken('teacher', [
+        'select' => 'id,name,last_name',
+        'state' => 'neq.0',
+        'or' => '(name.ilike.*' . $term . '*,last_name.ilike.*' . $term . '*)',
+        'order' => 'name.asc',
+        'limit' => '10',
+    ], $token);
+
+    $profesores = [];
+    foreach (($resultado['data'] ?? []) as $profe) {
+        $profesores[] = [
+            'id' => $profe['id'],
+            'name' => $profe['name'],
+            'last_name' => $profe['last_name'],
+        ];
+    }
+
+    echo json_encode($profesores, JSON_UNESCAPED_UNICODE);
+    exit();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*-------------------------------------------------------------------------------------------------------------------------*/
+//$pdo = mainModel::conectar();
+
+/*
 if (isset($_GET['accion']) && $_GET['accion'] == 'buscar_profesor') {
     $term = mainModel::limpiar_cadena($_GET['q'] ?? '');
 
@@ -42,7 +182,7 @@ if (isset($_GET['accion']) && $_GET['accion'] == 'buscar_curso') {
 
     echo json_encode($cursos);
     exit();
-}
+}*/
 
 
 // Buscar cursos activos que NO tengan publicidad

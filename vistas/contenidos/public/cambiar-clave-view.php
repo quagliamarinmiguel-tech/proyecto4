@@ -1,73 +1,150 @@
 <?php
-session_start(['name' => 'SPM']);
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
-echo "<pre>";
-print_r($_GET);
-echo "</pre>";
-
-
-if (!isset($_GET['id_usuario'])) {
-    echo "Parámetro 'id_usuario' no recibido.";
-    exit();
-}
-$id_usuario = $_GET['id_usuario'];
-
-//if (!isset($_SESSION['recuperacion_autorizada']) || $_SESSION['recuperacion_autorizada'] !== true ) {
-//    header("Location: " . SERVERURL . "index.php");
- //   exit();
-//}
-    $idiso = $_GET['id_usuario'] ?? '';
-
-$id_usuario = isset($_GET['id_usuario']) ? $_GET['id_usuario'] : null;
-//$id_usuario = isset($_GET['id_usuario']) ? mainModel::decryption($_GET['id_usuario']) : null;
-$ip = isset($_GET['id_ip']) ? mainModel::decryption($_GET['id_ip']) : null;
-//echo $id_usuario;
-// Buscar nombre del estudiante
-
-
-echo "<pre>";
-echo "Encriptado: " . $_GET['id_usuario'] . "\n";
-echo "Encriptado: " . $idiso . "\n";
-//echo "Desencriptado: " . mainModel::decryption($_GET['id_usuario']);
-echo "</pre>";
-//echo "<pre>";
-//var_dump($id_usuario);
-//echo "</pre>";
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 ?>
+
+<script>window.DARK_MODE_BLOQUEADO = true;</script>
+
+<?php
+require_once "./controladores/publicoControlador.php";
+$localCtrl = new publicoControlador();
+
+//datos visuales de la paigna
+$configVisual = mainModel::obtener_config_visual();
+$coloresInicio = mainModel::obtener_colores_config();
+
+$nombreCorto    = $configVisual['nombre_corto'];
+$nombreCompleto = $configVisual['nombre_completo'];
+$rutaIcono      = $configVisual['icono'];
+$rutaLogo       = $configVisual['logo'];
+$paletaInicioId = $configVisual['paleta_id'];
+//var_dump($nombreCorto,$nombreCompleto,$rutaIcono,$rutaLogo,$paletaInicioId);die();
+
+$primario = $coloresInicio[0];
+$secundario = $coloresInicio[1];
+//$c1 = mainModel::hex2rgba($primario, 1);      // 100%
+//$c2 = mainModel::hex2rgba($primario, 0.85);   // 85%
+//$c3 = mainModel::hex2rgba($primario, 0.7);    // 70%
+$c1 = mainModel::hex2rgba($primario, 0.85);      
+$c2 = mainModel::hex2rgba($primario, 1);    
+$c3 = mainModel::hex2rgba($secundario, 1);  
+
+
+?>
+
+<style>
+body {
+  min-height: 100vh;
+  height:auto;
+  /*padding: 30px 0px;**/
+  padding:1px;
+  margin:0px;
+  width:100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: <?= $c2 ?>; 
+  background: linear-gradient(90deg, <?= $c1 ?> 0%, <?= $c2 ?> 50%, <?= $c3 ?> 99%);
+  background-size: cover;
+}
+.login-container{
+	background-color: rgba(0, 0, 0, 0); 
+	color: #ffffff; 
+	background: rgba(0, 0, 0, 0);
+}
+html {overflow-y: hidden;}
+</style>
+
+
+
+
 
 
 
 <div class="login-container">
-	<div class="login-content">
-		<p class="text-center">
-			<i class="fas fa-lock fa-5x"></i>
-		</p>
-		<p class="text-center">
-			Establecer nueva contraseña
-		</p>
-		<p class="text-center">
-			<a href="<?php echo SERVERURL; ?>login/"><i class="fas fa-arrow-left"></i> Volver al login</a>
-		</p>
+    <div class="login-content" style="width:100%;">
+        
+        	<div style="display: flex; justify-content: center; align-items: center;">
+                <!--img src="<c?php echo SERVERURL; ?>vistas/<c?= htmlspecialchars($rutaLogo) ?>"--> 
+                	<img src="<?= mainModel::obtenerRutaImagenLocal('logo') ?>"
+                     alt="Logo" 
+                     style="width: 80px; height: auto;padding:0 5px;">
+            </div>
+        
+        <p class="text-center">Nueva contraseña</p>
 
+        <form id="form-cambiar-clave" style="display:none;">
+            <div class="form-group">
+                <label for="nueva_clave"><i class="fas fa-lock"></i> Nueva contraseña</label>
+                <input type="password" class="form-control" id="nueva_clave"
+                       minlength="7" maxlength="100" required>
+            </div>
+            <div class="form-group">
+                <label for="confirmar_clave"><i class="fas fa-lock"></i> Confirmar contraseña</label>
+                <input type="password" class="form-control" id="confirmar_clave"
+                       minlength="7" maxlength="100" required>
+            </div>
 
-<p><?php echo $id_usuario; ?></p>
-		<form action="<?php echo SERVERURL; ?>ajax/recuperarAjax.php" method="POST" autocomplete="off">
-			<div class="form-group">
-				<label for="NuevaClave" class="bmd-label-floating"><i class="fas fa-key"></i> &nbsp; Nueva contraseña</label>
-				<input type="password" required pattern="[^ ].*" title="El nombre no debe comenzar con espacio." class="form-control" id="NuevaClave" name="nueva_clave" pattern="[a-zA-Z0-9$@.-]{7,100}" maxlength="100" required>
-			</div>
-			<div class="form-group">
-				<label for="ConfirmarClave" class="bmd-label-floating"><i class="fas fa-key"></i> &nbsp; Confirmar contraseña</label>
-				<input type="password" required pattern="[^ ].*" title="El nombre no debe comenzar con espacio." class="form-control" id="ConfirmarClave" name="confirmar_clave" pattern="[a-zA-Z0-9$@.-]{7,100}" maxlength="100" required>
-			</div>
+            <button type="submit" class="btn-login text-center"
+                    style="padding: 4px 10px; font-size: 0.8rem; margin:0; width:100%;">
+                Actualizar contraseña
+            </button>
+        </form>
 
-			<!-- Campo oculto para saber qué usuario actualizar -->
-			<input type="hidden" name="id_usuario" value="<?php echo $id_usuario; ?>">
-
-			<button type="submit" class="btn-login text-center">Cambiar contraseña</button>
-		</form>
-	</div>
+        <div id="mensaje-error" class="text-danger text-center" style="display:none;">
+            El enlace no es válido o ha expirado. Solicite uno nuevo.
+        </div>
+    </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // El token viene en el hash de la URL
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
+    const accessToken = params.get('access_token');
+    const type = params.get('type');
+
+    if (!accessToken || type !== 'recovery') {
+        document.getElementById('mensaje-error').style.display = 'block';
+        return;
+    }
+
+    document.getElementById('form-cambiar-clave').style.display = 'block';
+
+    document.getElementById('form-cambiar-clave').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const clave1 = document.getElementById('nueva_clave').value.trim();
+        const clave2 = document.getElementById('confirmar_clave').value.trim();
+
+        if (clave1.length < 7) {
+            Swal.fire('Error', 'La contraseña debe tener al menos 7 caracteres.', 'error');
+            return;
+        }
+        if (clave1 !== clave2) {
+            Swal.fire('Error', 'Las contraseñas no coinciden.', 'error');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('access_token', accessToken);
+        formData.append('nueva_clave', clave1);
+
+        try {
+            const res = await fetch('<?= SERVERURL ?>ajax/loginAjax.php?accion=cambiar_clave', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+
+            if (data.ok) {
+                Swal.fire('Éxito', 'Contraseña actualizada. Ya puede iniciar sesión.', 'success')
+                    .then(() => window.location.href = '<?= SERVERURL ?>?views=login');
+            } else {
+                Swal.fire('Error', data.mensaje || 'No se pudo actualizar.', 'error');
+            }
+        } catch (err) {
+            Swal.fire('Error', 'Error de conexión.', 'error');
+        }
+    });
+});
+</script>

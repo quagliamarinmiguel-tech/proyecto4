@@ -44,24 +44,23 @@ public function subir_slider_img_controlador(){
 
         $ancho = $dimensiones[0];
         $alto = $dimensiones[1];
+        $ratio = $ancho / $alto;
 
-        $formaDetectada = $this->obtenerFormaImagen($ancho, $alto);
-        $tipoDetectado = $formaDetectada === 'vertical' ? 'sldr2' : 'sldr1';
+        // Clasificar orientación con tolerancia para cuadradas
+        if($ratio >= 1.3){
+            $tipoDetectado = "sldr1"; 
+        } elseif($ratio <= 0.77){
+            $tipoDetectado = "sldr2"; 
+        } else {
+            $tipoDetectado = "sldr1"; 
+        }
 
         $tipoUsuario = $_POST['tipo_seleccionado'] ?? '';
-        if ($tipoUsuario === 'sldr2' && $formaDetectada !== 'vertical') {
+        if($tipoUsuario !== $tipoDetectado){
             return json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Orientación incorrecta",
-                "Texto" => "La imagen es $formaDetectada, pero seleccionaste vertical.",
-                "Tipo" => "error"
-            ]);
-        }
-        if ($tipoUsuario === 'sldr1' && $formaDetectada === 'vertical') {
-            return json_encode([
-                "Alerta" => "simple",
-                "Titulo" => "Orientación incorrecta",
-                "Texto" => "La imagen es vertical, pero seleccionaste horizontal.",
+                "Texto" => "La imagen es ".($tipoDetectado=="sldr2"?"vertical":"horizontal o cuadrada").", pero seleccionaste ".($tipoUsuario=="sldr2"?"vertical":"horizontal").".",
                 "Tipo" => "error"
             ]);
         }
@@ -139,20 +138,6 @@ public function subir_slider_img_controlador(){
 
 
 
-
-private function obtenerFormaImagen(int $ancho, int $alto): string
-{
-    if ($alto === 0) {
-        return 'desconocida';
-    }
-
-    $ratio = $ancho / $alto;
-    if (abs($ratio - 1) <= 0.1) {
-        return 'cuadrada';
-    }
-
-    return $ratio > 1 ? 'horizontal' : 'vertical';
-}
 
 public function subir_profesor_img_controlador(){
     if(isset($_FILES['imagen']) && $_FILES['imagen']['error'] === 0){

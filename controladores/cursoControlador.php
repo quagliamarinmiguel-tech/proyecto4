@@ -15,6 +15,10 @@ class cursoControlador extends cursoModelo{
     public function validar_curso_no_duplicado($nombre, $tipo, $id=null) {
         return cursoModelo::verificar_curso_duplicado($nombre, $tipo, $id);
     }
+
+    public function validar_curso_no_duplicado_supabase($nombre, $tipo, $accessToken, $id = null): array {
+        return cursoModelo::verificar_curso_duplicado_supabase($nombre, $tipo, $accessToken, $id);
+    }
     
     public function validar_formato_nombre($nombre) {
         $patron = "[a-zA-ZáéíóúÁÉÍÓÚñÑ](?:[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{0,59})";
@@ -41,6 +45,21 @@ class cursoControlador extends cursoModelo{
         public function verificar_curso_periodo_existente($course_id){
             $id= mainModel::decryption($course_id);
 
+            if (filter_var($id, FILTER_VALIDATE_INT)) {
+                $token = $_SESSION['auth_access_token'] ?? null;
+                if ($token) {
+                    $resultado = cursoModelo::verificar_curso_periodo_supabase((int) $id, $token);
+                    if ($resultado['ok'] && !empty($resultado['data'])) {
+                        $curso = cursoModelo::obtener_curso_supabase((int) $id, $token);
+                        return $curso['ok'] && !empty($curso['data'][0])
+                            ? $curso['data'][0]['type']
+                            : false;
+                    }
+                    return false;
+                }
+                return false;
+            }
+
             //return cursoModelo:: verificar_curso_periodo_existente_modelo($id);
             $resultado = cursoModelo::verificar_curso_periodo_existente_modelo($id);
             
@@ -60,6 +79,12 @@ class cursoControlador extends cursoModelo{
             if(!is_numeric($id_curso)) {
                 return false;
             }
+
+            $token = $_SESSION['auth_access_token'] ?? null;
+            if ($token) {
+                $resultado = cursoModelo::obtener_nombre_curso_supabase((int) $id_curso, $token);
+                return $resultado['ok'] && !empty($resultado['data'][0]) ? $resultado['data'][0] : false;
+            }
             $resultado= cursoModelo::obtener_nombre_curso_para_filtro_modelo($id_curso);
 
             if($resultado && $resultado->rowCount() > 0) {
@@ -76,11 +101,21 @@ class cursoControlador extends cursoModelo{
         $id=mainModel::decryption($id);
         $id=mainModel::limpiar_cadena($id);
 
+        if ($tipo === 'Unico' && filter_var($id, FILTER_VALIDATE_INT)) {
+            $token = $_SESSION['auth_access_token'] ?? null;
+            if ($token) {
+                $resultado = cursoModelo::obtener_curso_supabase((int) $id, $token);
+                if ($resultado['ok'] && !empty($resultado['data'][0])) {
+                    return $resultado['data'][0];
+                }
+            }
+            return null;
+        }
+
         return cursoModelo::datos_curso_modelo($tipo,$id);
     } 
 
-    
-    
+
     //------------------------------------------------------------------
     
     
@@ -95,19 +130,31 @@ class cursoControlador extends cursoModelo{
         $tipo=mainModel::limpiar_cadena($_POST['curso_tipo_reg']);
         
         if($nombre=="" || $tipo==""){
-            mainModel::generarAlertaControlador("No has llenado todos los campos que son obligatorios","error_simple");
+            //mainModel::generarAlertaControlador("No has llenado todos los campos que son obligatorios","error_simple");
+            mainModel::generarAlertaSimple("Todos los campos son obligatorios", "error", "simple");
         }
         
-        if($this->validar_curso_no_duplicado($nombre, $tipo)) {
-            mainModel::generarAlertaControlador("Ya existe un curso del mismo nombre y tipo","error_simple");
+        $accessToken = $_SESSION['auth_access_token'] ?? null;
+        if (!$accessToken) {
+           // mainModel::generarAlertaControlador("La sesión de Supabase no está disponible", "error_simple");
+            mainModel::generarAlertaSimple("La sesión de Supabase no está disponible", "error", "simple");
         }
-        
+
+        $validacion = $this->validar_curso_no_duplicado_supabase($nombre, $tipo, $accessToken);
+        if (!$validacion['ok']) {
+            mainModel::generarAlertaSimple("No se pudo validar el curso en Supabase", "error", "simple");
+        }
+
+        if (!empty($validacion['data'])) {
+            mainModel::generarAlertaSimple("Ya existe un curso del mismo nombre y tipo", "error", "simple");
+        }
+
         if($this-> validar_formato_nombre($nombre)){
-          mainModel::generarAlertaControlador("El nombre del curso no coincide con el formato solicitado","error_simple");
+          mainModel::generarAlertaSimple("El nombre del curso no coincide con el formato solicitado","error", "simple");
         }
         
         if(!$this->validar_tipo_curso($tipo)) {
-           mainModel::generarAlertaControlador("Debe seleccionar un tipo de curso válido (Intensivo, Extendido, Técnico Profesional)","error_simple");
+           mainModel::generarAlertaSimple("Debe seleccionar un tipo de curso válido (Intensivo, Extendido, Técnico Profesional)","error", "simple");
         }
    
 		$estado = "1";
@@ -117,22 +164,14 @@ class cursoControlador extends cursoModelo{
             "Estado"=>$estado
         ];
 
-        $agregar_curso=cursoModelo::agregar_curso_modelo($datos_curso_reg);
+        $agregar_curso = cursoModelo::agregar_curso_supabase($datos_curso_reg, $accessToken);
 
-        if($agregar_curso->rowCount()==1){
-            $alerta=[
-                "Alerta"=>"recargar",
-                "Titulo"=>"Curso registrado",
-                "Texto"=>"Los datos del curso han sido registrados con exito",
-                "Tipo"=>"success"
-            ];
+        if($agregar_curso['ok'] && !empty($agregar_curso['data'])){
+            $alerta= mainModel::generarAlertaSimple("Los datos del curso han sido registrados con exito", "success", "recargar");
+
         }else{
-            $alerta=[
-                "Alerta"=>"simple",
-                "Titulo"=>"Ocurrió un error inesperado",
-                "Texto"=>"No hemos podido registrar el curso",
-                "Tipo"=>"error"
-            ];
+            $texto="No hemos podido registrar el curso: " . ($agregar_curso['message'] ?? 'respuesta inválida');
+            $alerta= mainModel::generarAlertaSimple($texto, "error", "simple");
         }
 
         echo json_encode($alerta);
@@ -144,32 +183,50 @@ class cursoControlador extends cursoModelo{
     public function actualizar_curso_controlador(){
 
         $id=mainModel::limpiar_cadena($_POST['curso_id_up']);
-        
-        if(!mainModel::verificar_existencia_id("id_curso","curso",$id)){
-        	mainModel::generarAlertaControlador("No se encontró el id del curso","error_simple");
+
+        if(!filter_var($id, FILTER_VALIDATE_INT) || (int) $id <= 0){
+            echo json_encode(mainModel::generarAlertaSimple("El identificador del curso no es válido", "error", "simple"));
+            return;
         }
         
         $nombre=mainModel::limpiar_cadena($_POST['curso_nombre_up']);
         $tipo=mainModel::limpiar_cadena($_POST['curso_tipo_up']);
         
         if($nombre=="" || $tipo==""){
-            mainModel::generarAlertaControlador("No has llenado todos los campos que son obligatorios","error_simple");
+            echo json_encode(mainModel::generarAlertaSimple("No has llenado todos los campos que son obligatorios", "error", "simple"));
+            return;
         }
         
-        if($this->validar_curso_no_duplicado($nombre, $tipo,$id)) {
-            mainModel::generarAlertaControlador("Ya existe un curso del mismo nombre y tipo","error_simple");
+        $accessToken = $_SESSION['auth_access_token'] ?? null;
+        if (!$accessToken) {
+            echo json_encode(mainModel::generarAlertaSimple("La sesión de Supabase no está disponible", "error", "simple"));
+            return;
+        }
+
+        $validacion = $this->validar_curso_no_duplicado_supabase($nombre, $tipo, $accessToken, $id);
+        if (!$validacion['ok']) {
+            echo json_encode(mainModel::generarAlertaSimple("No se pudo validar el curso en Supabase", "error", "simple"));
+            return;
+        }
+
+        if (!empty($validacion['data'])) {
+            echo json_encode(mainModel::generarAlertaSimple("Ya existe un curso del mismo nombre y tipo", "error", "simple"));
+            return;
         }
         
         if($this-> validar_formato_nombre($nombre)){
-          mainModel::generarAlertaControlador("El nombre del curso no coincide con el formato solicitado","error_simple");
+                    echo json_encode(mainModel::generarAlertaSimple("El nombre del curso no coincide con el formato solicitado", "error", "simple"));
+                    return;
         }
         
         if(!$this->validar_tipo_curso($tipo)) {
-           mainModel::generarAlertaControlador("Debe seleccionar un tipo de curso válido (Intensivo, Extendido, Técnico Profesional)","error_simple");
+                     echo json_encode(mainModel::generarAlertaSimple("Debe seleccionar un tipo de curso válido (Intensivo, Extendido, Técnico Profesional)", "error", "simple"));
+                     return;
         }
         
-        if(mainModel::verificar_sin_permiso(4)){
-        	mainModel::generarAlertaControlador("No tienes los permisos necesarios para realizar esta operación","error_simple");
+        if(!in_array((int) ($_SESSION['cargo_spm'] ?? 0), [1, 4], true)){
+                        echo json_encode(mainModel::generarAlertaSimple("No tienes los permisos necesarios para realizar esta operación", "error", "simple"));
+                        return;
         }
         
         $datos_curso_up=[
@@ -178,20 +235,12 @@ class cursoControlador extends cursoModelo{
             "ID"=>$id
         ];
 
-        if(cursoModelo::actualizar_curso_modelo($datos_curso_up)){
-            $alerta=[
-                "Alerta"=>"recargar",
-                "Titulo"=>"Datos actualizados",
-                "Texto"=>"Los datos del curso han sido actualizados con exito",
-                "Tipo"=>"success"
-            ];
+        $resultado = cursoModelo::actualizar_curso_supabase($datos_curso_up, $accessToken);
+
+        if($resultado['ok']){
+            $alerta = mainModel::generarAlertaSimple("Datos del curso actualizados con exito", "success", "recargar");
         }else{
-            $alerta=[
-                "Alerta"=>"simple",
-                "Titulo"=>"Ocurrió un error inesperado",
-                "Texto"=>"No hemos podido actualizar los datos, por favor intente nuevamente",
-                "Tipo"=>"error"
-            ];
+            $alerta = mainModel::generarAlertaSimple("No hemos podido actualizar los datos: " . ($resultado['message'] ?? 'respuesta inválida'), "error", "simple");
         }
 
         echo json_encode($alerta);
@@ -200,50 +249,184 @@ class cursoControlador extends cursoModelo{
     
     
     
+   
     
     
-    
-    
-    
-    
-    
-    
+public function paginador_curso_supabase_controlador($pagina, $registros, $vista, $busqueda, $state = 1) {
+    $pagina = max(1, (int) $pagina);
+    $registros = max(1, (int) $registros);
+    $token = $_SESSION['auth_access_token'] ?? null;
 
-    /*
-                    <td>
-                    <a href="' . SERVERURL . 'index.php?views=course-vigente-list&curso_id=' . mainModel::encryption($rows['id_curso']) . '" class="btn btn-info btn-sm" title="Ver cursos vigentes">
-                        <i class="fas fa-eye"></i> Ver
-                    </a>
-                </td>
- 
-                     <a href="' . SERVERURL . 'index.php?views=seccion-list&filtro_id_curso=' . $rows['id_curso'] . '&origen=curso" class="btn btn-info btn-sm" title="Ver cursos vigentes">
-                        <i class="fas fa-eye"></i>
-                    </a>
- */
+    if (!$token) {
+        return '<div class="alert alert-danger">La sesión de Supabase no está disponible.</div>';
+    }
+
+    // Preparar parámetros (SIN p_busqueda)
+    $params = [
+        'p_tipo' => trim($_GET['filtro_tipo'] ?? '') ?: null,
+        'p_has_marketing' => isset($_GET['filtro_publicidad']) && $_GET['filtro_publicidad'] !== '' 
+            ? ($_GET['filtro_publicidad'] === '1' ? true : false) 
+            : null,
+        'p_id' => isset($_GET['filtro_nombre']) && $_GET['filtro_nombre'] !== '' ? (int) $_GET['filtro_nombre'] : null,
+        'p_orden' => $_GET['orden'] ?? 'name',
+        'p_limit' => $registros,
+        'p_offset' => ($pagina - 1) * $registros,
+        'p_state' => (int) $state, 
+    ];
+
+    // Llama a la nueva función RPC 'listar_cursos'
+    $resultado = SupabaseApi::rpcWithToken('listar_cursos', $params, $token);
+
+    if (!$resultado['ok']) {
+        return '<div class="alert alert-danger">No se pudo cargar la lista de cursos.</div>';
+    }
+
+    $cursos = $resultado['data']['data'] ?? [];
+    $total = (int) ($resultado['data']['total'] ?? 0);
+
+    $paginas = max(1, (int) ceil($total / $registros));
+
+    // Cargo del usuario
+    $cargo = (int) ($_SESSION['cargo_spm'] ?? 0);
+    $carpetas = [1 => 'admin', 2 => 'Control de estudio', 3 => 'administrador de pagos', 4 => 'Supervisor de cursos'];
+    $carpeta = $carpetas[$cargo] ?? 'admin';
+    $vistaCompleta = urlencode($carpeta) . '/' . urlencode($vista);
+
+    $tabla = '<div class="table-responsive"><table class="table table-dark table-sm"><thead><tr class="text-center roboto-medium"><th>Id</th><th>Nombre</th><th>Tipo</th>';
+    if ($cargo !== 5 && $state==1) {
+        $tabla .= '<th>Vigente en periodo actual</th><th>Publicidad</th>';
+    }
+    $tabla .= '<th>Ver periodos</th>';
     
+    if (in_array($cargo, [1, 4], true) && $state==1) {
+        $tabla .= '<th>Actualizar</th><th>Archivar</th>';
+    }
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    if($state==0){$tabla .= '<th>Restaurar</th>';}
+    $tabla .= '</tr></thead><tbody>';
+
+    foreach ($cursos as $curso) {
+        $id = (int) $curso['id'];
+        $nombre = htmlspecialchars((string) $curso['name'], ENT_QUOTES, 'UTF-8');
+        $tipo = htmlspecialchars((string) $curso['type'], ENT_QUOTES, 'UTF-8');
+        //$destino = $curso['type'] === 'Intensivo' ? 'cv-int-list' : 'seccion-list';
+        
+        if($state==1){$destino = 'seccion-list';}
+        if($state==0){$destino = 'seccion-list-archived';}
+        
+        $esVigente = (bool) $curso['has_periodo'];
+        $tienePublicidad = (bool) $curso['has_publicidad'];
+
+        $tabla .= '<tr class="text-center"><td>' . $id . '</td><td>' . $nombre . '</td><td>' . $tipo . '</td>';
+        if ($cargo !== 5 && $state==1) {
+            $tabla .= '<td>' . ($esVigente ? 'Sí' : 'No') . '</td><td>' . ($tienePublicidad ? '<span class="badge badge-info">Sí</span>' : '<span class="badge badge-secondary">No</span>') . '</td>';
+        }
+        //$tabla .= '<td><a href="' . SERVERURL . 'index.php?views=' . urlencode($carpeta . '/' . $destino) . '&filtro_nombre=' . $id . '&origen=curso" class="btn btn-info btn-sm" title="Ver cursos vigentes"><i class="fas fa-eye"></i></a></td>';
+        $tabla .= '<td><a href="' . SERVERURL . 'index.php?views=' . urlencode($carpeta . '/' . $destino) . '&filtro_id_curso=' . $id . '&origen=curso" class="btn btn-info btn-sm" title="Ver cursos vigentes"><i class="fas fa-eye"></i></a></td>';
+        
+        if (in_array($cargo, [1, 4], true) && $state==1) {
+            $tabla .= '<td><a href="' . SERVERURL . 'index.php?views=' . urlencode($carpeta . '/course-update') . '&course_id_up=' . mainModel::encryption($id) . '" class="btn btn-success"><i class="fas fa-sync-alt"></i></a></td>';
+            $tabla .= '<td><form class="FormularioAjax" action="' . SERVERURL . 'ajax/cursoAjax.php" method="POST" data-form="delete" data-entity="curso" autocomplete="off"><input type="hidden" name="curso_id_archive" value="' . mainModel::encryption($id) . '"><button type="submit" class="btn btn-warning"><i class="fas fa-archive"></i></button></form></td>';
+        }
+        
+    if($state==0){
+		$tabla .= '<td>
+                        <form class="FormularioAjax" action="' . SERVERURL . 'ajax/cursoAjax.php" method="POST" data-form="restore" data-entity="curso" autocomplete="off">
+                            <input type="hidden" name="curso_id_restore" value="' . mainModel::encryption($id) . '">
+                            <button type="submit" class="btn btn-info">
+                                <i class="fas fa-undo"></i> Restaurar
+                            </button>
+                        </form>
+                   </td>';
+    }
+
+        
+        $tabla .= '</tr>';
+    }
+
+    if ($total === 0) {
+        $columnas = $cargo !== 5 ? 7 : 5;
+        $tabla .= '<tr class="text-center"><td colspan="' . $columnas . '">No hay registros en el sistema</td></tr>';
+    }
+    $tabla .= '</tbody></table></div>';
+
+    if ($total > 0) {
+        $regInicio = ($pagina - 1) * $registros + 1;
+        $regFinal = min($regInicio + count($cursos) - 1, $total);
+        $tabla .= '<p class="text-right">Mostrando curso ' . $regInicio . ' al ' . $regFinal . ' de un total de ' . $total . '</p>';
+        $paramsGet = [
+            'orden' => $_GET['orden'] ?? '',
+            'filtro_tipo' => $_GET['filtro_tipo'] ?? '',
+            'filtro_publicidad' => $_GET['filtro_publicidad'] ?? '',
+            'filtro_nombre' => $_GET['filtro_nombre'] ?? '',
+        ];
+        $paramsGet = array_filter($paramsGet, function($v) { return $v !== ''; });
+        $queryString = http_build_query($paramsGet);
+        if ($queryString) {
+            $queryString = '&' . $queryString;
+        }
+        $tabla .= mainModel::paginador_tablas($pagina, $paginas, SERVERURL . 'index.php?views=' . $vistaCompleta . $queryString . '&page=', 7);
+    }
+
+    return $tabla;
+}    
+
+
+    public function archivar_curso_controlador(): string
+    {
+        try {
+            $idEnc = $_POST['curso_id_archive'] ?? '';
+            $idReal = mainModel::decryption($idEnc);
+            $idReal = (int) $idReal;
+            if ($idReal <= 0) {
+                return json_encode(mainModel::generarAlertaSimple('ID inválido', 'error', 'simple'));
+            }
+            $token = $_SESSION['auth_access_token'] ?? null;
+            if (!$token) {
+                return json_encode(mainModel::generarAlertaSimple('Sesión no disponible', 'error', 'simple'));
+            }
+            $resultado = cursoModelo::archivar_curso_cascada_supabase($idReal, $token);
+            if ($resultado['ok'] && ($resultado['data']['ok'] ?? false) === true) {
+                return json_encode(mainModel::generarAlertaSimple($resultado['data']['message'] ?? 'Curso archivado correctamente', 'success', 'recargar'));
+            } else {
+                $mensaje = $resultado['data']['error'] ?? $resultado['message'] ?? 'Error desconocido';
+                return json_encode(mainModel::generarAlertaSimple('Error al archivar: ' . $mensaje, 'error', 'simple'));
+            }
+        } catch (Exception $e) {
+            return json_encode(mainModel::generarAlertaSimple('Error: ' . $e->getMessage(), 'error', 'simple'));
+        }
+    }
 
     
+    public function restaurar_curso_controlador(): string
+    {
+        try {
+            $idEnc = $_POST['curso_id_restore'] ?? '';
+            $idReal = mainModel::decryption($idEnc);
+            $idReal = (int) $idReal;
+            if ($idReal <= 0) {
+                return json_encode(mainModel::generarAlertaSimple('ID inválido', 'error', 'simple'));
+            }
+
+            $token = $_SESSION['auth_access_token'] ?? null;
+            if (!$token) {
+                return json_encode(mainModel::generarAlertaSimple('Sesión no disponible', 'error', 'simple'));
+            }
+
+            $resultado = cursoModelo::restaurar_curso_supabase($idReal, $token);
+
+            if ($resultado['ok'] && ($resultado['data']['ok'] ?? false) === true) {
+                return json_encode(mainModel::generarAlertaSimple($resultado['data']['message'] ?? 'Curso restaurado correctamente', 'success', 'recargar'));
+            } else {
+                $mensaje = $resultado['data']['error'] ?? $resultado['message'] ?? 'Error desconocido';
+                return json_encode(mainModel::generarAlertaSimple('Error al restaurar: ' . $mensaje, 'error', 'simple'));
+            }
+        } catch (Exception $e) {
+            return json_encode(mainModel::generarAlertaSimple('Error: ' . $e->getMessage(), 'error', 'simple'));
+        }
+    }
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
+/*
 public function paginador_curso_controlador($pagina, $registros, $vista, $busqueda) {
     $pagina    = (int) mainModel::limpiar_cadena($pagina);
     $registros = (int) mainModel::limpiar_cadena($registros);
@@ -381,19 +564,6 @@ LIMIT 1
 
             
             
-            /*
-                            SELECT cv.id_curso_vigente
-                FROM curso_vigente cv
-                INNER JOIN cohorte c ON cv.id_cohorte_fk = c.id_cohorte
-                WHERE cv.id_curso_fk = :idCurso
-                  AND cv.estado_curso_vigente = 1
-                  AND c.estado_cohorte = 'Vigente'
-                  AND c.archivar_cohorte = 1
-                LIMIT 1
-            */
-            
-            
-            
             // Verificar publicidad
             $publicidad = $conexion->prepare("
                 SELECT id_materia
@@ -488,7 +658,7 @@ $tabla .= '</tr>';
     }
 
     return $tabla;
-}
+}*/
 
 
 
@@ -516,7 +686,7 @@ $tabla .= '</tr>';
 
 
 
-
+/*
 public function paginador_curso_archivado_controlador($pagina, $registros, $vista, $busqueda) {
     $pagina    = (int) mainModel::limpiar_cadena($pagina);
     $registros = (int) mainModel::limpiar_cadena($registros);
@@ -627,7 +797,7 @@ public function paginador_curso_archivado_controlador($pagina, $registros, $vist
 -->
                    <a href="' . SERVERURL . 'index.php?views=' . urlencode($carpeta) . '/seccion-archived&filtro_nombre=' . urlencode($rows['id_curso']) . '&origen=curso" class="btn btn-info btn-sm" title="Ver cursos archivados">
 
-*/
+*-----------/
             $tabla .= '
                 <tr class="text-center">
                     <td>' . $rows['id_curso'] . '</td>
@@ -687,7 +857,7 @@ public function paginador_curso_archivado_controlador($pagina, $registros, $vist
 
     return $tabla;
 }
-
+*/
 
 
 
@@ -796,76 +966,31 @@ public function archivar_curso_controlador_2025(){
 
 
 
-
+/*
     public function archivar_curso_controlador() {
-        // ... (Desencriptación y validación de existencia igual que antes) ...
+        $id = mainModel::decryption($_POST['curso_id_archive'] ?? '');
+        $id = filter_var($id, FILTER_VALIDATE_INT);
+        $token = $_SESSION['auth_access_token'] ?? null;
+        $cargo = (int) ($_SESSION['cargo_spm'] ?? 0);
 
-        $conexion = mainModel::conectar();
-
-        // Definimos el mapa de relaciones
-        $mapa_archivado = [
-            'columna_estado' => 'estado_curso',
-            'hijos' => [
-                [
-                    'tabla' => 'curso_vigente',
-                    'columna_id' => 'id_curso_vigente',
-                    'columna_fk' => 'id_curso_fk',
-                    'columna_estado' => 'estado_curso_vigente',
-                    'hijos' => [
-                        [
-                            'tabla' => 'seccion',
-                            'columna_id' => 'id_seccion',
-                            'columna_fk' => 'id_curso_vigente_fk',
-                            'columna_estado' => 'archivar_seccion',
-                            'extra_sql' => "UPDATE inscripcion SET observaciones = CONCAT(IFNULL(observaciones, ''), ' | curso archivado') WHERE id_seccion_fk = :id",
-                            'hijos' => [
-                                [
-                                    'tabla' => 'evaluacion',
-                                    'columna_id' => 'id_evaluacion',
-                                    'columna_fk' => 'id_seccion',
-                                    'columna_estado' => 'archivar_evaluacion',
-                                    'hijos' => [
-                                        [
-                                            'tabla' => 'puntaje_estudiante',
-                                            'columna_id' => 'id_puntaje',
-                                            'columna_fk' => 'id_evaluacion',
-                                            'columna_estado' => 'archivar_puntaje'
-                                        ]
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ]
-                ]
-            ]
-        ];
-
-        try {
-            $conexion->beginTransaction();
-            self::archivar_registros_cascada($conexion, 'curso', 'id_curso', $id, $mapa_archivado);
-
-            // Caso especial: curso_publicidad no tiene hijos pero depende de curso
-            $conexion->exec("UPDATE curso_publicidad SET estado_curso_publicidad = 0 WHERE id_curso = '$id'");
-
-            $conexion->commit();
-            //return $this->respuesta_json("Éxito", "Todo se archivó correctamente", "success");
-            echo json_encode([
-                "Alerta" => "recargar",
-                "Titulo" => "Curso archivado",
-                "Texto" => "El curso y sus registros relacionados han sido archivados exitosamente",
-                "Tipo" => "success"
-            ]);
-        } catch (Exception $e) {
-            $conexion->rollBack();
-            //return $this->respuesta_json("Error", $e->getMessage(), "error");
-            echo json_encode([
-            	"Alerta" => "simple",
-            	"Titulo" => "Error al archivar",
-            	"Texto" => "No se pudo completar el proceso: " . $e->getMessage(),
-            	"Tipo" => "error"
-        	]);
+        if (!$id || !$token) {
+            echo json_encode(mainModel::generarAlertaSimple('La sesión o el identificador del curso no son válidos.', 'error', 'simple'));
+            return;
         }
-    }
+
+        if (!in_array($cargo, [1, 4], true)) {
+            echo json_encode(mainModel::generarAlertaSimple('No tienes permisos para archivar cursos.', 'error', 'simple'));
+            return;
+        }
+
+        $resultado = cursoModelo::archivar_curso_cascada_supabase((int) $id, $token);
+        if (!$resultado['ok']) {
+            echo json_encode(mainModel::generarAlertaSimple($resultado['message'], 'error', 'simple'));
+            return;
+        }
+
+        echo json_encode(mainModel::generarAlertaSimple('Curso y registros relacionados archivados exitosamente.', 'success', 'recargar'));
+    }*/
 
 
 
@@ -934,7 +1059,7 @@ public function archivar_curso_controlador_2025(){
 
 
     /*--------- Controlador restaurar curso ---------*/
-public function restaurar_curso_controlador() {
+public function restaurar_curso_controlador_pdo() {
     $id = mainModel::decryption($_POST['curso_id_restore']);
     $id = mainModel::limpiar_cadena($id);
 
