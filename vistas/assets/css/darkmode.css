@@ -1,0 +1,312 @@
+/* ============================================
+   MODO OSCURO
+   ============================================ */
+html.dark-mode {
+    --dm-bg:           #121212;
+    --dm-bg-secondary: #1e1e1e;
+    --dm-bg-card:      #1f1f1f;
+    --dm-bg-input:     #2a2a2a;
+    --dm-text:         #e0e0e0;
+    --dm-text-muted:   #a0a0a0;
+    --dm-border:       #333333;
+}
+
+html.dark-mode body {
+    background-color: var(--dm-bg) !important;
+    color: var(--dm-text);
+}
+
+html.dark-mode .card,
+html.dark-mode .modal-content,
+html.dark-mode .dropdown-menu {
+    background-color: var(--dm-bg-card);
+    color: var(--dm-text);
+    border-color: var(--dm-border);
+}
+
+html.dark-mode .card-header,
+html.dark-mode .card-footer {
+    background-color: var(--dm-bg-secondary);
+    border-color: var(--dm-border);
+    color: var(--dm-text);
+}
+
+html.dark-mode .form-control,
+html.dark-mode .form-select,
+html.dark-mode .form-control-file,
+html.dark-mode textarea {
+    background-color: var(--dm-bg-input);
+    color: var(--dm-text);
+    border-color: var(--dm-border);
+}
+
+html.dark-mode .form-control:focus,
+html.dark-mode .form-select:focus {
+    background-color: var(--dm-bg-input);
+    color: var(--dm-text);
+    border-color: var(--color-primario);
+    box-shadow: 0 0 0 0.2rem rgba(var(--shadow-color1), 0.25);
+}
+
+html.dark-mode .FormularioAjax{
+    background-color: var(--dm-bg-card) !important;
+    border-color: var(--dm-border) !important;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+html.dark-mode .form-control::placeholder {
+    color: var(--dm-text-muted);
+}
+
+html.dark-mode .table {
+    color: var(--dm-text);
+}
+
+html.dark-mode .table thead th {
+    background-color: var(--dm-bg-secondary);
+    color: var(--dm-text);
+    border-color: var(--dm-border);
+}
+
+html.dark-mode .table td,
+html.dark-mode .table th {
+    border-color: var(--dm-border);
+}
+
+html.dark-mode .table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+html.dark-mode .table-hover tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+html.dark-mode .bg-white,
+html.dark-mode .bg-light,
+html.dark-mode .bg-white-custom {
+    background-color: var(--dm-bg-card) !important;
+    color: var(--dm-text) !important;
+}
+
+html.dark-mode .text-dark {
+    color: var(--dm-text) !important;
+}
+
+html.dark-mode .text-muted {
+    color: var(--dm-text-muted) !important;
+}
+
+html.dark-mode .border,
+html.dark-mode fieldset {
+    border-color: var(--dm-border) !important;
+}
+
+html.dark-mode legend {
+    color: var(--color-primario);
+}
+
+html.dark-mode .list-group-item {
+    background-color: var(--dm-bg-card);
+    color: var(--dm-text);
+    border-color: var(--dm-border);
+}
+
+html.dark-mode .alert {
+    border-color: var(--dm-border);
+}
+
+html.dark-mode .navbar,
+html.dark-mode .sidebar,
+html.dark-mode .nav-lateral {
+    background-color: var(--dm-bg-secondary) !important;
+}
+
+html.dark-mode .page-header,
+html.dark-mode .page-nav-tabs {
+    background-color: var(--dm-bg-secondary);
+}
+
+html.dark-mode .page-nav-tabs a {
+    color: var(--dm-text-muted);
+}
+
+html.dark-mode .page-nav-tabs a.active {
+    color: var(--color-primario);
+}
+
+/* Sombra dinámica en modo oscuro: más sutil */
+html.dark-mode .shadow-dinamico {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ============================================
+   MODO OSCURO — ESTILOS FALTANTES
+   ============================================ */
+
+/* 1) Redefinir las variables base del :root para modo oscuro.
+      Así todo lo que usa var(--color-one), var(--accent-color), etc.
+      se adapta automáticamente sin tener que sobrescribir cada regla. */
+html.dark-mode {
+    --color-one:    #121212;   /* fondo general */
+    --color-two:    #1e1e1e;   /* nav lateral */
+    --border-color: #333333;   /* bordes */
+    --accent-color: #8ab4f8;   /* antes #253556 → invisible en oscuro */
+    --form-color:   #e0e0e0;
+    --color-three:  #EC5252;   /* se mantiene, funciona bien en oscuro */
+}
+
+/* 2) Formularios genéricos */
+html.dark-mode .form-neon {
+    background-color: var(--dm-bg-card);
+    border-color: var(--dm-border);
+    color: var(--dm-text);
+}
+
+html.dark-mode .form-control[readonly] {
+    background-color: transparent;
+    color: var(--dm-text-muted);
+}
+
+/* 3) Tablas oscuras (.table-dark y variantes) */
+html.dark-mode .table,
+html.dark-mode .table-dark {
+    background-color: var(--dm-bg-card);
+    color: var(--dm-text);
+}
+
+html.dark-mode .table-dark {
+    border: 1px solid var(--dm-border);
+}
+
+html.dark-mode .table-dark thead tr {
+    background-color: #1a2538; /* accent oscurecido */
+}
+
+html.dark-mode .table tbody tr {
+    color: var(--dm-text);
+}
+
+html.dark-mode .table-dark tr:hover {
+    color: var(--color-three);
+    background-image: linear-gradient(
+        to right,
+        transparent,
+        rgba(236, 82, 82, .18) 85%,
+        transparent
+    );
+}
+
+/* 4) Paginación */
+html.dark-mode .page-link {
+    background-color: var(--dm-bg-card);
+    border-color: var(--dm-border);
+    color: var(--dm-text);
+}
+html.dark-mode .page-link:hover,
+html.dark-mode .page-link.active {
+    background-color: var(--color-three);
+    border-color: var(--color-three);
+    color: #FFF;
+}
+
+/* 5) Login */
+html.dark-mode .login-container {
+    /* Reemplaza el degradado azul brillante por uno apagado */
+    background: #050912;
+    background: linear-gradient(to right, #050912, #0b1a33);
+}
+
+html.dark-mode .login-content {
+    background-color: var(--dm-bg-card);
+    border-color: var(--dm-border);
+    color: var(--dm-text);
+}
+
+/* Estado base (input vacío, sin foco) */
+html.dark-mode .bmd-label-floating {
+    color: var(--dm-text-muted);   /* mejor muted que text: es un placeholder visual */
+}
+
+/* Cuando el input tiene foco */
+html.dark-mode .form-group .form-control:focus ~ .bmd-label-floating,
+html.dark-mode .form-group.is-focused .bmd-label-floating {
+    color: var(--color-primario);  /* o --color-three si prefieres el rojo */
+}
+
+/* Cuando el input tiene valor (label subido) */
+html.dark-mode .form-group.is-filled .bmd-label-floating,
+html.dark-mode .form-group.has-danger .bmd-label-floating {
+    color: var(--dm-text-muted);
+}
+html.dark-mode .btn-login {
+    background-color: transparent;
+    color: var(--dm-text);
+    border: 1px solid var(--dm-border);
+}
+html.dark-mode .btn-login:hover {
+    background-color: var(--color-three);
+    border-color: var(--color-three);
+    color: #FFF;
+}
+
+
+/* 9) Tiles del home */
+html.dark-mode .tile {
+    background-color: var(--dm-bg-card);
+    color: var(--dm-text);
+    border-color: var(--dm-border);
+}
+html.dark-mode .tile:hover {
+    border-color: var(--color-three);
+    color: var(--dm-text);
+}
+html.dark-mode .tile:focus,
+html.dark-mode .tile:active {
+    outline: none;
+}
+html.dark-mode .tile-tittle {
+    border-bottom-color: var(--dm-border);
+}
+html.dark-mode .tile:hover .tile-tittle {
+    color: #FFF;
+    border-color: var(--color-three);
+    background-color: var(--color-three);
+}
+html.dark-mode .tile:hover .tile-icon > i,
+html.dark-mode .tile:hover .tile-icon > p {
+    color: var(--color-three);
+}
+
+/* 10) Page header (título + subtítulo) */
+html.dark-mode .page-header {
+    color: var(--dm-text);
+}
+html.dark-mode .page-header > :nth-child(2) {
+    color: var(--dm-text-muted);
+}
+
+/* 11) Page nav tabs (por si acaso refinas más) */
+html.dark-mode .page-nav-tabs li a {
+    color: var(--dm-text-muted);
+}
+html.dark-mode .page-nav-tabs li a:hover {
+    color: var(--dm-text);
+    border-bottom: 2px solid var(--dm-text);
+}
+html.dark-mode .page-nav-tabs li a.active {
+    color: var(--color-three);
+}

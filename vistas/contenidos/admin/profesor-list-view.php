@@ -87,24 +87,8 @@ $carpeta = $carpetasPorCargo[$cargo] ?? "admin";
 
     <div class="col-md-4">
     <label for="filtro_nombre">Nombre o apellido</label>
-    <!--select name="filtro_nombre" id="filtro_nombre" class="form-control select2">
-        <option value="">Todos los profesores</option>
-        <php
-        $conexion = mainModel::conectar();
-        $profesores = $conexion->query("
-            SELECT id_profesor, nombre_profesor, apellido_profesor 
-            FROM profesor 
-            WHERE estado_profesor = 1 
-            ORDER BY nombre_profesor ASC, apellido_profesor ASC
-        ");
-        foreach ($profesores as $prof) {
-            $nombreCompleto = $prof['nombre_profesor'] . ' ' . $prof['apellido_profesor'];
-            $selected = (isset($_GET['filtro_nombre']) && $_GET['filtro_nombre'] == $prof['id_profesor']) ? "selected" : "";
-            echo '<option value="' . $prof['id_profesor'] . '" ' . $selected . '>' . htmlspecialchars($nombreCompleto) . '</option>';
-        }
-        ?>
-    </select-->
-        <?php
+
+        <!--?php
         $filtro_nombre = $_GET['filtro_nombre'] ?? '';
         $profesor_nombre = '';
 
@@ -119,10 +103,34 @@ $carpeta = $carpetasPorCargo[$cargo] ?? "admin";
         }
         ?>
         <select name="filtro_nombre" id="filtro_nombre" class="form-control select2-ajax">
-          <?php if ($filtro_nombre && $profesor_nombre): ?>
+          <php if ($filtro_nombre && $profesor_nombre): ?>
             <option value="<?= $filtro_nombre ?>" selected><?= htmlspecialchars($profesor_nombre) ?></option>
-          <?php endif; ?>
-        </select>
+          <php endif; ?>
+        </select-->
+        
+        
+
+            <?php
+            $filtro_nombre = $_GET['filtro_nombre'] ?? '';
+            $profesor_nombre = '';
+
+            if ($filtro_nombre !== '') {
+                require_once "./controladores/profesorControlador.php";
+                $ins_profesor = new profesorControlador();
+                $profesor = $ins_profesor->obtener_nombre_profesor_para_filtro_controlador($filtro_nombre);
+                if ($profesor) {
+                    $profesor_nombre = ($profesor['name'] ?? '') . ' ' . ($profesor['last_name'] ?? '');
+                }
+            }
+            ?>
+            <select name="filtro_nombre" id="filtro_nombre" class="form-control select2-ajax">
+              <?php if ($filtro_nombre && $profesor_nombre): ?>
+                <option value="<?= $filtro_nombre ?>" selected><?= htmlspecialchars($profesor_nombre) ?></option>
+              <?php endif; ?>
+            </select>
+        
+  
+        
         
         
     </div>
@@ -148,7 +156,8 @@ $carpeta = $carpetasPorCargo[$cargo] ?? "admin";
         require_once "./controladores/profesorControlador.php";
         $ins_profesor = new profesorControlador();
         $pagina = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        echo $ins_profesor->paginador_profesor_controlador($pagina, 10, "profesor-list", "");
+        //echo $ins_profesor->paginador_profesor_controlador($pagina, 10, "profesor-list", "");
+        echo $ins_profesor->paginador_profesor_controlador($pagina, 15, 'profesor-list', $_GET['busqueda'] ?? '',1);
     ?>
 </div>
 
@@ -183,8 +192,8 @@ $(document).ready(function() {
       data: params => ({ q: params.term }),
       processResults: data => ({
         results: data.map(p => ({
-          id: p.id_profesor,
-          text: `${p.nombre_profesor} ${p.apellido_profesor}`
+          id: p.id,
+          text: `${p.name} ${p.last_name} (id: ${p.id})`
         }))
       }),
       cache: true
@@ -192,14 +201,7 @@ $(document).ready(function() {
   });
 });
 </script>
-<!--script>
-  $(document).ready(function() {
-    $('#filtro_nombre').select2({
-      placeholder: "Seleccione un profesor",
-      allowClear: true
-    });
-  });
-</script-->
+
 
 
 

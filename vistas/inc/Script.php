@@ -6,6 +6,9 @@
 
 <!-- popper -->
 <script src="<?php echo SERVERURL; ?>vistas/js/popper.min.js" ></script>
+    
+<!-- modo oscuro -->
+<script src="<?php echo SERVERURL; ?>vistas/js/darkmode.js" ></script>
 
 <!-- Bootstrap V4.3 -->
 <script src="<?php echo SERVERURL; ?>vistas/js/bootstrap.min.js" ></script>
@@ -21,8 +24,8 @@
 
 <script src="<?php echo SERVERURL; ?>vistas/js/alertas.js" ></script>
     
-<!-- validaciones y modales -->
-<script src="<?php echo SERVERURL; ?>vistas/js/miscript.js" ></script>
+<!-- //validaciones y modales  
+<script src="<?php echo SERVERURL; ?>vistas/js/miscript.js" ></script-->
 
 <!--select2-->
 <!--script src="https://code.jquery.com/jquery-3.6.0.min.js"></script-->

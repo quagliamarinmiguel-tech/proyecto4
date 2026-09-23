@@ -15,6 +15,8 @@ try {
         require_once "../controladores/localControlador.php";
         $ins_local = new localControlador();
 
+            session_start(['name' => 'SPM']);
+
         /*--------- Actualizar información institucional ---------*/
         if (isset($_POST['local_id_up'])) {
             echo $ins_local->actualizar_local_controlador();

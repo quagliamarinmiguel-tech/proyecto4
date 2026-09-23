@@ -147,11 +147,16 @@ html{scroll-behavior:smooth;}
 /*	background-image: url('../vistas/assets/img/talves4.webp');*/
 	background-size: cover;
     box-shadow: 
-        rgba(2, 165, 235, 0.8) 0px 6px,  
+       /* rgba(2, 165, 235, 0.8) 0px 6px,  
         rgba(1, 149, 212, 0.7) 0px 14px, 
         rgba(4, 116, 164, 0.6) 0px 22px,  
         rgba(56, 116, 144, 0.5) 0px 30px,    
-        rgba(2, 53, 53, 0.4) 0px 38px; 
+        rgba(2, 53, 53, 0.4) 0px 38px; */
+        var(--sombra1) 0px 6px,
+        var(--sombra2) 0px 14px,
+        var(--sombra3) 0px 22px,
+        var(--sombra4) 0px 30px,
+        var(--sombra5) 0px 38px;
 }
     .inicio_header_imagen_ceproca p{
         width:70%;
@@ -902,8 +907,9 @@ background-color: #005f5f;
   	.tarjeta_curso img{height:100%;width:60%;border-radius:12px;box-shadow: rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px;}
 	.tarjeta_curso_texto{height:100%;width:40%;display:flex;justify-content:center;align-items:flex-start;flex-direction:column;}
          .tarjeta_curso_texto p{font-size:6rem;margin:3% 3% 3% 5%;width:90%;}
-
-         .tarjeta_curso_texto_prefacio{font-size:4rem !important;margin:3% 3% 3% 5%;width:90%;}
+/*--------------------------------------------------------------------------------------------------------------------------------------------*/
+         .tarjeta_curso_texto_prefacio{font-size:4rem !important;margin:3% 3% 3% 5%;width:90%;
+             display: -webkit-box;-webkit-line-clamp: 3;       /* número de líneas visibles */-webkit-box-orient: vertical;overflow: hidden;text-overflow: ellipsis;}
 
 
     .div_precio_tarjeta{display:flex;margin:1%;justify-content:center;align-items:space-between;width:90%;flex-wrap:wrap;}
@@ -931,8 +937,16 @@ background-color: #005f5f;
 
             .datosprofe_curso{width:90%;height:auto;margin:2% 0;display:flex;justify-content:flex-start;align-items:center;background-color:inherit;}
                 .datosprofe_curso img{border-radius:50%;width:50px;height:50px;border:1px solid #F9F;margin:1%}
-                .datosprofe_curso p{font-size:4rem;margin-left:1%;}
+                .datosprofe_curso p{font-size:3rem;margin-left:1%;
+                    
+                    display: -webkit-box;-webkit-line-clamp: 3;       /* número de líneas visibles */-webkit-box-orient: vertical;overflow: hidden;text-overflow: ellipsis;
+                    /*white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    max-width: 100%;*/
+                }
             	    .datosprofe_curso p b{color:#36C;font-size:5rem;border-right:3px solid #666;padding-right:20px;}
+/*--------------------------------------------------------------------------------------------------------------------------------------------*/
 
         .contenido_list{width:99%;height:auto;display:flex;justify-content:flex-start;align-items:flex-start;background-color:#FFF;flex-direction:column;border:3px solid #F9F;}
 
@@ -1098,7 +1112,7 @@ option{font-size:4rem;}
 /* Botón de búsqueda */
 .filtro-formulario .btn-filtrar {
   margin-top: 20px;
-  padding: 10px 20px;
+  /*padding: 10px 20px;*/
   background-color: #007bff;
   color: #fff;
   font-weight: bold;
@@ -1114,13 +1128,67 @@ option{font-size:4rem;}
 
 
 
+/*---------------------filtros y paginacion de cursos view------------------------*/
+/*para form*/
+.form_filtro_cursos{display:flex;justify-content:center;align-items:center;box-shadow: none;padding:0;max-width:90%; max-height: 15vh;margin: 30px auto;background-color: #f2f2f2;border-radius: 8px;box-shadow: 0 0 10px rgba(0,0,0,0.1);}
+
+/*para el div que los guarda*/
+.div_filtro_cursos{display:flex;justify-content:flex-start;align-items:center;background-color:inherit;box-shadow: none;width:100%;padding:0;margin:0;}
+
+/*el div que guarda el select*/
+.div_select_filtro_cursos{background-color:inherit;display:flex;justify-content:flex-start;align-items:center;padding:3px;margin:0;max-width:30vw;flex: 1 1 45%; flex-direction: column;}
+
+/*el div q guarda el input*/
+.div_input_filtro_cursos{background-color:inherit;display:flex;justify-content:flex-start;align-items:center;padding:3px;margin:0;max-width:30vw;flex: 1 1 45%;flex-direction: column;}
+.div_input_filtro_cursos_input{font-size:5rem;border: 1px solid #ccc;border-radius: 4px;background-color: #fff;transition: border-color 0.3s;width:100%;background-color:inherit;margin:0;padding:0;}
+
+/*buton de filtrar*/
+.boton_filtro_cursos{font-size:5rem;margin:0;padding:3px;max-width:20vw;margin-right:5px;  margin-top: 20px;background-color: #007bff;color: #fff;font-weight: bold;border: none;border-radius: 4px;cursor: pointer;display: block;width: 100%;transition: background-color 0.3s;}
+
+.pagination_cursos {
+    display: flex;
+    justify-content: center;
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+    gap: 5px;
+}
+
+.page-link_cursos{font-size:5rem;}
+.page-item_cursos .page-link_cursos {
+    display: block;
+    padding: 8px 14px;
+    background: #f8f9fa;
+    color: #333;
+    border-radius: 4px;
+    text-decoration: none;
+    border: 1px solid #ddd;
+    transition: 0.2s;
+}
+
+.page-item_cursos .page-link_cursos:hover {
+    background: #e9ecef;
+    border-color: #ccc;
+}
+
+.page-item_cursos.active .page-link_cursos {
+    background: #007bff;
+    color: #fff;
+    border-color: #007bff;
+}
+
+.page-item_cursos .page-link_cursos:active {
+    transform: scale(0.95);
+}
 
 
 
 
-
-
-
+/*esto es de cursos detail,*/
+	.nombre_del_curso{display:flex;justify-content:flex-start;align-items:center;font-size:6rem;width: 100%;}
+    .nombre_del_curso h1{font-size:8rem; background-color:inherit;}
+/*img_curso*/	.lado2png{width:99%;box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;}
+				.lado2png img{width:100%;height:auto;object-fit:cover;}
 
 
 
@@ -1197,8 +1265,8 @@ option{font-size:4rem;}
 
 /*a partir de aqui empiezan los cambios con cursos view*/
         .tarjeta_curso{flex-direction:column;}
-        .tarjeta_curso img{width:100%;height:55%;}
-        .tarjeta_curso_texto{width:100%;height:45%;}
+        .tarjeta_curso img{width:100%;height:48%;}
+        .tarjeta_curso_texto{width:100%;height:52%;}
         .tarjeta_datosprofe_curso{width:45%;}
 
         .datos_cursos{flex-direction:column;justify-content:flex-start;align-items:center;}
@@ -1232,6 +1300,7 @@ option{font-size:4rem;}
                 .datosprofe_curso{width:95%;height:auto;}
                 .datosprofe_curso img{width:40px;height:40px;}
                 .datosprofe_curso p{font-size:4rem;}
-
+    
+    /*esto es de cursos detail*/ .lado2png{height:40vh;width:80%;box-shadow:none;}
 
 }

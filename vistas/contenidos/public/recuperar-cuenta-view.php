@@ -1,164 +1,124 @@
+<?php
+require_once "./controladores/loginControlador.php";
+$ctrl = new loginControlador();
 
+// Validar IP bloqueada antes de renderizar
+$ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+$bloqueo = loginModelo::verificar_ip_bloqueada_supabase($ip, 'recuperacion');
+
+$ipBloqueada      = !empty($bloqueo['bloqueado']);
+$minutosRestantes = $ipBloqueada ? (int) ceil(($bloqueo['tiempo_restante'] ?? 0) / 60) : 0;
+
+// Procesar POST
+if (!$ipBloqueada && isset($_POST['correo'])) {
+    $ctrl->solicitar_recuperacion_controlador();
+}
+?>
+<script>window.DARK_MODE_BLOQUEADO = true;</script>
+
+
+<?php
+require_once "./controladores/publicoControlador.php";
+$localCtrl = new publicoControlador();
+
+//datos visuales de la paigna
+$configVisual = mainModel::obtener_config_visual();
+$coloresInicio = mainModel::obtener_colores_config();
+
+$nombreCorto    = $configVisual['nombre_corto'];
+$nombreCompleto = $configVisual['nombre_completo'];
+$rutaIcono      = $configVisual['icono'];
+$rutaLogo       = $configVisual['logo'];
+$paletaInicioId = $configVisual['paleta_id'];
+//var_dump($nombreCorto,$nombreCompleto,$rutaIcono,$rutaLogo,$paletaInicioId);die();
+
+$primario = $coloresInicio[0];
+$secundario = $coloresInicio[1];
+//$c1 = mainModel::hex2rgba($primario, 1);      // 100%
+//$c2 = mainModel::hex2rgba($primario, 0.85);   // 85%
+//$c3 = mainModel::hex2rgba($primario, 0.7);    // 70%
+$c1 = mainModel::hex2rgba($primario, 0.85);      
+$c2 = mainModel::hex2rgba($primario, 1);    
+$c3 = mainModel::hex2rgba($secundario, 1);  
+
+
+?>
 
 <style>
-.login-container {
-  //  width: 100%;
-//	height:100%;
-   // margin: auto;
-    //padding: 30px;
-    //border-radius: 10px;
- //   box-shadow: 0 0 15px rgba(0,0,0,0.1);
+body {
+  min-height: 100vh;
+  height:auto;
+  /*padding: 30px 0px;**/
+  padding:1px;
+  margin:0px;
+  width:100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: <?= $c2 ?>; 
+  background: linear-gradient(90deg, <?= $c1 ?> 0%, <?= $c2 ?> 50%, <?= $c3 ?> 99%);
+  background-size: cover;
 }
+.login-container{
+	background-color: rgba(0, 0, 0, 0); 
+	color: #ffffff; 
+	background: rgba(0, 0, 0, 0);
+}
+html {overflow-y: hidden;}
 </style>
 
+<?php if ($ipBloqueada): ?>
 
+    <div class="login-container">
+        <div class="login-content text-center" style="width:100%;">
+            <p><i class="fas fa-ban fa-5x" style="color:#dc3545;"></i></p>
+            <h3 style="color:#dc3545;">Acceso bloqueado</h3>
+            <p class="text-danger">
+                Demasiados intentos. Intente más tarde en <b><?= $minutosRestantes ?></b> minutos.
+            </p>
+            <p class="mt-4">
+                <a href="<?= SERVERURL ?>?views=login">
+                    <i class="fas fa-arrow-left"></i> Volver al login
+                </a>
+            </p>
+        </div>
+    </div>
 
-<div class="login-container">
-	<div class="login-content" style="width:100%;">
-		<!--p class="text-center">
-			<i class="fas fa-user-shield fa-5x"></i>
-		</p-->
-		<p class="text-center">
-			Recuperar cuenta
-		</p>
-		<p class="text-center">
+<?php else: ?>
 
-			<a href="<?php echo SERVERURL; ?>?views=login"><i class="fas fa-arrow-left"></i> Volver al login</a>
-		</p>
-						<p class="text-center small ">Reponda a las preguntas de verificación del formulario</p>
-                        <div class="text-danger text-center small mt-1" id="alerta-ip-recuperacion" style="display:none;"></div>
-
-		<form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/recuperarAjax.php" method="POST" data-form="verificar" autocomplete="off">
-
-            <div class="row">
-                <div class="col-md-6 form-group">
-                    <label for="Cedula"><i class="fas fa-id-card"></i> Cédula</label>
-                    <input type="text" class="form-control" id="Cedula" name="cedula" pattern="[0-9]{6,10}" maxlength="10" required>
-                </div>
-                <div class="col-md-6 form-group">
-                    <label for="Telefono"><i class="fas fa-phone"></i> Teléfono</label>
-                    <input type="text" class="form-control" id="Telefono" name="telefono" pattern="[0-9]{10,15}" maxlength="15" required>
-                </div>
-                                        <button type="button" class="btn btn-sm ver-ayuda-texto"
-                            data-text="Escriba el número de teléfono común (0412-123-1234) de esta manera: 04123334444. En el caso de que sea un número de Whatsapp (+58 412-123...) escríbalo así: 584123334444."
-                            title="Ver explicación"
-                            style="background-color: #3CA6A6; color: #fff; border: none; padding: 1px 8px; border-radius: 4px;margin: 0 0 0 85%;">
-                        <i class="fas fa-question"></i>
-                    </button>
+    <div class="login-container">
+        <div class="login-content" style="width:100%;">
+            <p class="text-center">Recuperar cuenta</p>
+                        
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <!--img src="<c?php echo SERVERURL; ?>vistas/<c?= htmlspecialchars($rutaLogo) ?>"--> 
+                   <img src="<?= mainModel::obtenerRutaImagenLocal('logo') ?>"
+                     alt="Logo" 
+                     style="width: 80px; height: auto;padding:0 5px;">
             </div>
+            
+            <p class="text-center">
+                <a href="<?= SERVERURL ?>?views=login">
+                    <i class="fas fa-arrow-left"></i> Volver al login
+                </a>
+            </p>
 
-            <div class="row">
-                <div class="col-md-6 form-group">
+            <p class="text-center small">
+                Le enviaremos un correo con un enlace para restablecer su contraseña.
+            </p>
+
+            <form action="" method="POST" autocomplete="off" id="form-recuperar">
+                <div class="form-group">
                     <label for="Correo"><i class="fas fa-envelope"></i> Correo electrónico</label>
-                    <input type="email" class="form-control" id="Correo" name="correo" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" maxlength="60" required>
+                    <input type="email" class="form-control" id="Correo" name="correo"
+                           maxlength="100" required>
                 </div>
-                <div class="col-md-6 form-group">
-                    <label for="FechaNacimiento"><i class="fas fa-calendar-alt"></i> Fecha de nacimiento</label>
-                    <input type="date" class="form-control" id="FechaNacimiento" name="fecha_nacimiento" min="1900-01-01" max="<?= date('Y-m-d') ?>" required>
-                </div>
-            </div>
 
-            <div class="row">
-                <div class="col-md-6 form-group">
-                    <label for="Clave"><i class="fas fa-lock"></i> Nueva clave</label>
-                    <input type="password" class="form-control" required pattern="[^ ].*" title="El nombre no debe comenzar con espacio." id="Clave" name="clave" minlength="7" maxlength="100" required>
-                </div>
-                <div class="col-md-6 form-group">
-                    <label for="ConfirmarClave"><i class="fas fa-lock"></i> Confirmar clave</label>
-                    <input type="password" class="form-control" required pattern="[^ ].*" title="El nombre no debe comenzar con espacio." id="ConfirmarClave" name="confirmar_clave" minlength="7" maxlength="100" required>
-                </div>
-            </div>
-            <div class="text-danger small mt-1" id="alerta-clave" style="display:none;"></div>
+                <button type="submit" class="btn-login text-center"
+                        style="padding: 4px 10px; font-size: 0.8rem; margin:0; width:100%;">
+                    Enviar enlace de recuperación
+                </button>
+            </form>
+        </div>
+    </div>
 
-            <button type="submit" class="btn-login text-center"  style="padding: 4px 10px; font-size: 0.8rem;margin:0px;width:100%;">Verificar identidad</button>
-		</form>
-	</div>
-</div>
-
-    <div id="modalTextoAyuda" class="modal" tabindex="-1" style="display:none; position:fixed; z-index:9999; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.75);">
-  <div style="position:relative; margin:auto; top:10%; max-width:60%; background:#000; border:3px solid #fff; padding:20px; border-radius:8px; color:white;">
-    <p id="textoAyuda" style="font-size:1.2rem; line-height:1.6; text-align:center;">Escriba el número de teléfono común (0412-123-1234) de esta manera: 04123334444. En el caso de que sea un número de Whatsapp (+58 412-123...) escríbalo así: 584123334444</p>
-    <button onclick="document.getElementById('modalTextoAyuda').style.display='none'" style="position:absolute; top:10px; right:10px;" class="btn btn-sm btn-light">
-      <i class="fas fa-times"></i>
-    </button>
-  </div>
-</div>
-
-
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll(".ver-ayuda-texto").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const modal = document.getElementById("modalTextoAyuda");
-      const texto = btn.dataset.text || "No hay ayuda disponible.";
-      modal.querySelector("#textoAyuda").textContent = texto;
-      modal.style.display = "block";
-    });
-  });
-});
-</script>
-
-    
-    
-    
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const claveInput = document.getElementById("Clave");
-  const confirmarInput = document.getElementById("ConfirmarClave");
-  const alertaClave = document.getElementById("alerta-clave");
-
-  function validarClaves() {
-    const clave = claveInput.value.trim();
-    const confirmar = confirmarInput.value.trim();
-
-    if (clave.length >= 7 && confirmar.length >= 7) {
-      if (clave !== confirmar) {
-        alertaClave.textContent = "Las claves no coinciden.";
-        alertaClave.style.display = "block";
-      } else {
-        alertaClave.style.display = "none";
-      }
-    } else {
-      alertaClave.style.display = "none";
-    }
-  }
-
-  claveInput.addEventListener("input", validarClaves);
-  confirmarInput.addEventListener("input", validarClaves);
-});
-</script>
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const alertaIP = document.getElementById("alerta-ip-recuperacion");
-  const btnSubmit = document.querySelector("button[type='submit']");
-  const SERVERURL = "<?php echo SERVERURL; ?>";
-
-  fetch(`${SERVERURL}ajax/recuperarAjax.php?accion=validar_ip&tipo=recuperacion`)
-    .then(res => res.json())
-    .then(data => {
-      if (data.bloqueado) {
-        alertaIP.textContent = data.mensaje;
-        alertaIP.style.display = "block";
-        btnSubmit.disabled = true;
-        btnSubmit.style.opacity = "0.6";
-        btnSubmit.style.cursor = "not-allowed";
-      } else {
-        alertaIP.style.display = "none";
-        btnSubmit.disabled = false;
-        btnSubmit.style.opacity = "1";
-        btnSubmit.style.cursor = "pointer";
-      }
-    })
-    .catch(err => {
-      console.error("Error al validar IP:", err);
-      alertaIP.textContent = "Error al verificar acceso. Intente más tarde.";
-      alertaIP.style.display = "block";
-      btnSubmit.disabled = true;
-      btnSubmit.style.opacity = "0.6";
-      btnSubmit.style.cursor = "not-allowed";
-    });
-});
-</script>
-
+<?php endif; ?>

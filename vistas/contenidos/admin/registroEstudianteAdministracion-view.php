@@ -59,6 +59,14 @@
     .requirement.unmet {
       color: #6c757d;
     }
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0;
+    }
+    .checkbox-label input {
+      margin-right: 8px;
+    }
   </style>
 </head>
 <body>
@@ -72,7 +80,7 @@
         <form action="controladores/registroEstudianteControlador.php" method="POST" id="formEstudiante" novalidate>
           <div class="form-row">
 			<div class="form-group col-md-6">
-    			<label for="ci">Cédula *</label>
+    			<label for="ci_estudiante">Cédula *</label>
     			<div class="input-group">
         			<select class="form-control" name="ci_tipo" id="ci_tipo" required style="max-width: 80px;">
             			<option value="V">V</option>
@@ -87,8 +95,7 @@
     			<div class="invalid-feedback" id="ci-error">
         			La cédula debe contener exactamente 8 dígitos numéricos.
     			</div>
-    			<!-- Campo oculto para almacenar el valor completo -->
-    			<input type="hidden" name="ci" id="ci_completo">
+    			<input type="hidden" name="ci_estudiante" id="ci_completo">
 			</div>
             <div class="form-group col-md-6">
               <label for="nombre">Nombre(s) *</label>
@@ -129,7 +136,13 @@
 
           <div class="form-row">
             <div class="form-group col-md-6">
-              <label for="telefono">Teléfono *</label>
+              <label for="lugar_nacimiento">Lugar de nacimiento</label>
+              <input type="text" class="form-control" name="lugar_nacimiento" id="lugar_nacimiento" 
+                     maxlength="100" placeholder="Ciudad, Estado">
+            </div>
+            
+            <div class="form-group col-md-6">
+              <label for="telefono_estudiante">Teléfono *</label>
               <div class="input-group">
                 <select class="form-control" name="telefono_codigo" id="telefono_codigo" required style="max-width: 100px;">
                   <option value="">Código</option>
@@ -149,8 +162,34 @@
                 El teléfono debe tener un código y 7 dígitos.
               </div>
             </div>
+          </div>
+
+
+          <div class="form-row">
             <div class="form-group col-md-6">
-              <label for="correo">Correo electrónico *</label>
+              <label for="wsp_estudiante">WhatsApp</label>
+              <div class="input-group">
+                <select class="form-control" name="wsp_codigo" id="wsp_codigo" style="max-width: 100px;">
+                  <option value="">Código</option>
+                  <option value="58412">58412</option>
+                  <option value="58414">58414</option>
+                  <option value="58416">58416</option>
+                  <option value="58422">58422</option>
+                  <option value="58424">58424</option>
+                  <option value="58426">58426</option>
+                </select>
+                <input type="text" class="form-control" name="wsp_numero" id="wsp_numero" 
+                       pattern="\d{7}" 
+                       title="Debe contener 7 dígitos"
+                       maxlength="7" placeholder="1234567">
+              </div>
+              <div class="invalid-feedback" id="whatsapp-error">
+                El WhatsApp debe tener 7 dígitos si se proporciona un código.
+              </div>
+            </div>
+            
+            <div class="form-group col-md-6">
+              <label for="correo_estudiante">Correo electrónico *</label>
               <div class="input-group">
                 <input type="text" class="form-control" name="correo_local" id="correo_local" 
                        required maxlength="50" placeholder="usuario">
@@ -168,15 +207,59 @@
             </div>
           </div>
 
-          <div class="form-group">
-            <label for="usuario">Nombre de usuario *</label>
-            <input type="text" class="form-control" name="usuario" id="usuario" readonly required>
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label for="direccion_estudiante">Dirección</label>
+              <textarea class="form-control" name="direccion_estudiante" id="direccion_estudiante" 
+                        rows="2" maxlength="200" 
+                        placeholder="Ingrese la dirección completa"></textarea>
+            </div>
+            
+            <div class="form-group col-md-6">
+              <label for="nivel_estudio_estudiante">Nivel de estudio</label>
+              <select class="form-control" name="nivel_estudio_estudiante" id="nivel_estudio_estudiante">
+                <option value="">Seleccione...</option>
+                <option value="Primaria">Primaria</option>
+                <option value="Secundaria">Secundaria</option>
+                <option value="Técnico">Técnico</option>
+                <option value="Universitario">Universitario</option>
+                <option value="Posgrado">Posgrado</option>
+                <option value="Ninguno">Ninguno</option>
+              </select>
+            </div>
           </div>
 
           <div class="form-row">
             <div class="form-group col-md-6">
-              <label for="clave1">Contraseña *</label>
-              <input type="password" class="form-control" name="clave1" id="clave1" 
+              <label for="oficio_actual_estudiante">Oficio actual</label>
+              <input type="text" class="form-control" name="oficio_actual_estudiante" id="oficio_actual_estudiante" 
+                     maxlength="100" 
+                     placeholder="Ej: Electricista, Docente, etc.">
+            </div>
+            
+    		<div class="form-group col-md-6">
+        		<label>Trabaja actualmente: </label><br>
+        		<div class="form-check form-check-inline">
+            		<input class="form-check-input" type="radio" name="if_trabaja_estudiante" id="trabaja_si" value="1" checked>
+            		<label class="form-check-label" for="trabaja_si">Sí</label>
+        		</div>
+        		<div class="form-check form-check-inline">
+            		<input class="form-check-input" type="radio" name="if_trabaja_estudiante" id="trabaja_no" value="0">
+            		<label class="form-check-label" for="trabaja_no">No</label>
+        		</div>
+    		</div>
+          </div>
+
+          <div class="form-group">
+            <label for="usuario">Nombre de usuario *</label>
+            <input type="text" class="form-control" name="usuario" id="usuario" readonly required>
+            <small class="form-text text-muted">Se genera automáticamente a partir de la cédula</small>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label for="clave">Contraseña *</label>
+              <input type="password" class="form-control" name="clave" id="clave" 
                      required minlength="8" maxlength="20"
                      pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$"
                      title="La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número. No se permiten caracteres especiales.">
@@ -197,7 +280,7 @@
                   <i class="bi bi-check-circle"></i> No se permiten caracteres especiales
                 </div>
               </div>
-              <div class="invalid-feedback" id="clave1-error">
+              <div class="invalid-feedback" id="clave-error">
                 La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número. No se permiten caracteres especiales.
               </div>
             </div>
@@ -225,23 +308,22 @@
 
  <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM cargado - Script funcionando');
     
     const form = document.getElementById('formEstudiante');
     const ciTipo = document.getElementById('ci_tipo');
     const ciNumero = document.getElementById('ci_numero');
     const ciCompleto = document.getElementById('ci_completo');
     const usuarioInput = document.getElementById('usuario');
-    const clave1Input = document.getElementById('clave1');
+    const claveInput = document.getElementById('clave');
     
-    // Función para actualizar el valor completo de la cédula Y el usuario
+    // Esta es la función para actualizar el valor completo de la cédula Y el usuario
     function actualizarCedulaCompleta() {
         const tipo = ciTipo.value;
         const numero = ciNumero.value;
         
         if (tipo && numero.length === 8) {
             ciCompleto.value = tipo + numero;
-            // ACTUALIZACIÓN: El usuario ahora también incluye el tipo
+            // El usuario se genera a partir de la cédula
             usuarioInput.value = tipo + numero;
         } else {
             ciCompleto.value = '';
@@ -249,25 +331,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Capitalizar primera letra de cada palabra
+    // Aqui se capitaliza la primera letra de cada palabra
     function capitalizarPalabras(texto) {
         return texto.replace(/\w\S*/g, function(txt) {
             return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
         });
     }
     
-    // Validar solo letras y espacios
+    // Aqui valida solo letras y espacios
     function validarSoloLetrasYEspacios(texto) {
         return /^[A-Za-záéíóúñÑ\s]+$/.test(texto);
     }
     
-    // Validar contraseña (sin caracteres especiales)
+    // Esto valida contraseña (sin caracteres especiales), preferimos que las contraseñas no tengan caracteres especiales
     function validarContraseña(contraseña) {
         const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/;
         return regex.test(contraseña);
     }
     
-    // Actualizar indicadores de requisitos de contraseña
+    // Aqui actualiza indicadores de requisitos de contraseña, como el largo de la contraseña, si tiene mayusculas, minusculas etc. Asi tiene
+    // mas requisitos las contraseñas.
     function actualizarRequisitosContraseña(contraseña) {
         const tieneLongitud = contraseña.length >= 8;
         const tieneMayuscula = /[A-Z]/.test(contraseña);
@@ -275,7 +358,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const tieneNumero = /\d/.test(contraseña);
         const tieneCaracteresEspeciales = /[^a-zA-Z\d]/.test(contraseña);
         
-        // Actualizar visualmente cada requisito
+        // Esto actualiza visualmente cada requisito, para mostrarle al usuario que mas falta en su contraseña
         actualizarRequisitoVisual('req-length', tieneLongitud);
         actualizarRequisitoVisual('req-uppercase', tieneMayuscula);
         actualizarRequisitoVisual('req-lowercase', tieneMinuscula);
@@ -308,11 +391,10 @@ document.addEventListener('DOMContentLoaded', function() {
             this.value = this.value.substring(0, 8);
         }
         
-        // ACTUALIZACIÓN: Ya no actualizamos el usuario aquí, lo hacemos en actualizarCedulaCompleta
         actualizarCedulaCompleta();
     });
     
-    // Actualizar cédula completa y usuario cuando cambie el tipo
+    // Actualizar cédula completa y usuario cuando cambie el tipo, ya sea V- o E-
     ciTipo.addEventListener('change', actualizarCedulaCompleta);
     
     // Validación específica para la cédula
@@ -340,13 +422,57 @@ document.addEventListener('DOMContentLoaded', function() {
         this.value = valor;
     });
     
+    // Capitalizar lugar de nacimiento
+    document.getElementById('lugar_nacimiento').addEventListener('input', function() {
+        let valor = this.value;
+        if (valor.length > 0) valor = capitalizarPalabras(valor);
+        this.value = valor;
+    });
+    
     // Solo números en teléfono
     document.getElementById('telefono_numero').addEventListener('input', function() {
         this.value = this.value.replace(/\D/g, '').substring(0, 7);
     });
     
+    // Solo números en WhatsApp
+    document.getElementById('wsp_numero').addEventListener('input', function() {
+        this.value = this.value.replace(/\D/g, '').substring(0, 7);
+    });
+    
+    // Validar que si se selecciona código de WhatsApp, tenga número
+    document.getElementById('wsp_codigo').addEventListener('change', function() {
+        const numero = document.getElementById('wsp_numero').value;
+        if (this.value && numero.length !== 7) {
+            document.getElementById('whatsapp-error').style.display = 'block';
+        } else {
+            document.getElementById('whatsapp-error').style.display = 'none';
+        }
+    });
+    
+    document.getElementById('wsp_numero').addEventListener('blur', function() {
+        const codigo = document.getElementById('wsp_codigo').value;
+        if (codigo && this.value.length !== 7) {
+            this.classList.add('is-invalid');
+            document.getElementById('whatsapp-error').style.display = 'block';
+        } else if (codigo && this.value.length === 7) {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+            document.getElementById('whatsapp-error').style.display = 'none';
+        } else {
+            this.classList.remove('is-invalid', 'is-valid');
+        }
+    });
+    
+    // Capitalizar oficio actual
+    document.getElementById('oficio_actual_estudiante').addEventListener('input', function() {
+        let valor = this.value;
+        if (valor.length > 0) {
+            this.value = capitalizarPalabras(valor);
+        }
+    });
+    
     // Validar contraseña en tiempo real
-    clave1Input.addEventListener('input', function() {
+    claveInput.addEventListener('input', function() {
         actualizarRequisitosContraseña(this.value);
         
         // Validar visualmente
@@ -363,14 +489,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Validar que las contraseñas coincidan
     document.getElementById('clave2').addEventListener('input', function() {
-        const clave1 = document.getElementById('clave1').value;
+        const clave = document.getElementById('clave').value;
         const clave2 = this.value;
         
-        if (clave2 && clave1 !== clave2) {
-            this.classList.remove('is-valid');
+        if (clave2 && clave !== clave2) {
+            this.classList.remove('is-invalid');
             this.classList.add('is-invalid');
             document.getElementById('clave2-error').style.display = 'block';
-        } else if (clave2 && clave1 === clave2) {
+        } else if (clave2 && clave === clave2) {
             this.classList.remove('is-invalid');
             this.classList.add('is-valid');
             document.getElementById('clave2-error').style.display = 'none';
@@ -382,7 +508,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Manejar envío del formulario
     form.addEventListener('submit', function(e) {
         e.preventDefault();
-        console.log('Formulario enviado - Iniciando validación');
         
         // Validar cédula primero
         if (ciNumero.value.length !== 8) {
@@ -396,8 +521,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const telefonoNumero = document.getElementById('telefono_numero').value;
         const correoLocal = document.getElementById('correo_local').value;
         const correoDominio = document.getElementById('correo_dominio').value;
-        const clave1 = document.getElementById('clave1').value;
+        const clave = document.getElementById('clave').value;
         const clave2 = document.getElementById('clave2').value;
+        const wspCodigo = document.getElementById('wsp_codigo').value;
+        const wspNumero = document.getElementById('wsp_numero').value;
         
         // Validar teléfono
         if (!telefonoCodigo || telefonoNumero.length !== 7) {
@@ -411,13 +538,19 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
+        // Validar WhatsApp (si se proporciona código, debe tener número completo)
+        if (wspCodigo && wspNumero.length !== 7) {
+            alert('Si proporciona un código de WhatsApp, debe completar los 7 dígitos');
+            return;
+        }
+        
         // Validar contraseña
-        if (!validarContraseña(clave1)) {
+        if (!validarContraseña(clave)) {
             alert('La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número. No se permiten caracteres especiales.');
             return;
         }
         
-        if (clave1 !== clave2) {
+        if (clave !== clave2) {
             alert('Las contraseñas no coinciden');
             return;
         }
@@ -425,24 +558,47 @@ document.addEventListener('DOMContentLoaded', function() {
         // Preparar datos para enviar
         const formData = new FormData();
         
-        // Usamos ci_completo que contiene el formato "V-12345678"
+        // Campos principales (con nombres exactos de la BD)
         formData.append('ci', ciCompleto.value);
         formData.append('nombre', document.getElementById('nombre').value);
         formData.append('apellido', document.getElementById('apellido').value);
         formData.append('fecha_nacimiento', document.getElementById('fecha_nacimiento').value);
-        formData.append('telefono', telefonoCodigo + telefonoNumero);
-        formData.append('correo', correoLocal + correoDominio);
-        formData.append('usuario', usuarioInput.value); // Ahora será "V-12345678" o "E-12345678"
-        formData.append('clave1', clave1);
+        formData.append('lugar_nacimiento', document.getElementById('lugar_nacimiento').value);
+        formData.append('telefono_estudiante', telefonoCodigo + telefonoNumero);
+        formData.append('correo_estudiante', correoLocal + correoDominio);
+        
+        // Campos de login
+        formData.append('usuario', usuarioInput.value);
+        formData.append('clave', clave);
         formData.append('clave2', clave2);
         
-        // Mostrar datos en consola para debug
-        console.log('Datos a enviar:');
-        console.log('Cédula completa:', ciCompleto.value);
-        console.log('Usuario:', usuarioInput.value);
-        for (let [key, value] of formData.entries()) {
-            console.log(key + ': ' + value);
+
+        // WhatsApp (solo si ambos campos están completos)
+        if (wspCodigo && wspNumero) {
+            formData.append('wsp_estudiante', wspCodigo + wspNumero);
+        } else {
+            formData.append('wsp_estudiante', '');
         }
+        
+        formData.append('direccion_estudiante', document.getElementById('direccion_estudiante').value);
+        formData.append('nivel_estudio_estudiante', document.getElementById('nivel_estudio_estudiante').value);
+        formData.append('oficio_actual_estudiante', document.getElementById('oficio_actual_estudiante').value);
+        
+        // Validar los botones para la pregunta "¿El estudiante tiene trabajo actual?"
+        const trabajaSi = document.getElementById('trabaja_si');
+        const trabajaNo = document.getElementById('trabaja_no');
+        let trabajaValor = '0'; // Valor por defecto
+        
+        if (trabajaSi.checked) {
+            trabajaValor = '1';
+        } else if (trabajaNo.checked) {
+            trabajaValor = '0';
+        }
+        
+        formData.append('if_trabaja_estudiante', trabajaValor);
+        
+        // Campo estado_estudiante
+        formData.append('estado_estudiante', 'activo');
         
         // Enviar formulario
         const btnSubmit = document.getElementById('btnSubmit');
@@ -453,7 +609,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btnText.textContent = 'Registrando...';
         btnSpinner.classList.remove('d-none');
         
-        fetch('controladores/registroEstudianteControlador.php', {
+        fetch('../controladores/registroEstudianteControlador.php', {
             method: 'POST',
             body: formData
         })

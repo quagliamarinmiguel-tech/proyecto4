@@ -1,0 +1,637 @@
+2026-09-04 11:55:34 - === INICIO ===
+2026-09-04 11:55:34 - POST: Array
+(
+    [period_course_id] => 5
+)
+
+2026-09-04 11:55:34 - period_course_id: 5
+2026-09-04 11:55:34 - SUPABASE_SECRET_KEY definida (longitud: 41)
+2026-09-04 11:55:34 - Filtros: Array
+(
+    [period_course_id] => eq.5
+    [state] => eq.1
+)
+
+2026-09-04 11:55:34 - Intentando supabaseGet con token...
+2026-09-04 11:55:34 - Resultado supabaseGet: Array
+(
+    [ok] => 
+    [status] => 401
+    [message] => Expected 3 parts in JWT; got 1
+    [data] => Array
+        (
+            [code] => PGRST301
+            [details] => 
+            [hint] => 
+            [message] => Expected 3 parts in JWT; got 1
+        )
+
+)
+
+2026-09-04 11:55:34 - Fallback: intentando supabaseQuery...
+2026-09-04 11:55:34 - Resultado supabaseQuery: Array
+(
+    [data] => Array
+        (
+            [0] => Array
+                (
+                    [id] => 4
+                    [name] => A
+                    [section_day] => Lunes
+                )
+
+        )
+
+)
+
+2026-09-04 11:55:34 - Éxito con supabaseQuery, datos: 1
+2026-09-04 11:55:34 - HTML generado: 85 caracteres
+2026-09-04 11:55:34 - === FIN ===
+2026-09-04 12:00:57 - === INICIO ===
+2026-09-04 12:00:57 - POST: Array
+(
+    [period_course_id] => 5
+)
+
+2026-09-04 12:00:57 - period_course_id: 5
+2026-09-04 12:00:57 - SUPABASE_SECRET_KEY definida (longitud: 41)
+2026-09-04 12:00:57 - Filtros: Array
+(
+    [period_course_id] => eq.5
+    [state] => eq.1
+)
+
+2026-09-04 12:00:57 - Intentando supabaseGet con token...
+2026-09-04 12:00:57 - Resultado supabaseGet: Array
+(
+    [ok] => 
+    [status] => 401
+    [message] => Expected 3 parts in JWT; got 1
+    [data] => Array
+        (
+            [code] => PGRST301
+            [details] => 
+            [hint] => 
+            [message] => Expected 3 parts in JWT; got 1
+        )
+
+)
+
+2026-09-04 12:00:57 - Fallback: intentando supabaseQuery...
+2026-09-04 12:00:57 - Resultado supabaseQuery: Array
+(
+    [data] => Array
+        (
+            [0] => Array
+                (
+                    [id] => 4
+                    [name] => A
+                    [section_day] => Lunes
+                )
+
+        )
+
+)
+
+2026-09-04 12:00:57 - Éxito con supabaseQuery, datos: 1
+2026-09-04 12:00:57 - HTML generado: 85 caracteres
+2026-09-04 12:00:57 - === FIN ===
+2026-09-04 12:12:05 - === INICIO ===
+2026-09-04 12:12:05 - POST: Array
+(
+    [period_course_id] => 5
+)
+
+2026-09-04 12:12:05 - period_course_id: 5
+2026-09-04 12:12:05 - SUPABASE_SECRET_KEY definida (longitud: 41)
+2026-09-04 12:12:05 - Filtros: Array
+(
+    [period_course_id] => eq.5
+    [state] => eq.1
+)
+
+2026-09-04 12:12:05 - Intentando supabaseGet con token...
+2026-09-04 12:12:06 - Resultado supabaseGet: Array
+(
+    [ok] => 
+    [status] => 401
+    [message] => Expected 3 parts in JWT; got 1
+    [data] => Array
+        (
+            [code] => PGRST301
+            [details] => 
+            [hint] => 
+            [message] => Expected 3 parts in JWT; got 1
+        )
+
+)
+
+2026-09-04 12:12:06 - Fallback: intentando supabaseQuery...
+2026-09-04 12:12:06 - Resultado supabaseQuery: Array
+(
+    [data] => Array
+        (
+            [0] => Array
+                (
+                    [id] => 4
+                    [name] => A
+                    [section_day] => Lunes
+                )
+
+        )
+
+)
+
+2026-09-04 12:12:06 - Éxito con supabaseQuery, datos: 1
+2026-09-04 12:12:06 - HTML generado: 85 caracteres
+2026-09-04 12:12:06 - === FIN ===
+2026-09-11 08:53:53 - === INICIO ===
+2026-09-11 08:53:53 - POST: Array
+(
+    [period_course_id] => 27
+)
+
+2026-09-11 08:53:53 - period_course_id: 27
+2026-09-11 08:53:53 - SUPABASE_SECRET_KEY definida (longitud: 41)
+2026-09-11 08:53:53 - Filtros: Array
+(
+    [period_course_id] => eq.27
+    [state] => eq.1
+)
+
+2026-09-11 08:53:53 - Intentando supabaseGet con token...
+2026-09-11 08:53:54 - Resultado supabaseGet: Array
+(
+    [ok] => 
+    [status] => 401
+    [message] => Expected 3 parts in JWT; got 1
+    [data] => Array
+        (
+            [code] => PGRST301
+            [details] => 
+            [hint] => 
+            [message] => Expected 3 parts in JWT; got 1
+        )
+
+)
+
+2026-09-11 08:53:54 - Fallback: intentando supabaseQuery...
+2026-09-11 08:53:54 - Resultado supabaseQuery: Array
+(
+    [data] => Array
+        (
+            [0] => Array
+                (
+                    [id] => 33
+                    [name] => A
+                    [section_day] => Miércoles
+                )
+
+        )
+
+)
+
+2026-09-11 08:53:54 - Éxito con supabaseQuery, datos: 1
+2026-09-11 08:53:54 - HTML generado: 91 caracteres
+2026-09-11 08:53:54 - === FIN ===
+2026-09-11 09:13:56 - === INICIO ===
+2026-09-11 09:13:56 - POST: Array
+(
+    [period_course_id] => 26
+)
+
+2026-09-11 09:13:56 - period_course_id: 26
+2026-09-11 09:13:56 - SUPABASE_SECRET_KEY definida (longitud: 41)
+2026-09-11 09:13:56 - Filtros: Array
+(
+    [period_course_id] => eq.26
+    [state] => eq.1
+)
+
+2026-09-11 09:13:56 - Intentando supabaseGet con token...
+2026-09-11 09:13:56 - Resultado supabaseGet: Array
+(
+    [ok] => 
+    [status] => 401
+    [message] => Expected 3 parts in JWT; got 1
+    [data] => Array
+        (
+            [code] => PGRST301
+            [details] => 
+            [hint] => 
+            [message] => Expected 3 parts in JWT; got 1
+        )
+
+)
+
+2026-09-11 09:13:56 - Fallback: intentando supabaseQuery...
+2026-09-11 09:13:57 - Resultado supabaseQuery: Array
+(
+    [data] => Array
+        (
+            [0] => Array
+                (
+                    [id] => 32
+                    [name] => A
+                    [section_day] => Jueves
+                )
+
+        )
+
+)
+
+2026-09-11 09:13:57 - Éxito con supabaseQuery, datos: 1
+2026-09-11 09:13:57 - HTML generado: 87 caracteres
+2026-09-11 09:13:57 - === FIN ===
+2026-09-11 10:55:10 - === INICIO ===
+2026-09-11 10:55:10 - POST: Array
+(
+    [period_course_id] => 26
+)
+
+2026-09-11 10:55:10 - period_course_id: 26
+2026-09-11 10:55:10 - SUPABASE_SECRET_KEY definida (longitud: 41)
+2026-09-11 10:55:10 - Filtros: Array
+(
+    [period_course_id] => eq.26
+    [state] => eq.1
+)
+
+2026-09-11 10:55:10 - Intentando supabaseGet con token...
+2026-09-11 10:55:11 - Resultado supabaseGet: Array
+(
+    [ok] => 
+    [status] => 401
+    [message] => Expected 3 parts in JWT; got 1
+    [data] => Array
+        (
+            [code] => PGRST301
+            [details] => 
+            [hint] => 
+            [message] => Expected 3 parts in JWT; got 1
+        )
+
+)
+
+2026-09-11 10:55:11 - Fallback: intentando supabaseQuery...
+2026-09-11 10:55:11 - Resultado supabaseQuery: Array
+(
+    [data] => Array
+        (
+            [0] => Array
+                (
+                    [id] => 32
+                    [name] => A
+                    [section_day] => Jueves
+                )
+
+        )
+
+)
+
+2026-09-11 10:55:11 - Éxito con supabaseQuery, datos: 1
+2026-09-11 10:55:11 - HTML generado: 87 caracteres
+2026-09-11 10:55:11 - === FIN ===
+2026-09-11 10:55:13 - === INICIO ===
+2026-09-11 10:55:13 - POST: Array
+(
+    [period_course_id] => 33
+)
+
+2026-09-11 10:55:13 - period_course_id: 33
+2026-09-11 10:55:13 - SUPABASE_SECRET_KEY definida (longitud: 41)
+2026-09-11 10:55:13 - Filtros: Array
+(
+    [period_course_id] => eq.33
+    [state] => eq.1
+)
+
+2026-09-11 10:55:13 - Intentando supabaseGet con token...
+2026-09-11 10:55:13 - Resultado supabaseGet: Array
+(
+    [ok] => 
+    [status] => 401
+    [message] => Expected 3 parts in JWT; got 1
+    [data] => Array
+        (
+            [code] => PGRST301
+            [details] => 
+            [hint] => 
+            [message] => Expected 3 parts in JWT; got 1
+        )
+
+)
+
+2026-09-11 10:55:13 - Fallback: intentando supabaseQuery...
+2026-09-11 10:55:13 - Resultado supabaseQuery: Array
+(
+    [data] => Array
+        (
+            [0] => Array
+                (
+                    [id] => 39
+                    [name] => A
+                    [section_day] => Miércoles
+                )
+
+        )
+
+)
+
+2026-09-11 10:55:13 - Éxito con supabaseQuery, datos: 1
+2026-09-11 10:55:13 - HTML generado: 91 caracteres
+2026-09-11 10:55:13 - === FIN ===
+2026-09-11 10:55:57 - === INICIO ===
+2026-09-11 10:55:57 - POST: Array
+(
+    [period_course_id] => 25
+)
+
+2026-09-11 10:55:57 - period_course_id: 25
+2026-09-11 10:55:57 - SUPABASE_SECRET_KEY definida (longitud: 41)
+2026-09-11 10:55:57 - Filtros: Array
+(
+    [period_course_id] => eq.25
+    [state] => eq.1
+)
+
+2026-09-11 10:55:57 - Intentando supabaseGet con token...
+2026-09-11 10:55:57 - Resultado supabaseGet: Array
+(
+    [ok] => 
+    [status] => 401
+    [message] => Expected 3 parts in JWT; got 1
+    [data] => Array
+        (
+            [code] => PGRST301
+            [details] => 
+            [hint] => 
+            [message] => Expected 3 parts in JWT; got 1
+        )
+
+)
+
+2026-09-11 10:55:57 - Fallback: intentando supabaseQuery...
+2026-09-11 10:55:57 - Resultado supabaseQuery: Array
+(
+    [data] => Array
+        (
+            [0] => Array
+                (
+                    [id] => 31
+                    [name] => A
+                    [section_day] => Martes
+                )
+
+        )
+
+)
+
+2026-09-11 10:55:57 - Éxito con supabaseQuery, datos: 1
+2026-09-11 10:55:57 - HTML generado: 87 caracteres
+2026-09-11 10:55:57 - === FIN ===
+2026-09-11 10:57:22 - === INICIO ===
+2026-09-11 10:57:22 - POST: Array
+(
+    [period_course_id] => 25
+)
+
+2026-09-11 10:57:22 - period_course_id: 25
+2026-09-11 10:57:22 - SUPABASE_SECRET_KEY definida (longitud: 41)
+2026-09-11 10:57:22 - Filtros: Array
+(
+    [period_course_id] => eq.25
+    [state] => eq.1
+)
+
+2026-09-11 10:57:22 - Intentando supabaseGet con token...
+2026-09-11 10:57:23 - Resultado supabaseGet: Array
+(
+    [ok] => 
+    [status] => 401
+    [message] => Expected 3 parts in JWT; got 1
+    [data] => Array
+        (
+            [code] => PGRST301
+            [details] => 
+            [hint] => 
+            [message] => Expected 3 parts in JWT; got 1
+        )
+
+)
+
+2026-09-11 10:57:23 - Fallback: intentando supabaseQuery...
+2026-09-11 10:57:23 - Resultado supabaseQuery: Array
+(
+    [data] => Array
+        (
+            [0] => Array
+                (
+                    [id] => 31
+                    [name] => A
+                    [section_day] => Martes
+                )
+
+        )
+
+)
+
+2026-09-11 10:57:23 - Éxito con supabaseQuery, datos: 1
+2026-09-11 10:57:23 - HTML generado: 87 caracteres
+2026-09-11 10:57:23 - === FIN ===
+2026-09-11 11:00:45 - === INICIO ===
+2026-09-11 11:00:45 - POST: Array
+(
+    [period_course_id] => 25
+)
+
+2026-09-11 11:00:45 - period_course_id: 25
+2026-09-11 11:00:45 - SUPABASE_SECRET_KEY definida (longitud: 41)
+2026-09-11 11:00:45 - Filtros: Array
+(
+    [period_course_id] => eq.25
+    [state] => eq.1
+)
+
+2026-09-11 11:00:45 - Intentando supabaseGet con token...
+2026-09-11 11:00:46 - Resultado supabaseGet: Array
+(
+    [ok] => 
+    [status] => 401
+    [message] => Expected 3 parts in JWT; got 1
+    [data] => Array
+        (
+            [code] => PGRST301
+            [details] => 
+            [hint] => 
+            [message] => Expected 3 parts in JWT; got 1
+        )
+
+)
+
+2026-09-11 11:00:46 - Fallback: intentando supabaseQuery...
+2026-09-11 11:00:46 - Resultado supabaseQuery: Array
+(
+    [data] => Array
+        (
+            [0] => Array
+                (
+                    [id] => 31
+                    [name] => A
+                    [section_day] => Martes
+                )
+
+        )
+
+)
+
+2026-09-11 11:00:46 - Éxito con supabaseQuery, datos: 1
+2026-09-11 11:00:46 - HTML generado: 87 caracteres
+2026-09-11 11:00:46 - === FIN ===
+2026-09-11 11:01:21 - === INICIO ===
+2026-09-11 11:01:21 - POST: Array
+(
+    [period_course_id] => 25
+)
+
+2026-09-11 11:01:21 - period_course_id: 25
+2026-09-11 11:01:21 - SUPABASE_SECRET_KEY definida (longitud: 41)
+2026-09-11 11:01:21 - Filtros: Array
+(
+    [period_course_id] => eq.25
+    [state] => eq.1
+)
+
+2026-09-11 11:01:21 - Intentando supabaseGet con token...
+2026-09-11 11:01:21 - Resultado supabaseGet: Array
+(
+    [ok] => 
+    [status] => 401
+    [message] => Expected 3 parts in JWT; got 1
+    [data] => Array
+        (
+            [code] => PGRST301
+            [details] => 
+            [hint] => 
+            [message] => Expected 3 parts in JWT; got 1
+        )
+
+)
+
+2026-09-11 11:01:21 - Fallback: intentando supabaseQuery...
+2026-09-11 11:01:22 - Resultado supabaseQuery: Array
+(
+    [data] => Array
+        (
+            [0] => Array
+                (
+                    [id] => 31
+                    [name] => A
+                    [section_day] => Martes
+                )
+
+        )
+
+)
+
+2026-09-11 11:01:22 - Éxito con supabaseQuery, datos: 1
+2026-09-11 11:01:22 - HTML generado: 87 caracteres
+2026-09-11 11:01:22 - === FIN ===
+2026-09-15 06:34:43 - === INICIO ===
+2026-09-15 06:34:43 - POST: Array
+(
+    [period_course_id] => 35
+)
+
+2026-09-15 06:34:43 - period_course_id: 35
+2026-09-15 06:34:43 - SUPABASE_SECRET_KEY definida (longitud: 41)
+2026-09-15 06:34:43 - Filtros: Array
+(
+    [period_course_id] => eq.35
+    [state] => eq.1
+)
+
+2026-09-15 06:34:43 - Intentando supabaseGet con token...
+2026-09-15 06:34:43 - Resultado supabaseGet: Array
+(
+    [ok] => 
+    [status] => 401
+    [message] => Expected 3 parts in JWT; got 1
+    [data] => Array
+        (
+            [code] => PGRST301
+            [details] => 
+            [hint] => 
+            [message] => Expected 3 parts in JWT; got 1
+        )
+
+)
+
+2026-09-15 06:34:43 - Fallback: intentando supabaseQuery...
+2026-09-15 06:34:43 - Resultado supabaseQuery: Array
+(
+    [data] => Array
+        (
+            [0] => Array
+                (
+                    [id] => 41
+                    [name] => A
+                    [section_day] => Lunes
+                )
+
+        )
+
+)
+
+2026-09-15 06:34:43 - Éxito con supabaseQuery, datos: 1
+2026-09-15 06:34:43 - HTML generado: 86 caracteres
+2026-09-15 06:34:43 - === FIN ===
+2026-09-15 06:39:51 - === INICIO ===
+2026-09-15 06:39:51 - POST: Array
+(
+    [period_course_id] => 35
+)
+
+2026-09-15 06:39:51 - period_course_id: 35
+2026-09-15 06:39:51 - SUPABASE_SECRET_KEY definida (longitud: 41)
+2026-09-15 06:39:51 - Filtros: Array
+(
+    [period_course_id] => eq.35
+    [state] => eq.1
+)
+
+2026-09-15 06:39:51 - Intentando supabaseGet con token...
+2026-09-15 06:39:51 - Resultado supabaseGet: Array
+(
+    [ok] => 
+    [status] => 401
+    [message] => Expected 3 parts in JWT; got 1
+    [data] => Array
+        (
+            [code] => PGRST301
+            [details] => 
+            [hint] => 
+            [message] => Expected 3 parts in JWT; got 1
+        )
+
+)
+
+2026-09-15 06:39:51 - Fallback: intentando supabaseQuery...
+2026-09-15 06:39:52 - Resultado supabaseQuery: Array
+(
+    [data] => Array
+        (
+            [0] => Array
+                (
+                    [id] => 41
+                    [name] => A
+                    [section_day] => Lunes
+                )
+
+        )
+
+)
+
+2026-09-15 06:39:52 - Éxito con supabaseQuery, datos: 1
+2026-09-15 06:39:52 - HTML generado: 86 caracteres
+2026-09-15 06:39:52 - === FIN ===

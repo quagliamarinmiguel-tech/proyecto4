@@ -65,40 +65,27 @@ $carpeta = $carpetasPorCargo[$cargo] ?? "admin";
 
       <!-- Fila 1: ID y nombre -->
       <div class="form-row">
-        <div class="col-md-1 mb-2">
+        <!--div class="col-md-1 mb-2">
           <label for="filtro_id">ID del curso</label>
-          <input type="number" name="filtro_id" id="filtro_id" min="0" class="form-control" value="<?= $_GET['filtro_id'] ?? '' ?>">
-        </div>
+          <input type="number" name="filtro_id" id="filtro_id" min="0" class="form-control" value="<-?= $_GET['filtro_id'] ?? '' ?>">
+        </div-->
 
         <div class="col-md-4 mb-3">
           <label for="filtro_nombre">Nombre del curso</label>
             <?php
-    
-
-                    require_once "./controladores/cursoControlador.php";
+                require_once "./controladores/cursoControlador.php";
                 $ins_curso = new cursoControlador();
 
                 $filtro_nombre = $_GET['filtro_nombre'] ?? '';
                 $curso_nombre = '';
-                            //$conexion = mainModel::conectar();
 
                 if ($filtro_nombre !== '') {
-                     //   $curso_nombre = $ins_curso->obtener_nombre_curso_controlador($filtro_nombre);
                    $curso = $ins_curso->obtener_nombre_curso_para_filtro_controlador($filtro_nombre);
                    if ($curso) {
-                        $curso_nombre = $curso['nombre_curso'] . ' (' . $curso['tipo_curso'] . ')';
+                        $curso_nombre = $curso['name'] . ' (' . $curso['type'] . ')';
                     }
                 }
                  
-                 /*
-                if ($filtro_nombre !== '') {
-                    $stmt = $conexion->prepare("SELECT nombre_curso, tipo_curso FROM curso WHERE id_curso = :id");
-                    $stmt->execute([':id' => $filtro_nombre]);
-                    $curso = $stmt->fetch();
-                    if ($curso) {
-                        $curso_nombre = $curso['nombre_curso'] . ' (' . $curso['tipo_curso'] . ')';
-                    }
-                }*/
             ?>
             <select name="filtro_nombre" id="filtro_nombre" class="form-control select2-ajax">
               <?php if ($filtro_nombre && $curso_nombre): ?>
@@ -175,7 +162,7 @@ $carpeta = $carpetasPorCargo[$cargo] ?? "admin";
         // Obtener el número de página actual
         $pagina_actual = isset($_GET['page']) ? (int)$_GET['page'] : 1;
         
-        echo $ins_curso->paginador_curso_controlador($pagina_actual, 15, "course-list", "");
+        echo $ins_curso->paginador_curso_supabase_controlador($pagina_actual, 15, "course-list", 1);
     ?>
 </div>
 
@@ -215,11 +202,3 @@ $(document).ready(function() {
   });
 });
 </script>
-<!--script>
-  $(document).ready(function() {
-    $('#filtro_nombre').select2({
-      placeholder: "Seleccione un curso",
-      allowClear: true
-    });
-  });
-</script-->

@@ -32,9 +32,9 @@ function enviar_formulario_ajax(e){
 			let texto_alerta = "¿Estás seguro? Se archivará este " + entidad;
 
 			if(entidad === "curso"){
-				texto_alerta = "¿Estás seguro? Se archivará este curso, su publicidad, sus registros de vigencia en cohortes, sus secciones, evaluaciones y calificaciones de estudiantes.";
-			} else if(entidad === "cohorte"){
-				texto_alerta = "¿Estás seguro? Se archivará esta cohorte, junto con sus cursos vigentes, secciones, evaluaciones y calificaciones.";
+				texto_alerta = "¿Estás seguro? Se archivará este curso, su publicidad, sus registros de vigencia en periodos y sus secciones si no tienen inscritos. Los registros con inscritos no se verán afectados";
+			} else if(entidad === "periodo"){
+				texto_alerta = "¿Estás seguro? Se archivará esta periodo, junto con sus cursos vigentes y secciones. No se puede archivar un periodo con estudiantes inscritos";
 			} else if(entidad === "curso_vigente"){
 				texto_alerta = "¿Estás seguro? Se archivará este curso vigente, sus secciones, evaluaciones y calificaciones.";
 			} else if(entidad === "seccion"){
@@ -42,7 +42,7 @@ function enviar_formulario_ajax(e){
 			} else if(entidad === "evaluacion"){
 				texto_alerta = "¿Estás seguro? Se archivará esta evaluación y sus calificaciones de estudiantes.";
 			} else if(entidad === "profesor"){
-				texto_alerta = "¿Estás seguro? Se archivará este profesor y las secciones, evaluaciones y calificaciones que impartió";
+				texto_alerta = "¿Estás seguro? Se archivará solamente el profesor, seguirá apareciendo en los registros pero no podrá designarse a un curso";
 			} 
 
 			Swal.fire({
@@ -82,6 +82,8 @@ function enviar_formulario_ajax(e){
         texto_alerta = "¿Estás seguro? Se eliminará esta solicitud y sus datos de forma permanente.";
     } else if (entidad === "evaluacion") {
         texto_alerta = "¿Estás seguro? Se eliminará esta evaluación de forma permanente junto con sus calificaciones.";
+    } else if (entidad === "seccion") {
+        texto_alerta = "¿Estás seguro? Se eliminará esta sección de forma permanente.";
     }
 
     Swal.fire({
@@ -181,9 +183,10 @@ function alertas_ajax(alerta){
 		});
 	}
 	
-//	else if(alerta.Alerta==="redireccionar"){
-//		window.location.href=alerta.URL;
-//	}
+	else if(alerta.Alerta==="logout"){
+        //if (alerta.ResetTema === true) {localStorage.setItem('modo_oscuro', 'false');}
+		window.location.href=alerta.URL;
+	}
 
 
 	else if(alerta.Alerta==="redireccionar"){

@@ -1,0 +1,290 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.student (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  ci text UNIQUE,
+  name text,
+  last_name text,
+  birthday date,
+  phone bigint,
+  email text,
+  address text,
+  birthplace text,
+  education_level text,
+  work boolean NOT NULL,
+  current_work text NOT NULL,
+  whatsapp_phone bigint NOT NULL,
+  state smallint NOT NULL,
+  img_id smallint,
+  profile_id bigint,
+  CONSTRAINT student_pkey PRIMARY KEY (id),
+  CONSTRAINT student_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profile(id)
+);
+CREATE TABLE public.profile (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  role_id bigint,
+  state smallint,
+  user_id uuid DEFAULT gen_random_uuid(),
+  CONSTRAINT profile_pkey PRIMARY KEY (id),
+  CONSTRAINT user_role_id_fkey FOREIGN KEY (role_id) REFERENCES public.role(id),
+  CONSTRAINT profile_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.role (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  role text UNIQUE CHECK (length(role) < 50),
+  role_number smallint,
+  CONSTRAINT role_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.staff (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  profile_id bigint,
+  ci text UNIQUE CHECK (length(ci) < 12),
+  name text CHECK (length(name) < 30),
+  last_name text CHECK (length(last_name) < 30),
+  email text CHECK (length(email) < 500),
+  CONSTRAINT staff_pkey PRIMARY KEY (id),
+  CONSTRAINT staff_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profile(id)
+);
+CREATE TABLE public.period (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  name text UNIQUE CHECK (length(name) < 60),
+  type text CHECK (length(type) < 60),
+  current_state text CHECK (length(current_state) < 60),
+  start_date date CHECK (start_date < '2050-01-01'::date AND start_date > '2025-12-31'::date),
+  end_date date CHECK (end_date <= '2050-12-31'::date AND end_date > now()),
+  state smallint,
+  CONSTRAINT period_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.period_costs (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  cost_description text CHECK (length(cost_description) < 30),
+  price smallint CHECK (price > 0),
+  cost_date date CHECK (cost_date > '2025-01-01'::date AND cost_date < '2050-01-01'::date),
+  period_id bigint,
+  CONSTRAINT period_costs_pkey PRIMARY KEY (id),
+  CONSTRAINT period_costs_period_id_fkey FOREIGN KEY (period_id) REFERENCES public.period(id)
+);
+CREATE TABLE public.course (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  name text CHECK (length(name) < 60),
+  type text CHECK (length(type) < 30),
+  state smallint,
+  CONSTRAINT course_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.period_course (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  course_id bigint,
+  period_id bigint,
+  section_name text CHECK (length(section_name) < 10),
+  state smallint,
+  section_day text CHECK (length(section_day) < 15),
+  teacher_id bigint,
+  CONSTRAINT period_course_pkey PRIMARY KEY (id),
+  CONSTRAINT period_course_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.course(id),
+  CONSTRAINT period_course_period_id_fkey FOREIGN KEY (period_id) REFERENCES public.period(id),
+  CONSTRAINT period_course_teacher_id_fkey FOREIGN KEY (teacher_id) REFERENCES public.teacher(id)
+);
+CREATE TABLE public.teacher (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  ci text UNIQUE CHECK (length(ci) < 12),
+  name text CHECK (length(name) < 30),
+  last_name text CHECK (length(last_name) < 30),
+  phone bigint,
+  email text,
+  description text CHECK (length(description) < 120),
+  show_teacher boolean,
+  img_id bigint,
+  state smallint,
+  CONSTRAINT teacher_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.img (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  route text,
+  type text CHECK (length(type) < 20),
+  CONSTRAINT img_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.marketing_course (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  course_id bigint UNIQUE,
+  img_id bigint,
+  introduction text CHECK (length(introduction) < 80),
+  description text CHECK (length(description) < 350),
+  content_1 text CHECK (length(content_1) < 80),
+  content_2 text CHECK (length(content_2) < 80),
+  content_3 text CHECK (length(content_3) < 80),
+  content_4 text CHECK (length(content_4) < 80),
+  content_5 text CHECK (length(content_5) < 80),
+  content_6 text CHECK (length(content_6) < 80),
+  content_7 text CHECK (length(content_7) < 80),
+  content_8 text CHECK (length(content_8) < 80),
+  content_9 text CHECK (length(content_9) < 80),
+  content_10 text CHECK (length(content_10) < 80),
+  requirement_1 text CHECK (length(requirement_1) < 60),
+  requirement_2 text CHECK (length(requirement_2) < 60),
+  requirement_3 text CHECK (length(requirement_3) < 60),
+  requirement_4 text CHECK (length(requirement_4) < 60),
+  class text CHECK (length(class) < 50),
+  icon_1 boolean,
+  icon_2 boolean,
+  icon_3 boolean,
+  state smallint,
+  CONSTRAINT marketing_course_pkey PRIMARY KEY (id),
+  CONSTRAINT marketing_course_img_id_fkey FOREIGN KEY (img_id) REFERENCES public.img(id),
+  CONSTRAINT marketing_course_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.course(id)
+);
+CREATE TABLE public.page_info (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  phone bigint CHECK (phone > 7 AND phone <= 11),
+  email text CHECK (length(email) < 254),
+  facebook_link text,
+  instagram_link text,
+  city_address text CHECK (length(city_address) < 255),
+  country_address text CHECK (length(country_address) < 60),
+  page_color character varying,
+  rif text CHECK (length(rif) < 20),
+  page_texts json,
+  CONSTRAINT page_info_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.page_info-img (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  img_id bigint,
+  page_id bigint,
+  img_name text CHECK (length(img_name) < 30),
+  CONSTRAINT page_info-img_pkey PRIMARY KEY (id),
+  CONSTRAINT page_info-img_img_id_fkey FOREIGN KEY (img_id) REFERENCES public.img(id),
+  CONSTRAINT page_info-img_page_id_fkey FOREIGN KEY (page_id) REFERENCES public.page_info(id)
+);
+CREATE TABLE public.visit (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  ip_visitor_id bigint,
+  visit_date timestamp without time zone,
+  CONSTRAINT visit_pkey PRIMARY KEY (id),
+  CONSTRAINT visit_ip_visitor_id_fkey FOREIGN KEY (ip_visitor_id) REFERENCES public.ip_visitor(id)
+);
+CREATE TABLE public.ip_visitor (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  ip_direction text,
+  failed_login_access_attemps smallint,
+  failed_recover_account_attemps smallint,
+  failed_creating_account_attemps smallint,
+  block_login_access_time timestamp without time zone,
+  block_recover_account_time timestamp without time zone,
+  block_create_account_time timestamp without time zone,
+  CONSTRAINT ip_visitor_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.notification (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  created_at timestamp with time zone NOT NULL,
+  user_id bigint,
+  description text CHECK (length(description) < 255),
+  CONSTRAINT notification_pkey PRIMARY KEY (id),
+  CONSTRAINT notification_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profile(id)
+);
+CREATE TABLE public.activity_log (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  user_id bigint,
+  table_name text,
+  row_id bigint,
+  action text,
+  action_date timestamp with time zone,
+  result boolean,
+  observation text,
+  CONSTRAINT activity_log_pkey PRIMARY KEY (id),
+  CONSTRAINT activity_log_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profile(id)
+);
+CREATE TABLE public.user-student (
+  user_id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  student_id bigint NOT NULL,
+  CONSTRAINT user-student_pkey PRIMARY KEY (user_id, student_id)
+);
+CREATE TABLE public.page_interaction (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  marketing_course_id bigint NOT NULL,
+  ip_visitor_id bigint,
+  interaction_date timestamp without time zone,
+  CONSTRAINT page_interaction_pkey PRIMARY KEY (id),
+  CONSTRAINT page_interaction_marketing_course_id_fkey FOREIGN KEY (marketing_course_id) REFERENCES public.marketing_course(id),
+  CONSTRAINT page_interaction_ip_visitor_id_fkey FOREIGN KEY (ip_visitor_id) REFERENCES public.ip_visitor(id)
+);
+CREATE TABLE public.registration (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  student_id bigint NOT NULL,
+  period_course_id bigint,
+  abandonment_date date CHECK (abandonment_date > '2020-01-01'::date AND abandonment_date < '2050-01-01'::date),
+  current_state text CHECK (length(current_state) < 30),
+  last_qualification smallint CHECK (last_qualification > 0),
+  observation text,
+  missing_payment smallint CHECK (missing_payment > 0),
+  graduand_code text,
+  state smallint,
+  registration_date date CHECK (registration_date > '2020-01-01'::date AND registration_date < '2050-01-01'::date),
+  CONSTRAINT registration_pkey PRIMARY KEY (id),
+  CONSTRAINT registration_student_id_fkey FOREIGN KEY (student_id) REFERENCES public.student(id),
+  CONSTRAINT registration_period_course_id_fkey FOREIGN KEY (period_course_id) REFERENCES public.period_course(id)
+);
+CREATE TABLE public.transaction (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  cost smallint CHECK (cost > 0),
+  payment_method text CHECK (length(payment_method) < 30),
+  img_id bigint,
+  state smallint,
+  reference bigint,
+  CONSTRAINT transaction_pkey PRIMARY KEY (id),
+  CONSTRAINT transaction_img_id_fkey FOREIGN KEY (img_id) REFERENCES public.img(id)
+);
+CREATE TABLE public.transaction_detail (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  registration_id bigint NOT NULL,
+  transaction_id bigint,
+  motive_payment text CHECK (length(motive_payment) < 30),
+  amount smallint CHECK (amount > 0),
+  state smallint,
+  CONSTRAINT transaction_detail_pkey PRIMARY KEY (id),
+  CONSTRAINT transaction_detail_registration_id_fkey FOREIGN KEY (registration_id) REFERENCES public.registration(id),
+  CONSTRAINT transaction_detail_transaction_id_fkey FOREIGN KEY (transaction_id) REFERENCES public.transaction(id)
+);
+CREATE TABLE public.evaluation (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  period_course_id bigint,
+  evaluation_type text CHECK (length(evaluation_type) < 30),
+  objective real CHECK (objective > 0.0::double precision),
+  evaluation_date date CHECK (evaluation_date >= '2026-01-01'::date AND evaluation_date <= '2050-12-31'::date),
+  percentage smallint CHECK (percentage > 0 AND percentage <= 100),
+  state smallint,
+  CONSTRAINT evaluation_pkey PRIMARY KEY (id),
+  CONSTRAINT evaluation_period_course_id_fkey FOREIGN KEY (period_course_id) REFERENCES public.period_course(id)
+);
+CREATE TABLE public.qualification-student (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  registration_id bigint NOT NULL,
+  evaluation_id bigint,
+  note smallint CHECK (note >= 0),
+  state smallint,
+  CONSTRAINT qualification-student_pkey PRIMARY KEY (id),
+  CONSTRAINT qualification-student_registration_id_fkey FOREIGN KEY (registration_id) REFERENCES public.registration(id),
+  CONSTRAINT qualification-student_evaluation_id_fkey FOREIGN KEY (evaluation_id) REFERENCES public.evaluation(id)
+);
+CREATE TABLE public.classroom (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  classroom text,
+  CONSTRAINT classroom_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.classes (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  period_course_id bigint,
+  start_date date,
+  end_date date,
+  teacher_id bigint,
+  classroom_id bigint,
+  CONSTRAINT classes_pkey PRIMARY KEY (id),
+  CONSTRAINT classes_period_course_id_fkey FOREIGN KEY (period_course_id) REFERENCES public.period_course(id),
+  CONSTRAINT classes_teacher_id_fkey FOREIGN KEY (teacher_id) REFERENCES public.teacher(id),
+  CONSTRAINT classes_classroom_id_fkey FOREIGN KEY (classroom_id) REFERENCES public.classroom(id)
+);

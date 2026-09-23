@@ -1,110 +1,91 @@
 <?php
+// Activar errores
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
+// Registrar todo en un archivo de log
+function logDebug($msg) {
+    file_put_contents('debug_secciones.log', date('Y-m-d H:i:s') . " - " . $msg . "\n", FILE_APPEND);
+}
+
+logDebug("=== INICIO ===");
+logDebug("POST: " . print_r($_POST, true));
+
+require_once "../config/APP.php";
 require_once "../modelos/mainModel.php";
 
-$conexion = mainModel::conectar();
-$id_curso = $_POST['id_curso'] ?? '';
-
-if ($id_curso === '') {
-  echo "<option value=''>Seleccione una sección</option>";
-  exit;
+session_name('SPM');
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
 
-// PRIMERO: Obtener el tipo de curso
-$consultaTipo = $conexion->prepare("
-    SELECT tipo_curso 
-    FROM curso 
-    WHERE id_curso = :id_curso
-");
-$consultaTipo->execute([':id_curso' => $id_curso]);
-$tipoCurso = $consultaTipo->fetchColumn();
+if (!isset($_SESSION['cargo_spm']) || !in_array($_SESSION['cargo_spm'], [1, 2])) {
+    logDebug("Acceso denegado por rol");
+    die('<option value="">Acceso denegado</option>');
+}
 
-if ($tipoCurso === 'Intensivo') {
-    // CONSULTA PARA CURSOS INTENSIVOS
-    $consulta = $conexion->prepare("
-        SELECT 
-            s.id_seccion, 
-            s.nombre_seccion,
-            c.nombre_curso,
-            pi.fecha_inicio_int,
-            pi.fecha_fin_int,
-            (
-                SELECT COUNT(*) 
-                FROM inscripcion i 
-                WHERE i.id_seccion_fk = s.id_seccion 
-                    AND i.estado_inscripcion = 'Activa'
-            ) AS inscritos
-        FROM seccion s
-        JOIN curso_vigente cv ON s.id_curso_vigente_fk = cv.id_curso_vigente
-        JOIN periodo_intensivo pi ON cv.id_curso_vigente = pi.id_curso_vigente_fk
-        JOIN curso c ON cv.id_curso_fk = c.id_curso
-        WHERE cv.id_curso_fk = :id_curso
-            AND cv.estado_curso_vigente = 1
-            AND pi.estado_periodo = 'Vigente'
-    ");
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['period_course_id'])) {
+    logDebug("No es POST o falta period_course_id");
+    die('<option value="">Seleccione un curso primero</option>');
+}
+
+$periodCourseId = (int)$_POST['period_course_id'];
+logDebug("period_course_id: $periodCourseId");
+
+// Verificar que SUPABASE_SECRET_KEY esté definida
+if (!defined('SUPABASE_SECRET_KEY')) {
+    logDebug("SUPABASE_SECRET_KEY NO DEFINIDA");
+    die('<option value="">Error: Clave de servicio no configurada</option>');
 } else {
-    // CONSULTA PARA CURSOS NO INTENSIVOS (Extendido y Técnico Profesional)
-    $consulta = $conexion->prepare("
-        SELECT 
-            s.id_seccion, 
-            s.nombre_seccion,
-            co.numero_cohorte, 
-            co.anio_cohorte, 
-            c.nombre_curso,
-            (
-                SELECT COUNT(*) 
-                FROM inscripcion i 
-                WHERE i.id_seccion_fk = s.id_seccion 
-                    AND i.estado_inscripcion = 'Activa'
-            ) AS inscritos
-        FROM seccion s
-        JOIN curso_vigente cv ON s.id_curso_vigente_fk = cv.id_curso_vigente
-        JOIN cohorte co ON cv.id_cohorte_fk = co.id_cohorte
-        JOIN curso c ON cv.id_curso_fk = c.id_curso
-        WHERE cv.id_curso_fk = :id_curso
-            AND cv.estado_curso_vigente = 1
-            AND co.estado_cohorte = 'Vigente'
-    ");
+    logDebug("SUPABASE_SECRET_KEY definida (longitud: " . strlen(SUPABASE_SECRET_KEY) . ")");
 }
 
-$consulta->execute([':id_curso' => $id_curso]);
-$secciones = $consulta->fetchAll();
+$serviceToken = SUPABASE_SECRET_KEY;
+$filtros = [
+    'period_course_id' => 'eq.' . $periodCourseId,
+    'state' => 'eq.1'
+];
 
-if (empty($secciones)) {
-    if ($tipoCurso === 'Intensivo') {
-        echo "<option value=''>No hay secciones disponibles para este curso intensivo</option>";
+logDebug("Filtros: " . print_r($filtros, true));
+
+try {
+    // 1. Intentar con supabaseGet + token
+    logDebug("Intentando supabaseGet con token...");
+    $result = mainModel::supabaseGet('section', 'id,name,section_day', $filtros, $serviceToken);
+    logDebug("Resultado supabaseGet: " . print_r($result, true));
+    
+    // Verificar si funcionó
+    if (isset($result['ok']) && $result['ok'] && !empty($result['data'])) {
+        logDebug("Éxito con supabaseGet, datos: " . count($result['data']));
+        $secciones = $result['data'];
     } else {
-        echo "<option value=''>No hay secciones disponibles para este curso</option>";
-    }
-} else {
-    foreach ($secciones as $s) {
-        if ($s['inscritos'] < 20) {
-            if ($tipoCurso === 'Intensivo') {
-                // Formato para cursos intensivos
-                $fechaInicio = date('d/m/Y', strtotime($s['fecha_inicio_int']));
-                $fechaFin = date('d/m/Y', strtotime($s['fecha_fin_int']));
-                echo "<option value='{$s['id_seccion']}'>
-                        Sección {$s['nombre_seccion']} - Intensivo ({$fechaInicio} al {$fechaFin}) - {$s['inscritos']}/20 disponibles
-                    </option>";
-            } else {
-                // Formato para cursos no intensivos
-                echo "<option value='{$s['id_seccion']}'>
-                        Sección {$s['nombre_seccion']} - Cohorte {$s['numero_cohorte']}/{$s['anio_cohorte']} - {$s['inscritos']}/20 disponibles
-                    </option>";
-            }
+        // 2. Fallback: intentar con supabaseQuery (sin token)
+        logDebug("Fallback: intentando supabaseQuery...");
+        $result2 = mainModel::supabaseQuery('section', 'id,name,section_day', $filtros);
+        logDebug("Resultado supabaseQuery: " . print_r($result2, true));
+        
+        if (isset($result2['data']) && !empty($result2['data'])) {
+            logDebug("Éxito con supabaseQuery, datos: " . count($result2['data']));
+            $secciones = $result2['data'];
+        } else {
+            throw new Exception("No hay secciones disponibles para este curso.");
         }
     }
     
-    // Si no hay secciones con cupo disponible, mostrar mensaje
-    $hayCupo = false;
-    foreach ($secciones as $s) {
-        if ($s['inscritos'] < 20) {
-            $hayCupo = true;
-            break;
-        }
+    // Generar HTML
+    $html = '<option value="">Seleccione una sección</option>';
+    foreach ($secciones as $sec) {
+        $nombre = htmlspecialchars($sec['name'] ?? 'Sin nombre');
+        $dia = htmlspecialchars($sec['section_day'] ?? '');
+        $texto = $nombre . ($dia ? " - $dia" : "");
+        $html .= "<option value='{$sec['id']}'>{$texto}</option>";
     }
-    
-    if (!$hayCupo) {
-        echo "<option value=''>Todas las secciones están llenas (20/20)</option>";
-    }
+    logDebug("HTML generado: " . strlen($html) . " caracteres");
+    echo $html;
+
+} catch (Exception $e) {
+    logDebug("EXCEPCIÓN: " . $e->getMessage());
+    echo '<option value="">Error: ' . htmlspecialchars($e->getMessage()) . '</option>';
 }
+logDebug("=== FIN ===");
 ?>

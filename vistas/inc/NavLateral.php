@@ -18,7 +18,8 @@
                             5 => "Estudiante"
                         ];
 
-                        $carpeta = $carpetasPorCargo[$cargo] ?? "admin";        
+                        //$carpeta = $carpetasPorCargo[$cargo] ?? "admin";        
+                        $carpeta = "admin";        
 
 				echo $nombre . " " . $apellido; ?> <br><small class="roboto-condensed-light"><?php echo $_SESSION['usuario_spm']; ?></small>
 			</figcaption>
@@ -86,32 +87,33 @@
 				<?php if($_SESSION['cargo_spm'] == 1 || $_SESSION['cargo_spm'] == 4 || $_SESSION['cargo_spm'] == 3 || $_SESSION['cargo_spm'] == 2): ?>
 
 				<li>
-					<a href="#" class="nav-btn-submenu">&nbsp; Cohortes <i class="fas fa-chevron-down"></i></a>
+					<a href="#" class="nav-btn-submenu">&nbsp; Periodos <i class="fas fa-chevron-down"></i></a>
 					<ul>
                         
                         <?php if($_SESSION['cargo_spm'] == 1 || $_SESSION['cargo_spm'] == 4): ?>
                             <li>
-                                <a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/cohorte-new"> &nbsp; Nuevo cohorte</a>
+                                <a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/period-new"> &nbsp; Nuevo periodo</a>
                             </li>
                         <?php endif; ?>
 					
 						<li>
-							<a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/cohorte-list"> &nbsp; Lista de cohortes</a>
+							<a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/period-list"> &nbsp; Lista de periodos</a>
 						</li>
 
+                        <li>
+							<a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/seccion-list"> &nbsp; Periodos de cursos</a>
+						</li>
+                        
 					<?php if($_SESSION['cargo_spm'] == 1 || $_SESSION['cargo_spm'] == 4): ?>
 						<li>
-							<a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/cohorte-archived"> &nbsp; Lista de cohortes archivados</a>
+							<a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/period-archived"> &nbsp; Lista de periodos archivados</a>
 						</li>
                     <?php endif; ?>
 
-
                         <li>
-							<a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/seccion-archived"> &nbsp; Periodos / cohortes archivados</a>
+							<a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/seccion-archived"> &nbsp; Periodos de cursos archivados</a>
 						</li>
-                        <li>
-							<a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/seccion-list"> &nbsp; Periodos de cursos / cohortes</a>
-						</li>		
+		
                        
 
 
@@ -120,28 +122,28 @@
 
 				<?php endif; ?>
 			
-				<?php if($_SESSION['cargo_spm'] == 1 || $_SESSION['cargo_spm'] == 4 || $_SESSION['cargo_spm'] == 3 || $_SESSION['cargo_spm'] == 2): ?>
+				<!--php if($_SESSION['cargo_spm'] == 1 || $_SESSION['cargo_spm'] == 4 || $_SESSION['cargo_spm'] == 3 || $_SESSION['cargo_spm'] == 2): ?>
 
 				<li>
 					<a href="#" class="nav-btn-submenu"> &nbsp; Periodos intensivos <i class="fas fa-chevron-down"></i></a>
 					<ul>
                         
                         <li>
-							<a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/cv-int-new"> &nbsp; Nuevo periodo de curso Int</a>
+							<a href="<-?php echo SERVERURL; ?>index.php?views=<-?php echo $carpeta; ?>/cv-int-new"> &nbsp; Nuevo periodo de curso Int</a>
 						</li>	
                         <li>
-							<a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/cv-int-list"> &nbsp; Periodos de cursos Int</a>
+							<a href="<-?php echo SERVERURL; ?>index.php?views=<-?php echo $carpeta; ?>/cv-int-list"> &nbsp; Periodos de cursos Int</a>
 						</li>	
-                       <?php if($_SESSION['cargo_spm'] == 1 || $_SESSION['cargo_spm'] == 4): ?>
+                       <-?php if($_SESSION['cargo_spm'] == 1 || $_SESSION['cargo_spm'] == 4): ?>
                              <li>
-                                <a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/cv-int-list-archived"> &nbsp; Periodos intensivos archivados</a>
+                                <a href="<-?php echo SERVERURL; ?>index.php?views=<-?php echo $carpeta; ?>/cv-int-list-archived"> &nbsp; Periodos intensivos archivados</a>
                             </li>
-                        <?php endif; ?>
+                        <-?php endif; ?>
 
                         
 					</ul>
 				</li>
-				<?php endif; ?>
+				<-?php endif; ?-->
 				
                 <?php if($_SESSION['cargo_spm'] == 1 || $_SESSION['cargo_spm'] == 4 || $_SESSION['cargo_spm'] == 3 || $_SESSION['cargo_spm'] == 2): ?>
 				<li>
@@ -206,18 +208,6 @@
                     <?php endif; ?>
 
                 
-
-				<!--li>
-					<a href="#" class="nav-btn-submenu"> &nbsp; Publicidad de cursos <i class="fas fa-chevron-down"></i></a>
-					<ul>
-
-
-					</ul>
-				</li-->
-
-
-
-
                 <!-- //INSCRIPCIONES PARA PORTAL ESTUDIANTE-->
                 
                 <?php if($_SESSION['cargo_spm'] == 5): ?>
@@ -283,7 +273,7 @@
 					<ul>
 
                         <li>
-							<a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/solicitud-list"> &nbsp; Lista de s. de nuevo ingreso</a>
+							<a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/solicitud-nuevo-ingreso-list"> &nbsp; Lista de s. de nuevo ingreso</a>
 						</li>
                         
                         <li>
@@ -359,20 +349,31 @@
 
                        <?php if($_SESSION['cargo_spm'] == 1): ?>
 				<li>
-					<a href="#" class="nav-btn-submenu">&nbsp; Usuarios <i class="fas fa-chevron-down"></i></a>
+					<a href="#" class="nav-btn-submenu">&nbsp; Sistema <i class="fas fa-chevron-down"></i></a>
 					<ul>
                         <li>
-							<a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/user4-new"> &nbsp;Crear usuario-personal</a>
+							<a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/user-new"> &nbsp;Crear usuario-personal</a>
 						</li>                        
                         <!--li>
 							<a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/user3-new"> &nbsp;Crear usuario-estudiante</a>
 						</li-->
-                        <li>
+                        <!--li>
 							<a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/user-estudiante-list"> &nbsp;Lista de usuario-estudiantes</a>
-						</li>
+						</li-->
                         <li>
-							<a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/user-personal-list"> &nbsp;Lista de usuario-personal</a>
+							<a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/user-list"> &nbsp;Lista de usuario-personal</a>
 						</li>
+                        
+                        <li>
+							<a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/user-activity-list"> &nbsp;Actividad de usuarios</a>
+						</li>
+                        
+                        <?php if($_SESSION['cargo_spm'] == 1 || $_SESSION['cargo_spm'] == 4): ?>
+                            <li>
+                                <a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/local"> &nbsp; Local</a>
+                            </li>
+                       <?php endif; ?>
+                        
 					</ul>
 				</li>
                     <?php endif; ?>
@@ -385,11 +386,6 @@
 				</li>
             <?php endif; ?>
 
-           <?php if($_SESSION['cargo_spm'] == 1 || $_SESSION['cargo_spm'] == 4): ?>
-				<li>
-					<a href="<?php echo SERVERURL; ?>index.php?views=<?php echo $carpeta; ?>/local"> &nbsp; Local</a>
-				</li>
-           <?php endif; ?>
                 
 		   <?php if($_SESSION['cargo_spm'] == 1 || $_SESSION['cargo_spm'] == 2 || $_SESSION['cargo_spm'] == 3 || $_SESSION['cargo_spm'] == 4): ?>
                 <li>
@@ -409,3 +405,12 @@
 		</nav>
 	</div>
 </section>
+
+<!--script>
+console.log('[CEPROCA][NavLateral] renderizado', {
+	cargo: <php echo json_encode($cargo); ?>,
+	carpeta: <php echo json_encode($carpeta); ?>,
+	submenus: document.querySelectorAll('.nav-btn-submenu').length,
+	botonesMostrar: document.querySelectorAll('.show-nav-lateral').length
+});
+</script-->

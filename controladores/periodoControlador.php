@@ -6,6 +6,7 @@ if($peticionAjax){
     require_once "./modelos/periodoModelo.php";
 }
 
+
 //maneja la logica de los periodos de los cursos, o cohortes e intensivos,
 //en este ultimo caso tambien se manejan las vistas de crear y modificar
 // ademas de las vistas de secciones y lista de evaluaciones y puntajes
@@ -37,16 +38,2439 @@ public function listar_cohortes_disponibles_controlador(){
 }
 
         
-  /*      
-//para el conteo de evaluaciones >6 de seccion consult
-        public function contar_evaluaciones_controlador($id_seccion) {
-            $id_seccion = mainModel::limpiar_cadena($id_seccion);
-            return periodoModelo::contar_evaluaciones_modelo($id_seccion);
+        
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+//para periodo-new y update, trae la lista de cursos y profes para los period_course
+   /*public function obtener_todos_los_cursos_para_periodo_controlador() {
+        $accessToken = $_SESSION['auth_access_token'] ?? null;
+        return periodoModelo::listar_cursos_supabase_para_periodo($accessToken);
+    }*/
+  	public function obtener_todos_los_cursos_para_periodo_controlador(?string $type = null) {
+        $accessToken = $_SESSION['auth_access_token'] ?? null;
+        return periodoModelo::listar_cursos_supabase_para_periodo($accessToken, $type);
+    }
+        
+    public function obtener_todos_los_profesores_para_periodo_controlador() {
+        $accessToken = $_SESSION['auth_access_token'] ?? null;
+        return periodoModelo::listar_profesores_supabase_para_periodo($accessToken);
+   }
+        
+        
+        
+// para periodo new y update para validar periodos de nombre duplicado 
+   public function validar_periodo_no_duplicado_supabase($nombre, $accessToken, $id = null): array {
+   		return periodoModelo::verificar_periodo_duplicado_supabase($nombre, $accessToken, $id);
+   }     
+
+    public function validar_nombre_periodo_controlador($nombre, $id = null): string {
+        $nombre = mainModel::limpiar_cadena($nombre);
+        $accessToken = $_SESSION['auth_access_token'] ?? null;
+        if ($nombre === '' || !$accessToken) {
+            return json_encode(['valido' => false, 'repetido' => false]);
         }
-*/
 
-//de seccion-list
+        $resultado = $this->validar_periodo_no_duplicado_supabase($nombre, $accessToken, $id);
+        $repetido = $resultado['ok'] && !empty($resultado['data']);
+        return json_encode(['valido' => !$repetido, 'repetido' => $repetido]);
+    }
 
+
+        
+        //para periodo new y update para traer el ultimo cohorte con nombre, y fecha de inicio y fin para dar contexto
+    public function obtener_ultimo_periodo_controlador() {
+        $tipo = mainModel::limpiar_cadena($_GET['tipo'] ?? '');
+
+        if (empty($tipo)) {
+            echo json_encode(['existe' => false]);
+            return;
+        }
+
+        $accessToken = $_SESSION['auth_access_token'] ?? null;
+        if (!$accessToken) {
+            echo json_encode(['existe' => false, 'error' => 'No session token']);
+            return;
+        }
+
+        $resultado = periodoModelo::obtener_ultimo_periodo_supabase($tipo, $accessToken);
+        if ($resultado['ok'] && !empty($resultado['data'][0])) {
+            $periodo = $resultado['data'][0];
+            echo json_encode([
+                'existe' => true,
+                'nombre' => $periodo['name'],
+                'fecha_inicio' => $periodo['start_date'],
+                'fecha_fin' => $periodo['end_date']
+            ]);
+        } else {
+            echo json_encode(['existe' => false]);
+        }
+    }
+
+                
+        
+    //para period update, trae el periodo sus period costs y period courses        
+     public function datos_periodo_para_update_controlador($idEnc): array{
+        $idReal = mainModel::decryption($idEnc);
+        if (!$idReal) {
+            return ['ok' => false, 'message' => 'ID inválido'];
+        }
+        $token = $_SESSION['auth_access_token'] ?? null;
+        if (!$token) {
+            return ['ok' => false, 'message' => 'Sesión no disponible'];
+        }
+        $resultado = periodoModelo::obtener_periodo_con_cursos_costos_supabase($idReal, $token);
+        if (!$resultado['ok'] || !isset($resultado['data'])) {
+            return ['ok' => false, 'message' => 'No se encontró el periodo'];
+        }
+        $data = $resultado['data'];
+        return [
+            'ok' => true,
+            'periodo' => $data['periodo'],
+            'cursos' => $data['cursos'] ?? [],
+            'costos' => $data['costos'] ?? []
+        ];
+    }  
+        
+        
+
+
+        
+        
+        
+        
+        
+
+
+   
+   public function crear_periodo_controlador(): string {
+       return $this->crear_periodo_rpc_controlador();
+   }
+
+   private function crear_periodo_rpc_controlador(): string {
+       $accessToken = $_SESSION['auth_access_token'] ?? null;
+       $nombre = trim(mainModel::limpiar_cadena($_POST['periodo_nombre'] ?? ''));
+       $tipo = trim(mainModel::limpiar_cadena($_POST['periodo_tipo'] ?? ''));
+       $inicio = $_POST['periodo_fecha_inicio'] ?? '';
+       $fin = $_POST['periodo_fecha_fin'] ?? '';
+       $cursos = $_POST['cursos_vigentes'] ?? [];
+       
+              /*$paramounts = [
+           'p_name' => $nombre,
+           'p_type' => $tipo,
+           'p_start_date' => $inicio,
+           'p_end_date' => $fin,
+           'el babo' => $accessToken];
+      var_dump($paramounts); die();*/
+
+       if (!$accessToken || $nombre === '' || $tipo === '' || $inicio === '' || $fin === '') {
+        return  json_encode(mainModel::generarAlertaSimple("Todos los campos son obligatorios", "error", "simple"));
+       }
+       if (!in_array($tipo, ['Intensivo', 'Extendido', 'Técnico Profesional'], true)) {
+            return  json_encode(mainModel::generarAlertaSimple("Selecciona un tipo de periodo válido.", "error", "simple"));
+       }
+       if ($inicio >= $fin) {
+           return json_encode(mainModel::generarAlertaSimple("La fecha de inicio debe ser anterior a la fecha de fin.", "error", "simple"));
+       }
+
+        $hoy = date('Y-m-d');
+        if ($fin < $hoy) {
+            return json_encode(mainModel::generarAlertaSimple("La fecha de fin no puede ser anterior al día de hoy.", "error", "simple"));
+        }
+       
+       $duplicado = $this->validar_periodo_no_duplicado_supabase($nombre, $accessToken);
+       if ($duplicado['ok'] && !empty($duplicado['data'])) {
+            return json_encode(mainModel::generarAlertaSimple("Ese nombre de periodo ya está registrado.", "error", "simple"));
+       }
+
+    $idsCursos = [];
+    $teacherIds = [];
+    $sectionDays = [];
+
+    foreach ($cursos as $curso) {
+        $courseId = (int) ($curso['course_id'] ?? 0);
+        if ($courseId <= 0) {
+            return json_encode(mainModel::generarAlertaSimple("Cada curso debe estar seleccionado correctamente.", "error", "simple"));
+        }
+        if (in_array($courseId, $idsCursos, true)) {
+            return json_encode(mainModel::generarAlertaSimple("No puedes agregar el mismo curso dos veces.", "error", "simple"));
+        }
+        $idsCursos[] = $courseId;
+
+        $teacherId = (int) ($curso['teacher_id'] ?? 0);
+        $day = trim($curso['dia'] ?? '');
+        if ($teacherId <= 0 || $day === '') {
+            return json_encode(mainModel::generarAlertaSimple("Cada curso debe tener profesor y día de clases.", "error", "simple"));
+        }
+        $teacherIds[] = $teacherId;
+        $sectionDays[] = $day;
+    }
+
+       $fechasPago = $tipo === 'Intensivo'
+           ? ['periodo_fecha_pago_inscripcion_int', 'periodo_fecha_pago_encuentro_int', 'periodo_fecha_pago_titulo_int']
+           : ['periodo_fecha_pago_inscripcion', 'periodo_fecha_modulo1', 'periodo_fecha_modulo2', 'periodo_fecha_modulo3', 'periodo_fecha_pago_art13', 'periodo_fecha_pago_aranceles'];
+       $fechasPago = array_values(array_filter(array_map(fn($campo) => $_POST[$campo] ?? '', $fechasPago)));
+       if (count($fechasPago) !== count(array_unique($fechasPago))) {
+           return json_encode(mainModel::generarAlertaSimple("Las fechas de pago no pueden repetirse..", "error", "simple"));
+       }
+       foreach ($fechasPago as $fechaPago) {
+           if ($fechaPago < $inicio || $fechaPago > $fin) {
+                return json_encode(mainModel::generarAlertaSimple("Las fechas de pago deben estar dentro del periodo..", "error", "simple"));
+           }
+       }
+       if ($tipo !== 'Intensivo') {
+           $modulos = array_values(array_filter([
+               $_POST['periodo_fecha_modulo1'] ?? '',
+               $_POST['periodo_fecha_modulo2'] ?? '',
+               $_POST['periodo_fecha_modulo3'] ?? '',
+           ]));
+           if (count($modulos) === 3 && !($modulos[0] < $modulos[1] && $modulos[1] < $modulos[2])) {
+                return json_encode(mainModel::generarAlertaSimple("Las fechas de módulos deben estar en orden 1, 2 y 3.", "error", "simple"));
+           }
+       }
+
+       $hoy = date('Y-m-d');
+       $estado = $hoy > $fin ? 'Terminado' : ($hoy >= $inicio ? 'Vigente' : 'Próximo');
+       $valor = static fn(string $campo): ?int => ($_POST[$campo] ?? '') === '' ? null : (int) $_POST[$campo];
+       $fecha = static fn(string $campo): ?string => ($_POST[$campo] ?? '') === '' ? null : $_POST[$campo];
+
+       $params = [
+           'p_name' => $nombre,
+           'p_type' => $tipo,
+           'p_current_state' => $estado,
+           'p_start_date' => $inicio,
+           'p_end_date' => $fin,
+           'p_period_state' => 1,
+           'p_course_ids' => $idsCursos,
+           'p_teacher_ids' => $teacherIds,
+           'p_section_days' => $sectionDays,
+           'p_int_inscripcion_price' => $tipo === 'Intensivo' ? $valor('periodo_pago_inscripcion_int') : null,
+           'p_int_encuentro_price' => $tipo === 'Intensivo' ? $valor('periodo_pago_encuentro_int') : null,
+           'p_int_titulo_price' => $tipo === 'Intensivo' ? $valor('periodo_pago_titulo_int') : null,
+           'p_ext_inscripcion_price' => $tipo !== 'Intensivo' ? $valor('periodo_pago_inscripcion') : null,
+           'p_ext_modulo_price' => $tipo !== 'Intensivo' ? $valor('periodo_pago_modulo') : null,
+           'p_ext_art13_price' => $tipo !== 'Intensivo' ? $valor('periodo_pago_art13') : null,
+           'p_ext_aranceles_price' => $tipo !== 'Intensivo' ? $valor('periodo_pago_aranceles') : null,
+           'p_ext_inscripcion_date' => $tipo !== 'Intensivo' ? $fecha('periodo_fecha_pago_inscripcion') : null,
+           'p_ext_modulo1_date' => $tipo !== 'Intensivo' ? $fecha('periodo_fecha_modulo1') : null,
+           'p_ext_modulo2_date' => $tipo !== 'Intensivo' ? $fecha('periodo_fecha_modulo2') : null,
+           'p_ext_modulo3_date' => $tipo !== 'Intensivo' ? $fecha('periodo_fecha_modulo3') : null,
+           'p_ext_art13_date' => $tipo !== 'Intensivo' ? $fecha('periodo_fecha_pago_art13') : null,
+           'p_ext_aranceles_date' => $tipo !== 'Intensivo' ? $fecha('periodo_fecha_pago_aranceles') : null,
+       ];
+
+       $resultado = periodoModelo::crear_periodo_rpc($params, $accessToken);
+       $rpc = $resultado['data'] ?? null;
+       if (!$resultado['ok'] || !is_array($rpc) || ($rpc['ok'] ?? false) !== true) {
+			$message = 'Error al crear periodo: ' . ($rpc['error'] ?? $resultado['message'] ?? 'La RPC no pudo crear el periodo.');
+           return json_encode(mainModel::generarAlertaSimple($message, "error", "simple"));
+       }
+       return json_encode(mainModel::generarAlertaSimple("El periodo fue registrado correctamente.", "success", "recargar"));
+   }
+        
+        
+        
+        
+        
+
+    public function actualizar_periodo_controlador(): string{
+        try {
+            $idEnc = $_POST['periodo_id_up'] ?? '';
+            $idReal = mainModel::decryption($idEnc);
+            if (!$idReal) {
+                return json_encode(mainModel::generarAlertaSimple('ID inválido', 'error', 'simple'));
+            }
+
+            $token = $_SESSION['auth_access_token'] ?? null;
+            if (!$token) {
+                return json_encode(mainModel::generarAlertaSimple('Sesión no disponible', 'error', 'simple'));
+            }
+
+            // Obtener datos del formulario
+            $nombre = trim(mainModel::limpiar_cadena($_POST['periodo_nombre_up'] ?? ''));
+            $tipo = trim(mainModel::limpiar_cadena($_POST['periodo_tipo_up'] ?? ''));
+            $inicio = $_POST['periodo_fecha_inicio_up'] ?? '';
+            $fin = $_POST['periodo_fecha_fin_up'] ?? '';
+
+            // Validaciones básicas
+            if ($nombre === '' || $tipo === '' || $inicio === '' || $fin === '') {
+                return json_encode(mainModel::generarAlertaSimple('Todos los campos son obligatorios', 'error', 'simple'));
+            }
+            if (!in_array($tipo, ['Intensivo', 'Extendido', 'Técnico Profesional'], true)) {
+                return json_encode(mainModel::generarAlertaSimple('Tipo inválido', 'error', 'simple'));
+            }
+            if ($inicio >= $fin) {
+                return json_encode(mainModel::generarAlertaSimple('La fecha de inicio debe ser anterior a la fecha de fin', 'error', 'simple'));
+            }
+
+            // Validación de 10 días
+            $hoy = new DateTime();
+            $fechaInicio = new DateTime($inicio);
+            $diasRestantes = $hoy->diff($fechaInicio)->days;
+            if ($fechaInicio <= $hoy || $diasRestantes <= 10) {
+                return json_encode(mainModel::generarAlertaSimple('No se puede modificar el periodo (menos de 10 días para el inicio o ya empezó).', 'error', 'simple'));
+            }
+
+            // Validar nombre duplicado (excluyendo el actual)
+            $duplicado = $this->validar_periodo_no_duplicado_supabase($nombre, $token, $idReal);
+            if ($duplicado['ok'] && !empty($duplicado['data'])) {
+                return json_encode(mainModel::generarAlertaSimple('Ese nombre de periodo ya está registrado', 'error', 'simple'));
+            }
+
+
+            $fechasPago = $tipo === 'Intensivo'
+                ? [] // Intensivo no tiene fechas de pago (solo precios)
+                : [
+                    $_POST['periodo_fecha_modulo1_up'] ?? '',
+                    $_POST['periodo_fecha_modulo2_up'] ?? '',
+                    $_POST['periodo_fecha_modulo3_up'] ?? '',
+                    $_POST['periodo_fecha_pago_art13_up'] ?? '',
+                    $_POST['periodo_fecha_pago_aranceles_up'] ?? '',
+                ];
+
+            if ($tipo !== 'Intensivo') {
+                $fechasPago = array_filter($fechasPago); // elimina vacíos
+                if (count($fechasPago) !== count(array_unique($fechasPago))) {
+                    return json_encode(mainModel::generarAlertaSimple('Las fechas de pago no pueden repetirse.', 'error', 'simple'));
+                }
+
+                foreach ($fechasPago as $fecha) {
+                    if ($fecha < $inicio || $fecha > $fin) {
+                        return json_encode(mainModel::generarAlertaSimple('Todas las fechas de pago deben estar dentro del rango del periodo.', 'error', 'simple'));
+                    }
+                }
+
+                // Validar orden de módulos (solo si las tres existen)
+                $modulo1 = $_POST['periodo_fecha_modulo1_up'] ?? '';
+                $modulo2 = $_POST['periodo_fecha_modulo2_up'] ?? '';
+                $modulo3 = $_POST['periodo_fecha_modulo3_up'] ?? '';
+                if ($modulo1 && $modulo2 && $modulo3) {
+                    if (!($modulo1 < $modulo2 && $modulo2 < $modulo3)) {
+                        return json_encode(mainModel::generarAlertaSimple('Las fechas de módulos deben estar en orden: 1, 2 y 3.', 'error', 'simple'));
+                    }
+                }
+            }    
+
+               
+            // Recoger nuevos cursos
+            $cursosNuevos = $_POST['cursos_vigentes'] ?? [];
+            $idsCursos = [];
+            $teacherIds = [];
+            $sectionDays = [];
+
+            foreach ($cursosNuevos as $curso) {
+                $courseId = (int) ($curso['course_id'] ?? 0);
+                $teacherId = (int) ($curso['teacher_id'] ?? 0);
+                $day = trim($curso['dia'] ?? '');
+                if ($courseId <= 0 || $teacherId <= 0 || $day === '') {
+                    return json_encode(mainModel::generarAlertaSimple('Cada curso debe tener profesor y día', 'error', 'simple'));
+                }
+                if (in_array($courseId, $idsCursos, true)) {
+                    return json_encode(mainModel::generarAlertaSimple('No puedes agregar el mismo curso dos veces', 'error', 'simple'));
+                }
+                $idsCursos[] = $courseId;
+                $teacherIds[] = $teacherId;
+                $sectionDays[] = $day;
+            }
+
+            // Recoger costos según el tipo
+            $valor = static fn(string $campo): ?int => ($_POST[$campo] ?? '') === '' ? null : (int) $_POST[$campo];
+            $fecha = static fn(string $campo): ?string => ($_POST[$campo] ?? '') === '' ? null : $_POST[$campo];
+
+            // Construir parámetros base
+            $params = [
+                'p_period_id' => $idReal,
+                'p_name' => $nombre,
+                'p_type' => $tipo,
+                'p_start_date' => $inicio,
+                'p_end_date' => $fin,
+            ];
+
+            // Agregar parámetros de costos según tipo
+            if ($tipo === 'Intensivo') {
+                $params['p_int_inscripcion_price'] = $valor('periodo_pago_inscripcion_int_up');
+                $params['p_int_encuentro_price'] = $valor('periodo_pago_encuentro_int_up');
+                $params['p_int_titulo_price'] = $valor('periodo_pago_titulo_int_up');
+            } else {
+                $params['p_ext_inscripcion_price'] = $valor('periodo_pago_inscripcion_up');
+                $params['p_ext_modulo_price'] = $valor('periodo_pago_modulo_up');
+                $params['p_ext_art13_price'] = $valor('periodo_pago_art13_up');
+                $params['p_ext_aranceles_price'] = $valor('periodo_pago_aranceles_up');
+
+                $params['p_ext_modulo1_date'] = $fecha('periodo_fecha_modulo1_up');
+                $params['p_ext_modulo2_date'] = $fecha('periodo_fecha_modulo2_up');
+                $params['p_ext_modulo3_date'] = $fecha('periodo_fecha_modulo3_up');
+                $params['p_ext_art13_date'] = $fecha('periodo_fecha_pago_art13_up');
+                $params['p_ext_aranceles_date'] = $fecha('periodo_fecha_pago_aranceles_up');
+            }
+
+            // Agregar cursos nuevos si existen
+            if (!empty($idsCursos)) {
+                $params['p_course_ids'] = $idsCursos;
+                $params['p_teacher_ids'] = $teacherIds;
+                $params['p_section_days'] = $sectionDays;
+            }
+
+            $resultado = periodoModelo::actualizar_periodo($params, $token);
+
+            if ($resultado['ok'] && ($resultado['data']['ok'] ?? false) === true) {
+                return json_encode(mainModel::generarAlertaSimple('Periodo actualizado correctamente', 'success', 'recargar'));
+            } else {
+                $mensaje = $resultado['data']['error'] ?? $resultado['message'] ?? 'Error desconocido';
+                return json_encode(mainModel::generarAlertaSimple('Error al actualizar: ' . $mensaje, 'error', 'simple'));
+            }
+        } catch (Exception $e) {
+            return json_encode(mainModel::generarAlertaSimple('Error: ' . $e->getMessage(), 'error', 'simple'));
+        }
+    }
+        
+        
+        
+      
+        
+        
+        
+        
+      
+        
+        
+        
+        
+        
+        
+public function paginador_periodo_controlador($pagina, $registros, $vista, $busqueda, $state = 1) {
+    $pagina = max(1, (int) $pagina);
+    $registros = max(1, (int) $registros);
+    $token = $_SESSION['auth_access_token'] ?? null;
+
+    if (!$token) {
+        return '<div class="alert alert-danger">La sesión de Supabase no está disponible.</div>';
+    }
+
+    // Preparar filtros desde GET (incluyendo los nuevos)
+    $filtros = [
+        'busqueda' => trim($busqueda),
+        'tipo' => trim($_GET['filtro_tipo'] ?? '') ?: null,
+        'estado' => trim($_GET['filtro_estado'] ?? '') ?: null,
+        'orden' => $_GET['orden'] ?? 'id_desc',
+        'state' => $state,
+        'id' => isset($_GET['filtro_id']) && $_GET['filtro_id'] !== '' ? (int) $_GET['filtro_id'] : null,
+        'anio' => isset($_GET['filtro_anio']) && $_GET['filtro_anio'] !== '' ? (int) $_GET['filtro_anio'] : null,
+    ];
+
+    $resultado = periodoModelo::listar_periodos_con_costos_supabase(
+        $filtros,
+        $token,
+        $registros,
+        ($pagina - 1) * $registros
+    );
+
+    if (!$resultado['ok']) {
+        return '<div class="alert alert-danger">No se pudo cargar la lista de periodos.</div>';
+    }
+
+    $periodos = $resultado['data']['data'] ?? [];
+    $total = (int) ($resultado['data']['total'] ?? 0);
+    $paginas = max(1, (int) ceil($total / $registros));
+
+    // Cargo y carpeta
+    $cargo = (int) ($_SESSION['cargo_spm'] ?? 0);
+    $carpetas = [1 => 'admin', 2 => 'Control de estudio', 3 => 'administrador de pagos', 4 => 'Supervisor de cursos', 5 => 'Estudiante'];
+    $carpeta = $carpetas[$cargo] ?? 'admin';
+    $vistaCompleta = urlencode($carpeta) . '/' . urlencode($vista);
+
+    // Generar tabla
+    $tabla = '<div class="table-responsive"><table class="table table-dark table-sm"><thead><tr class="text-center roboto-medium">';
+    $tabla .= '<th>ID</th><th>Nombre</th><th>Tipo</th><th>Fecha inicio/fin</th><th>Estado</th>';
+    
+    $tabla .= '<th>Costos</th>';
+    $tabla .= '<th>Ver periodos</th>';
+
+    if (in_array($cargo, [1, 4], true)) {
+        if ($state == 1) {
+            $tabla .= '<th>Actualizar</th>';
+            $tabla .= '<th>Archivar</th>';
+        } else {
+            $tabla .= '<th>Restaurar</th>';
+        }
+    }
+    $tabla .= '</tr></thead><tbody>';
+
+    if ($total > 0) {
+        $regInicio = ($pagina - 1) * $registros + 1;
+        foreach ($periodos as $periodo) {
+            $id = (int) $periodo['id'];
+            $name = htmlspecialchars($periodo['name'] ?? '', ENT_QUOTES, 'UTF-8');
+            $type = htmlspecialchars($periodo['type'] ?? '', ENT_QUOTES, 'UTF-8');
+            $startDate = htmlspecialchars($periodo['start_date'] ?? '', ENT_QUOTES, 'UTF-8');
+            $endDate = htmlspecialchars($periodo['end_date'] ?? '', ENT_QUOTES, 'UTF-8');
+            $current_state = htmlspecialchars($periodo['current_state'] ?? '', ENT_QUOTES, 'UTF-8');
+            $state = htmlspecialchars($periodo['state'] ?? '', ENT_QUOTES, 'UTF-8');
+            $date = 'FI:' . $periodo['start_date'] . ' - FF:' . $periodo['end_date'];
+            $costos = $periodo['costos'] ?? [];
+            $idEnc = mainModel::encryption($id);
+
+            $tabla .= '<tr class="text-center">';
+            $tabla .= '<td>' . $id . '</td>';
+            $tabla .= '<td>' . $name . '</td>';
+            $tabla .= '<td>' . $type . '</td>';
+            $tabla .= '<td>' . $date . '</td>'; 
+            $tabla .= '<td>' . $current_state . '</td>';
+
+            $tabla .= '<td>
+                <button type="button" class="btn btn-info btn-sm ver-costos" title="ver precios del periodo"
+                        data-periodo-id="' . $id . '"
+                        data-periodo-nombre="' . $name . '"
+                        data-costos=\'' . json_encode($costos, JSON_HEX_APOS) . '\'>
+                    <i class="fas fa-dollar-sign"></i>
+                </button>
+            </td>';
+
+            if($state==1){
+                $tabla .= '<td>
+                    <a href="' . SERVERURL . 'index.php?views=' . urlencode($carpeta) . '/seccion-list&filtro_id_periodo=' . $id. '&origen=periodo" class="btn btn-info btn-sm" title="Ver cursos vigentes">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                </td>';
+            }
+            
+            if($state==0){
+                $tabla .= '<td>
+                    <a href="' . SERVERURL . 'index.php?views=' . urlencode($carpeta) . '/seccion-list-archived&filtro_id_cohorte=' . $id . '&origen=cohorte" class="btn btn-info btn-sm" title="Ver cursos vigentes">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                </td>';
+            }
+            if (in_array($cargo, [1, 4], true)) {
+                if ($state == 1) {
+                    $tabla .= '<td><a href="' . SERVERURL . 'index.php?views=' . urlencode($carpeta) . '/period-update&periodo_id_up=' . $idEnc . '" class="btn btn-success btn-sm"><i class="fas fa-sync-alt"></i></a></td>';
+                    $tabla .= '<td>
+                        <form class="FormularioAjax" action="' . SERVERURL . 'ajax/periodoAjax.php" method="POST" data-form="delete" data-entity="periodo" autocomplete="off">
+                            <input type="hidden" name="periodo_id_archive" value="' . $idEnc . '">
+                            <button type="submit" class="btn btn-warning btn-sm"><i class="fas fa-archive"></i></button>
+                        </form>
+                    </td>';
+                } else {
+                    $tabla .= '<td>
+                        <form class="FormularioAjax" action="' . SERVERURL . 'ajax/periodoAjax.php" method="POST" data-form="restore" data-entity="periodo" autocomplete="off">
+                            <input type="hidden" name="periodo_id_restore" value="' . $idEnc . '">
+                            <button type="submit" class="btn btn-info btn-sm"><i class="fas fa-undo"></i> Restaurar</button>
+                        </form>
+                    </td>';
+                }
+            }
+            $tabla .= '</tr>';
+        }
+        $regFinal = $regInicio + count($periodos) - 1;
+    } else {
+        $columnas = in_array($cargo, [1, 4]) ? 8 : 6;
+        $tabla .= '<tr class="text-center"><td colspan="' . $columnas . '">No hay periodos registrados.</td></tr>';
+    }
+    $tabla .= '</tbody></table></div>';
+
+    // Paginador
+    if ($total > 0) {
+        $tabla .= '<p class="text-right">Mostrando periodo ' . $regInicio . ' al ' . $regFinal . ' de un total de ' . $total . '</p>';
+        // Incluir TODOS los filtros en la URL del paginador
+        $paramsGet = array_filter([
+            'busqueda' => $busqueda,
+            'filtro_tipo' => $_GET['filtro_tipo'] ?? '',
+            'filtro_estado' => $_GET['filtro_estado'] ?? '',
+            'orden' => $_GET['orden'] ?? '',
+            'filtro_id' => $_GET['filtro_id'] ?? '',
+            'filtro_anio' => $_GET['filtro_anio'] ?? '',
+        ]);
+        $queryString = http_build_query($paramsGet);
+        if ($queryString) {
+            $queryString = '&' . $queryString;
+        }
+        $tabla .= mainModel::paginador_tablas($pagina, $paginas, SERVERURL . 'index.php?views=' . $vistaCompleta . $queryString . '&page=', 7);
+    }
+
+    // Modal de costos (sin cambios)
+    $tabla .= '
+    <div id="modalCostos" class="modal" tabindex="-1" style="display:none; position:fixed; z-index:9999; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.75);">
+        <div style="position:relative; margin:auto; top:10%; max-width:60%; background:#fff; border:3px solid #007bff; padding:20px; border-radius:8px;">
+            <button onclick="document.getElementById(\'modalCostos\').style.display=\'none\'" style="position:absolute; top:10px; right:10px;" class="btn btn-sm btn-danger">
+                <i class="fas fa-times"></i>
+            </button>
+            <h4 id="modalCostosTitulo" class="text-center">Costos del periodo</h4>
+            <hr>
+            <div id="modalCostosContenido" style="max-height:400px; overflow-y:auto;">
+                <ul id="listaCostos" class="list-group">
+                    <!-- Los costos se insertarán dinámicamente -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.querySelectorAll(".ver-costos").forEach(btn => {
+        btn.addEventListener("click", function() {
+            const modal = document.getElementById("modalCostos");
+            const titulo = document.getElementById("modalCostosTitulo");
+            const lista = document.getElementById("listaCostos");
+
+            const periodoNombre = this.dataset.periodoNombre;
+            const costos = JSON.parse(this.dataset.costos);
+
+            titulo.textContent = "Costos del periodo: " + periodoNombre;
+            lista.innerHTML = "";
+
+            if (costos.length === 0) {
+                lista.innerHTML = "<li class=\\"list-group-item text-center\\">No hay costos registrados para este periodo.</li>";
+            } else {
+                costos.forEach(c => {
+                    let fecha = c.cost_date ? " (Fecha: " + c.cost_date + ")" : "";
+                    let precio = c.price !== null ? "$ " + c.price : "Sin precio";
+                    let desc = c.cost_description || "Sin descripción";
+                    let item = document.createElement("li");
+                    item.className = "list-group-item d-flex justify-content-between align-items-center";
+                    item.innerHTML = "<span><strong>" + desc + "</strong>" + fecha + "</span><span class=\\"badge badge-primary badge-pill\\">" + precio + "</span>";
+                    lista.appendChild(item);
+                });
+            }
+
+            modal.style.display = "block";
+        });
+    });
+
+    // Cerrar modal al hacer clic fuera del contenido
+    document.getElementById("modalCostos").addEventListener("click", function(e) {
+        if (e.target === this) {
+            this.style.display = "none";
+        }
+    });
+    </script>';
+
+    return $tabla;
+}
+        
+        
+        
+        //para seccion list o period course list, trae los datos para ligar la vista con course list
+    public function obtener_curso_por_id_controlador(int $id): array{
+        $token = $_SESSION['auth_access_token'] ?? null;
+        if (!$token) {
+            return ['ok' => false, 'message' => 'Sesión no disponible'];
+        }
+        return periodoModelo::obtener_curso_supabase($id, $token);
+    }
+                
+        //para seccion list o period course list, trae los datos para ligar la vista con period list
+    public function obtener_periodo_por_id_controlador(int $id): array{
+        $token = $_SESSION['auth_access_token'] ?? null;
+        if (!$token) {
+            return ['ok' => false, 'message' => 'Sesión no disponible'];
+        }
+        return periodoModelo::obtener_periodo_supabase($id, $token);
+    }
+        
+        
+        //archiva solo periodos sin inscritos, osea solo period, period course y section sin estudiantes, 
+    public function archivar_periodo_controlador(): string
+    {
+        try {
+            $idEnc = $_POST['periodo_id_archive'] ?? '';
+            $idReal = mainModel::decryption($idEnc);
+            $idReal = (int) $idReal;
+            if ($idReal <= 0) {
+                return json_encode(mainModel::generarAlertaSimple('ID inválido', 'error', 'simple'));
+            }
+
+            $token = $_SESSION['auth_access_token'] ?? null;
+            if (!$token) {
+                return json_encode(mainModel::generarAlertaSimple('Sesión no disponible', 'error', 'simple'));
+            }
+
+            $resultado = periodoModelo::archivar_periodo_cascada_supabase($idReal, $token);
+
+            if ($resultado['ok'] && ($resultado['data']['ok'] ?? false) === true) {
+                return json_encode(mainModel::generarAlertaSimple('Periodo archivado correctamente', 'success', 'recargar'));
+            } else {
+                $mensaje = $resultado['data']['error'] ?? $resultado['message'] ?? 'Error desconocido';
+                return json_encode(mainModel::generarAlertaSimple('Error al archivar: ' . $mensaje, 'error', 'simple'));
+            }
+        } catch (Exception $e) {
+            return json_encode(mainModel::generarAlertaSimple('Error: ' . $e->getMessage(), 'error', 'simple'));
+        }
+    }
+        
+  //restaura el period con sus period course y sections si no hay un periodo del mismo, tipo y cuyo rango de fechas coincida en al menos 1 dia con el del periodo archivado      
+    public function restaurar_periodo_controlador(): string{
+        try {
+            $idEnc = $_POST['periodo_id_restore'] ?? '';
+            $idReal = mainModel::decryption($idEnc);
+            $idReal = (int) $idReal;
+            if ($idReal <= 0) {
+                return json_encode(mainModel::generarAlertaSimple('ID inválido', 'error', 'simple'));
+            }
+
+            $token = $_SESSION['auth_access_token'] ?? null;
+            if (!$token) {
+                return json_encode(mainModel::generarAlertaSimple('Sesión no disponible', 'error', 'simple'));
+            }
+
+            $resultado = periodoModelo::restaurar_periodo_cascada_supabase($idReal, $token);
+
+            if ($resultado['ok'] && ($resultado['data']['ok'] ?? false) === true) {
+                return json_encode(mainModel::generarAlertaSimple('Periodo restaurado correctamente', 'success', 'recargar'));
+            } else {
+                $mensaje = $resultado['data']['error'] ?? $resultado['message'] ?? 'Error desconocido';
+                return json_encode(mainModel::generarAlertaSimple('Error al restaurar: ' . $mensaje, 'error', 'simple'));
+            }
+        } catch (Exception $e) {
+            return json_encode(mainModel::generarAlertaSimple('Error: ' . $e->getMessage(), 'error', 'simple'));
+        }
+    }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        /*-----------------------------------------------seguimos con period course--------------------------------------------------------*/
+        
+/**
+ * Paginador de period_course (cursos asignados a periodos)
+ * 
+ * @param int    $pagina            Número de página actual
+ * @param int    $registros         Registros por página
+ * @param string $vista             Nombre de la vista (para enlaces)
+ * @param string $busqueda_periodo  Filtro: nombre del periodo (ILIKE)
+ * @param string $busqueda_curso    Filtro: nombre del curso (ILIKE)
+ * @param int    $state             1 = activos, 0 = archivados
+ * @return string HTML de la tabla con paginador y modal
+ */
+    public function paginador_period_course_controlador($pagina,$registros,$vista,$busqueda_periodo,$busqueda_curso,$state = 1, $course_id = null, $period_id = null) {
+        // Sanitización y validación de parámetros
+        $pagina = max(1, (int) $pagina);
+        $registros = max(1, (int) $registros);
+        $token = $_SESSION['auth_access_token'] ?? null;
+
+        if (!$token) {
+            return '<div class="alert alert-danger">La sesión de Supabase no está disponible.</div>';
+        }
+
+        // Construir array de filtros desde GET
+        $filtros = [
+            'busqueda_periodo' => trim($busqueda_periodo) ?: null,
+            'busqueda_curso'   => trim($busqueda_curso) ?: null,
+            'id_period_course' => isset($_GET['filtro_id']) && $_GET['filtro_id'] !== '' ? (int) $_GET['filtro_id'] : null,
+            'estado_periodo'   => trim($_GET['filtro_estado'] ?? '') ?: null,
+            'orden'            => $_GET['orden'] ?? 'periodo_desc',
+            'state'            => (int) $state,
+            'course_id'        => $course_id,  
+            'period_id'        => $period_id,  
+        ];
+
+        // Llamar al modelo (RPC en Supabase)
+        $resultado = periodoModelo::listar_period_course_resumen_supabase(
+            $filtros,
+            $token,
+            $registros,
+            ($pagina - 1) * $registros
+        );
+
+        if (!$resultado['ok']) {
+            return '<div class="alert alert-danger">No se pudo cargar la lista de period‑cursos.</div>';
+        }
+
+        // Extraer datos y total
+        $items = $resultado['data']['data'] ?? [];
+        $total = (int) ($resultado['data']['total'] ?? 0);
+        $paginas = max(1, (int) ceil($total / $registros));
+
+        // Datos del usuario (cargo, carpeta)
+        $cargo = (int) ($_SESSION['cargo_spm'] ?? 0);
+        $carpetas = [
+            1 => 'admin',
+            2 => 'Control de estudio',
+            3 => 'administrador de pagos',
+            4 => 'Supervisor de cursos',
+            5 => 'Estudiante'
+        ];
+        $carpeta = $carpetas[$cargo] ?? 'admin';
+        $vistaCompleta = urlencode($carpeta) . '/' . urlencode($vista);
+
+        // ============================================================
+        // CONSTRUCCIÓN DE LA TABLA HTML
+        // ============================================================
+        $tabla = '<div class="table-responsive">';
+        $tabla .= '<table class="table table-dark table-sm table-hover">';
+        $tabla .= '<thead><tr class="text-center roboto-medium">';
+        $tabla .= '<th>Periodo</th>';
+        $tabla .= '<th>Curso</th>';
+        $tabla .= '<th>Period‑Course ID</th>';
+        $tabla .= '<th>Tipo</th>';
+        $tabla .= '<th>Fechas</th>';
+        $tabla .= '<th>Estado</th>';
+        $tabla .= '<th>Secciones</th>';  
+       
+        if($state==1){$tabla .= '<th>Crear sección</th>';}
+        
+        if (in_array($cargo, [1, 4], true)) {
+            $tabla .= '<th>Acciones</th>';
+        }
+        $tabla .= '</tr></thead><tbody>';
+
+        // ============================================================
+        // RENDERIZADO DE FILAS
+        // ============================================================
+        if ($total > 0) {
+            $regInicio = ($pagina - 1) * $registros + 1;
+            foreach ($items as $item) {
+                // Extraer datos
+                $pcId = (int) $item['period_course_id'];
+                $periodId = $item['period_id'];
+                $periodName = htmlspecialchars($item['period_name'] ?? '', ENT_QUOTES, 'UTF-8');
+                $periodType = htmlspecialchars($item['period_type'] ?? '', ENT_QUOTES, 'UTF-8');
+                $periodState = htmlspecialchars($item['period_current_state'] ?? '', ENT_QUOTES, 'UTF-8');
+                $startDate = htmlspecialchars($item['period_start_date'] ?? '', ENT_QUOTES, 'UTF-8');
+                $endDate = htmlspecialchars($item['period_end_date'] ?? '', ENT_QUOTES, 'UTF-8');
+                $courseId = $item['course_id'];
+                $courseName = htmlspecialchars($item['course_name'] ?? '', ENT_QUOTES, 'UTF-8');
+                $sectionsCount = (int) ($item['sections_count'] ?? 0);
+                $encryptedPcId = mainModel::encryption($pcId);
+
+                // Fila
+                $tabla .= '<tr class="text-center">';
+                $tabla .= '<td>' . $periodId . ' / ' . $periodName . '</td>';
+                $tabla .= '<td>' . $courseId . ' / ' . $courseName . '</td>';
+                $tabla .= '<td>' . $pcId . '</td>';
+                $tabla .= '<td>' . $periodType . '</td>';
+                $tabla .= '<td>' . $startDate . ' / ' . $endDate . '</td>';
+                $tabla .= '<td><span class="badge ' . $this->getEstadoBadgeClass($periodState) . '">' . $periodState . '</span></td>';
+
+                // Botón "Ver secciones" (dispara el modal)
+                if($state==1){
+                    $consultarseccionesdestino = 'seccion-consult';
+                	$archivar="0";
+				}
+                if($state==0){
+                    $consultarseccionesdestino = 'seccion-consult-archived';
+                    $archivar="1";
+				}
+                $tabla .= '<td>
+                    <button type="button" class="btn btn-secondary btn-sm ver-secciones" 
+                            data-id="' . $pcId . '" 
+                            data-nombre="' . $courseName . '" 
+                            data-carpeta="' . $carpeta . '"
+                            data-vista="' . $consultarseccionesdestino . '"
+                            data-archivadas="' . $archivar . '">
+                        <i class="fas fa-eye"></i> (' . $sectionsCount . ')
+                    </button>
+                </td>';
+
+        	     if($state==1){
+                    // Botón "Crear sección"
+                    $tabla .= '<td>
+                        <a href="' . SERVERURL . 'index.php?views=' . urlencode($carpeta) . '/seccion-new&curso_vigente=' . $pcId . '" 
+                           class="btn btn-success btn-sm" title="Crear sección">
+                            <i class="fas fa-plus"></i>
+                        </a>
+                    </td>';
+    	        }
+	
+                // Botones de Archivar / Restaurar (solo admin y supervisor)
+                if (in_array($cargo, [1, 4], true)) {
+                    $tabla .= '<td>';
+                    if ($state == 1) {
+                        // Activo → Mostrar botón Archivar
+                        $tabla .= '
+                            <form class="FormularioAjax" action="' . SERVERURL . 'ajax/periodoAjax.php" method="POST" data-form="delete" data-entity="period_course" autocomplete="off">
+                                <input type="hidden" name="period_course_id_archive" value="' . $encryptedPcId . '">
+                                <button type="submit" class="btn btn-warning btn-sm" title="Archivar">
+                                    <i class="fas fa-archive"></i>
+                                </button>
+                            </form>
+                        ';
+                    } else {
+                        // Archivado → Mostrar botón Restaurar
+                        $tabla .= '
+                            <form class="FormularioAjax" action="' . SERVERURL . 'ajax/periodoAjax.php" method="POST" data-form="restore" data-entity="period_course" autocomplete="off">
+                                <input type="hidden" name="period_course_id_restore" value="' . $encryptedPcId . '">
+                                <button type="submit" class="btn btn-info btn-sm" title="Restaurar">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                            </form>
+                        ';
+                    }
+                    $tabla .= '</td>';
+                }
+
+                $tabla .= '</tr>';
+            }
+            $regFinal = $regInicio + count($items) - 1;
+        } else {
+            // No hay registros
+            $columnas = in_array($cargo, [1, 4]) ? 9 : 7;
+            $tabla .= '<tr class="text-center"><td colspan="' . $columnas . '">No hay period‑cursos registrados.</td></tr>';
+        }
+
+        $tabla .= '</tbody></table></div>';
+
+        // ============================================================
+        // PAGINADOR
+        // ============================================================
+        if ($total > 0) {
+            $tabla .= '<p class="text-right">Mostrando ' . $regInicio . ' al ' . $regFinal . ' de un total de ' . $total . '</p>';
+            $paramsGet = array_filter([
+                'busqueda_periodo' => $busqueda_periodo,
+                'busqueda_curso'   => $busqueda_curso,
+                'filtro_id'        => $_GET['filtro_id'] ?? '',
+                'filtro_estado'    => $_GET['filtro_estado'] ?? '',
+                'orden'            => $_GET['orden'] ?? '',
+            ]);
+            $queryString = http_build_query($paramsGet);
+            if ($queryString) {
+                $queryString = '&' . $queryString;
+            }
+            $tabla .= mainModel::paginador_tablas(
+                $pagina,
+                $paginas,
+                SERVERURL . 'index.php?views=' . $vistaCompleta . $queryString . '&page=',
+                7
+            );
+        }
+
+        // MODAL DE SECCIONES (reutilizando la función existente)
+        $tabla .= mainModel::generar_modal_secciones_js('seccion-consult');
+
+        return $tabla;
+    }
+
+    /**
+     * Helper para asignar clase CSS según el estado del periodo
+     */
+    private function getEstadoBadgeClass($estado)
+    {
+        return match ($estado) {
+            'Vigente'   => 'badge-success',
+            'Próximo'   => 'badge-primary',
+            'Terminado' => 'badge-danger',
+            default     => 'badge-secondary',
+        };
+    }        
+        
+
+// para manejar el modal de secciones de period list        
+    public function obtener_secciones_ajax(): void
+    {
+        $periodCourseId = $_POST['curso_vigente_id'] ?? null;
+        if (!$periodCourseId) {
+            echo json_encode([]);
+            return;
+        }
+        $token = $_SESSION['auth_access_token'] ?? null;
+        if (!$token) {
+            echo json_encode([]);
+            return;
+        }
+        $soloArchivadas = isset($_POST['solo_archivadas']) && $_POST['solo_archivadas'] === '1';
+        $resultado = periodoModelo::obtener_secciones_por_period_course_supabase(
+            (int) $periodCourseId,
+            $soloArchivadas,
+            $token
+        );
+        echo json_encode($resultado['data'] ?? []);
+    }
+        
+        
+        
+        
+        
+    public function archivar_period_course_controlador(): string{
+        try {
+            $idEnc = $_POST['period_course_id_archive'] ?? '';
+            $idReal = mainModel::decryption($idEnc);
+            $idReal = (int) $idReal;
+            if ($idReal <= 0) {
+                return json_encode(mainModel::generarAlertaSimple('ID inválido', 'error', 'simple'));
+            }
+
+            $token = $_SESSION['auth_access_token'] ?? null;
+            if (!$token) {
+                return json_encode(mainModel::generarAlertaSimple('Sesión no disponible', 'error', 'simple'));
+            }
+
+            $resultado = periodoModelo::archivar_period_course_supabase($idReal, $token);
+
+            if ($resultado['ok'] && ($resultado['data']['ok'] ?? false) === true) {
+                return json_encode(mainModel::generarAlertaSimple(
+                    $resultado['data']['message'] ?? 'Period-course archivado correctamente',
+                    'success',
+                    'recargar'
+                ));
+            } else {
+                $mensaje = $resultado['data']['error'] ?? $resultado['message'] ?? 'Error desconocido';
+                return json_encode(mainModel::generarAlertaSimple('Error al archivar: ' . $mensaje, 'error', 'simple'));
+            }
+        } catch (Exception $e) {
+            return json_encode(mainModel::generarAlertaSimple('Error: ' . $e->getMessage(), 'error', 'simple'));
+        }
+    }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+/*--------------------------------------------------------a partir de aqui empieza las secciones-----------------------------------------------------------------*/
+
+
+    public function datos_para_nueva_seccion_controlador($periodCourseId): array{
+        $token = $_SESSION['auth_access_token'] ?? null;
+        if (!$token) {
+            return ['ok' => false, 'message' => 'Sesión no disponible'];
+        }
+
+        // Obtener period_course con periodo y curso
+        $resultadoPC = SupabaseApi::getWithToken('period_course', [
+            'select' => 'id,period_id,period(name,type,start_date,end_date),course_id,course(name,type)',
+            'id' => 'eq.' . $periodCourseId,
+        ], $token);
+        if (!$resultadoPC['ok'] || empty($resultadoPC['data'][0])) {
+            return ['ok' => false, 'message' => 'Period‑course no encontrado'];
+        }
+        $data = $resultadoPC['data'][0];
+        $period = $data['period'];
+        $course = $data['course'];
+
+        // Obtener siguiente letra para sección
+        $nextLetter = $this->obtener_siguiente_letra_seccion($periodCourseId, $token);
+        if ($nextLetter === null) {
+            return ['ok' => false, 'message' => 'No se pueden crear más secciones (máximo 26)'];
+        }
+
+        // Obtener profesores activos
+        //$profesores = $this->obtener_profesores_activos_para_select();
+      //  $profesores = $profesoresData['data'] ?? []; 
+            $profesoresData = $this->obtener_profesores_activos_para_select();
+    $profesores = $profesoresData['data'] ?? []; 
+
+        return [
+            'ok' => true,
+            'data' => $data,
+            'profesores' => $profesores,
+            'next_section_name' => $nextLetter,
+        ];
+    }
+        
+    public function obtener_siguiente_letra_seccion(int $periodCourseId, string $accessToken): ?string{
+        // Contar secciones existentes para este period_course_id
+        $resultado = SupabaseApi::getWithToken('section', [
+            'select' => 'count',
+            'period_course_id' => 'eq.' . $periodCourseId,
+            'state' => 'eq.1', // solo secciones activas
+        ], $accessToken);
+
+        if (!$resultado['ok']) {
+            return null;
+        }
+
+        $count = (int) ($resultado['data'][0]['count'] ?? 0);
+        if ($count >= 26) {
+            return null; // ya hay 26 secciones (A-Z)
+        }
+
+        $letras = range('A', 'Z');
+        return $letras[$count];
+    }
+        
+        
+
+    public function obtener_profesores_activos_para_select(): array{
+        $accessToken = $_SESSION['auth_access_token'] ?? null;
+        return periodoModelo::listar_profesores_supabase_para_periodo($accessToken);
+    }
+        
+/**
+ * Crea una nueva sección (sin encuentros)
+ * Espera: period_course_id, section_name, section_day, teacher_id
+ *
+        public function crear_seccion_controlador(): string{
+        try {
+            // 1. Verificar sesión
+            $token = $_SESSION['auth_access_token'] ?? null;
+            if (!$token) {
+                return json_encode(mainModel::generarAlertaSimple('Sesión no disponible', 'error', 'simple'));
+            }
+
+            // 2. Recibir y limpiar datos
+            $periodCourseId = (int) ($_POST['period_course_id'] ?? 0);
+            $sectionName = trim(mainModel::limpiar_cadena($_POST['section_name'] ?? ''));
+            $sectionDay = trim(mainModel::limpiar_cadena($_POST['section_day'] ?? ''));
+            $teacherId = (int) ($_POST['teacher_id'] ?? 0);
+
+            // 3. Validaciones básicas
+            if ($periodCourseId <= 0 || $sectionName === '' || $sectionDay === '' || $teacherId <= 0) {
+                return json_encode(mainModel::generarAlertaSimple('Todos los campos son obligatorios', 'error', 'simple'));
+            }
+
+            // 4. Validar que la letra de sección aún esté disponible (seguridad)
+            $nextLetter = $this->obtener_siguiente_letra_seccion($periodCourseId, $token);
+            if ($nextLetter === null || $nextLetter !== $sectionName) {
+                return json_encode(mainModel::generarAlertaSimple('El nombre de sección ya no está disponible', 'error', 'simple'));
+            }
+
+            // 5. Preparar datos para la inserción
+            $datos = [
+                'period_course_id' => $periodCourseId,
+                'name' => $sectionName,
+                'section_day' => $sectionDay,
+                'teacher_id' => $teacherId,
+                'state' => 1, // activa por defecto
+            ];
+
+            // 6. Llamar al modelo para crear la sección
+            $resultado = periodoModelo::crear_seccion_supabase($datos, $token);
+
+            // 7. Manejar respuesta
+            if ($resultado['ok'] && !empty($resultado['data'])) {
+                return json_encode(mainModel::generarAlertaSimple('Sección creada exitosamente', 'success', 'recargar'));
+            } else {
+                $mensaje = $resultado['message'] ?? 'Error desconocido';
+                return json_encode(mainModel::generarAlertaSimple('Error al crear sección: ' . $mensaje, 'error', 'simple'));
+            }
+        } catch (Exception $e) {
+            return json_encode(mainModel::generarAlertaSimple('Error: ' . $e->getMessage(), 'error', 'simple'));
+        }
+    }*/
+    public function crear_seccion_controlador(): string{
+        try {
+            $token = $_SESSION['auth_access_token'] ?? null;
+            if (!$token) {
+                return json_encode(mainModel::generarAlertaSimple('Sesión no disponible', 'error', 'simple'));
+            }
+
+            $periodCourseId = (int) ($_POST['period_course_id'] ?? 0);
+            $sectionName = trim(mainModel::limpiar_cadena($_POST['section_name'] ?? ''));
+            $sectionDay = trim(mainModel::limpiar_cadena($_POST['section_day'] ?? ''));
+            $teacherId = (int) ($_POST['teacher_id'] ?? 0);
+
+            if ($periodCourseId <= 0 || $sectionName === '' || $sectionDay === '' || $teacherId <= 0) {
+                return json_encode(mainModel::generarAlertaSimple('Todos los campos son obligatorios', 'error', 'simple'));
+            }
+
+            $estadoPeriodo = periodoModelo::obtener_estado_periodo_de_seccion_supabase(
+                $token,
+                $periodCourseId,
+                null
+            );
+            if ($estadoPeriodo === 'Terminado') {
+                return json_encode(mainModel::generarAlertaSimple(
+                    'No se puede crear una sección porque el periodo ya ha terminado.',
+                    'error', 'simple'
+                ));
+            }
+
+            // Verificar que la letra de sección aún esté disponible
+            $nextLetter = $this->obtener_siguiente_letra_seccion($periodCourseId, $token);
+            if ($nextLetter === null || $nextLetter !== $sectionName) {
+                return json_encode(mainModel::generarAlertaSimple('El nombre de sección ya no está disponible', 'error', 'simple'));
+            }
+
+            $datos = [
+                'period_course_id' => $periodCourseId,
+                'name' => $sectionName,
+                'section_day' => $sectionDay,
+                'teacher_id' => $teacherId,
+                'state' => 1,
+            ];
+
+            $resultado = periodoModelo::crear_seccion_supabase($datos, $token);
+
+            if ($resultado['ok'] && !empty($resultado['data'])) {
+                return json_encode(mainModel::generarAlertaSimple('Sección creada exitosamente', 'success', 'recargar'));
+            } else {
+                $mensaje = $resultado['message'] ?? 'Error desconocido';
+                return json_encode(mainModel::generarAlertaSimple('Error al crear sección: ' . $mensaje, 'error', 'simple'));
+            }
+        } catch (Exception $e) {
+            return json_encode(mainModel::generarAlertaSimple('Error: ' . $e->getMessage(), 'error', 'simple'));
+        }
+    }
+        
+        
+
+        
+/**
+ * Actualiza el profesor y el día de una sección.
+ * Espera: id_seccion_up, profesor_up, seccion_dia_up
+ *
+    public function actualizar_seccion_controlador(): string
+    {
+        try {
+            $token = $_SESSION['auth_access_token'] ?? null;
+            if (!$token) {
+                return json_encode(mainModel::generarAlertaSimple('Sesión no disponible', 'error', 'simple'));
+            }
+
+            $sectionId = (int) ($_POST['id_seccion_up'] ?? 0);
+            $teacherId = (int) ($_POST['profesor_up'] ?? 0);
+            $sectionDay = trim(mainModel::limpiar_cadena($_POST['seccion_dia_up'] ?? ''));
+
+            if ($sectionId <= 0 || $teacherId <= 0 || $sectionDay === '') {
+                return json_encode(mainModel::generarAlertaSimple('Todos los campos son obligatorios', 'error', 'simple'));
+            }
+
+            // Actualizar en Supabase
+            $resultado = SupabaseApi::patchWithToken('section', ['id' => 'eq.' . $sectionId], [
+                'teacher_id' => $teacherId,
+                'section_day' => $sectionDay,
+            ], $token);
+
+            if ($resultado['ok']) {
+                return json_encode(mainModel::generarAlertaSimple('Sección actualizada correctamente', 'success', 'recargar'));
+            } else {
+                $mensaje = $resultado['message'] ?? 'Error desconocido';
+                return json_encode(mainModel::generarAlertaSimple('Error al actualizar sección: ' . $mensaje, 'error', 'simple'));
+            }
+        } catch (Exception $e) {
+            return json_encode(mainModel::generarAlertaSimple('Error: ' . $e->getMessage(), 'error', 'simple'));
+        }
+    }*/
+    public function actualizar_seccion_controlador(): string{
+        try {
+            $token = $_SESSION['auth_access_token'] ?? null;
+            if (!$token) {
+                return json_encode(mainModel::generarAlertaSimple('Sesión no disponible', 'error', 'simple'));
+            }
+
+            $sectionId = (int) ($_POST['id_seccion_up'] ?? 0);
+            $teacherId = (int) ($_POST['profesor_up'] ?? 0);
+            $sectionDay = trim(mainModel::limpiar_cadena($_POST['seccion_dia_up'] ?? ''));
+
+            if ($sectionId <= 0 || $teacherId <= 0 || $sectionDay === '') {
+                return json_encode(mainModel::generarAlertaSimple('Todos los campos son obligatorios', 'error', 'simple'));
+            }
+
+            // 🔥 VALIDACIÓN: Verificar que el periodo NO esté Terminado
+            $estadoPeriodo = periodoModelo::obtener_estado_periodo_de_seccion_supabase(
+                $token,
+                0, // no tenemos period_course_id directamente
+                $sectionId
+            );
+            if ($estadoPeriodo === 'Terminado') {
+                return json_encode(mainModel::generarAlertaSimple(
+                    'No se puede actualizar la sección porque el periodo ya ha terminado.',
+                    'error', 'simple'
+                ));
+            }
+
+            $data = [
+                'teacher_id' => $teacherId,
+                'section_day' => $sectionDay,
+            ];
+
+            $resultado = periodoModelo::actualizar_seccion_supabase($sectionId, $data, $token);
+
+            if ($resultado['ok']) {
+                return json_encode(mainModel::generarAlertaSimple('Sección actualizada correctamente', 'success', 'recargar'));
+            } else {
+                $mensaje = $resultado['message'] ?? 'Error desconocido';
+                return json_encode(mainModel::generarAlertaSimple('Error al actualizar sección: ' . $mensaje, 'error', 'simple'));
+            }
+        } catch (Exception $e) {
+            return json_encode(mainModel::generarAlertaSimple('Error: ' . $e->getMessage(), 'error', 'simple'));
+        }
+    }
+        
+        
+
+    public function obtener_seccion_completa_controlador(int $sectionId): array
+    {
+        $token = $_SESSION['auth_access_token'] ?? null;
+        if (!$token) {
+            return ['ok' => false, 'message' => 'Sesión no disponible'];
+        }
+        return periodoModelo::obtener_seccion_completa_supabase($sectionId, $token);
+    }
+
+    public function obtener_evaluaciones_por_seccion_controlador(int $sectionId): array
+    {
+        $token = $_SESSION['auth_access_token'] ?? null;
+        if (!$token) {
+            return ['ok' => false, 'message' => 'Sesión no disponible'];
+        }
+        return periodoModelo::obtener_evaluaciones_por_seccion_supabase($sectionId, $token);
+    }
+
+    public function obtener_estudiantes_por_seccion_controlador(int $sectionId): array
+    {
+        $token = $_SESSION['auth_access_token'] ?? null;
+        if (!$token) {
+            return ['ok' => false, 'message' => 'Sesión no disponible'];
+        }
+        return periodoModelo::obtener_estudiantes_por_seccion_supabase($sectionId, $token);
+    }
+
+    public function obtener_puntajes_por_evaluacion_controlador(int $evaluationId): array
+    {
+        $token = $_SESSION['auth_access_token'] ?? null;
+        if (!$token) {
+            return ['ok' => false, 'message' => 'Sesión no disponible'];
+        }
+        return periodoModelo::obtener_puntajes_por_evaluacion_supabase($evaluationId, $token);
+    }
+
+    public function obtener_puntajes_por_seccion_controlador(int $sectionId): array
+    {
+        $token = $_SESSION['auth_access_token'] ?? null;
+        if (!$token) {
+            return ['ok' => false, 'message' => 'Sesión no disponible'];
+        }
+        return periodoModelo::obtener_puntajes_por_seccion_supabase($sectionId, $token);
+    }
+        
+
+
+/**
+ * Elimina una sección que no tenga inscritos. para casos donde haya una seccion que sobre
+ * Redirige a la lista de secciones archivadas (state=0).
+     */
+    public function eliminar_seccion_controlador(): string{
+        try {
+            // 1. Validar token de sesión
+            $token = $_SESSION['auth_access_token'] ?? null;
+            if (!$token) {
+                return json_encode(mainModel::generarAlertaSimple('Sesión no disponible', 'error', 'simple'));
+            }
+
+            // 2. Validar permisos (solo admin o supervisor)
+            $cargo = $_SESSION['cargo_spm'] ?? 0;
+            if (!in_array($cargo, [1, 4])) {
+                return json_encode(mainModel::generarAlertaSimple('No tienes permisos para eliminar secciones', 'error', 'simple'));
+            }
+
+            // 3. Obtener ID (puede ser encriptado o texto plano)
+            $id = $_POST['id_seccion_eliminar'] ?? '';
+            if (empty($id)) {
+                return json_encode(mainModel::generarAlertaSimple('ID no proporcionado', 'error', 'simple'));
+            }
+
+            // Determinar si está encriptado (si contiene caracteres no numéricos o es muy largo)
+            if (is_numeric($id)) {
+                $idReal = (int) $id;
+            } else {
+                $idReal = mainModel::decryption($id);
+                $idReal = (int) $idReal;
+            }
+
+            if ($idReal <= 0) {
+                return json_encode(mainModel::generarAlertaSimple('ID inválido', 'error', 'simple'));
+            }
+
+            // 4. Llamar al modelo (RPC)
+            $resultado = periodoModelo::eliminar_seccion_supabase($idReal, $token);
+
+            // 5. Procesar respuesta
+            if ($resultado['ok'] && ($resultado['data']['ok'] ?? false) === true) {
+                // Construir URL de redirección a la lista de secciones archivadas
+                $carpetas = [
+                    1 => 'admin',
+                    2 => 'Control de estudio',
+                    3 => 'administrador de pagos',
+                    4 => 'Supervisor de cursos',
+                    5 => 'Estudiante'
+                ];
+                $carpeta = $carpetas[$cargo] ?? 'admin';
+                $url = SERVERURL . 'index.php?views=' . urlencode($carpeta) . '/seccion-list';
+
+                return json_encode([
+                    'Alerta' => 'redireccionar',
+                    'Titulo' => 'Sección eliminada',
+                    'Texto' => 'La sección ha sido eliminada correctamente.',
+                    'Tipo' => 'success',
+                    'URL' => $url
+                ]);
+            } else {
+                $mensaje = $resultado['data']['error'] ?? $resultado['message'] ?? 'Error desconocido';
+                return json_encode(mainModel::generarAlertaSimple('Error al eliminar: ' . $mensaje, 'error', 'simple'));
+            }
+        } catch (Exception $e) {
+            return json_encode(mainModel::generarAlertaSimple('Error: ' . $e->getMessage(), 'error', 'simple'));
+        }
+    }
+
+
+        /**
+ * Obtiene todos los datos necesarios para la vista de consulta de sección.
+ * Reutiliza las funciones existentes del modelo y controlador.
+ * 
+ * @param int $periodCourseId ID del period_course.
+ * @param string $sectionLetter Letra de la sección (A, B, C, ...).
+ * @return array Con los datos de la sección, periodo, curso, profesor, evaluaciones activas y profesores para select.
+ */
+        public function obtener_datos_para_seccion_consulta(int $periodCourseId, string $sectionLetter): array
+        {
+            $token = $_SESSION['auth_access_token'] ?? null;
+            if (!$token) {
+                return ['ok' => false, 'message' => 'Sesión no disponible'];
+            }
+
+            // 1. Obtener sección con periodo, curso y profesor (relaciones)
+            $resultadoSeccion = periodoModelo::obtener_seccion_por_period_course_y_letra_supabase(
+                $periodCourseId,
+                $sectionLetter,
+                $token
+            );
+            if (!$resultadoSeccion['ok'] || empty($resultadoSeccion['data'][0])) {
+                return ['ok' => false, 'message' => 'Sección no encontrada'];
+            }
+            $seccion = $resultadoSeccion['data'][0];
+            $sectionId = $seccion['id'];
+
+            // 2. Obtener datos del profesor (si tiene asignado)
+            $teacher = null;
+            if (!empty($seccion['teacher_id'])) {
+                $resultadoTeacher = periodoModelo::obtener_profesor_por_id_supabase(
+                    $seccion['teacher_id'],
+                    $token
+                );
+                if ($resultadoTeacher['ok'] && !empty($resultadoTeacher['data'][0])) {
+                    $teacher = $resultadoTeacher['data'][0];
+                }
+            }
+
+            // 3. Obtener evaluaciones activas de la sección (para conteo y suma de porcentajes)
+            $resultadoEvals = periodoModelo::obtener_evaluaciones_por_seccion_supabase($sectionId, $token);
+            $evaluacionesActivas = [];
+            if ($resultadoEvals['ok']) {
+                foreach ($resultadoEvals['data'] as $eval) {
+                    if (isset($eval['state']) && $eval['state'] == 1) {
+                        $evaluacionesActivas[] = $eval;
+                    }
+                }
+            }
+            $evaluacionesCount = count($evaluacionesActivas);
+            $totalPorcentaje = 0;
+            foreach ($evaluacionesActivas as $eval) {
+                $totalPorcentaje += (float) ($eval['percentage'] ?? 0);
+            }
+
+            // 4. Obtener profesores para el select de modificación (usando función existente)
+            $profesoresResult = $this->obtener_todos_los_profesores_para_periodo_controlador();
+            $profesores = $profesoresResult['data'] ?? [];
+
+            // 5. Preparar respuesta
+            return [
+                'ok' => true,
+                'seccion' => $seccion,
+                'period' => $seccion['period_course']['period'] ?? [],
+                'course' => $seccion['period_course']['course'] ?? [],
+                'teacher' => $teacher,
+                'evaluaciones_count' => $evaluacionesCount,
+                'total_porcentaje' => $totalPorcentaje,
+                'profesores' => $profesores,
+                'periodCourseId' => $periodCourseId,
+                'sectionLetter' => $sectionLetter,
+            ];
+        }        
+
+
+        /**
+         * Controlador para transferir estudiantes entre secciones
+         * Espera POST: id_seccion_origen, id_seccion_destino (pueden ser encriptados)
+         */
+    public function transferir_estudiantes_seleccionados_controlador(): string
+    {
+        try {
+            $token = $_SESSION['auth_access_token'] ?? null;
+            if (!$token) {
+                return json_encode(mainModel::generarAlertaSimple('Sesión no disponible', 'error', 'simple'));
+            }
+
+            $cargo = $_SESSION['cargo_spm'] ?? 0;
+            if (!in_array($cargo, [1, 4])) {
+                return json_encode(mainModel::generarAlertaSimple('No tienes permisos', 'error', 'simple'));
+            }
+
+            $origen = $_POST['id_seccion_origen'] ?? '';
+            $destino = $_POST['id_seccion_destino'] ?? '';
+            $registrations = $_POST['registration_ids'] ?? [];
+
+            if (empty($origen) || empty($destino) || empty($registrations)) {
+                return json_encode(mainModel::generarAlertaSimple('Faltan datos', 'error', 'simple'));
+            }
+
+            // Desencriptar IDs
+            $origenId = is_numeric($origen) ? (int) $origen : (int) mainModel::decryption($origen);
+            $destinoId = is_numeric($destino) ? (int) $destino : (int) mainModel::decryption($destino);
+
+            if ($origenId <= 0 || $destinoId <= 0) {
+                return json_encode(mainModel::generarAlertaSimple('IDs inválidos', 'error', 'simple'));
+            }
+
+            // Asegurar que registration_ids sea un array de enteros
+            $regIds = array_map('intval', $registrations);
+
+            $resultado = periodoModelo::transferir_estudiantes_seleccionados_supabase(
+                $origenId,
+                $destinoId,
+                $regIds,
+                $token
+            );
+
+            if ($resultado['ok'] && ($resultado['data']['ok'] ?? false) === true) {
+                $transferidos = $resultado['data']['transferidos'] ?? 0;
+                return json_encode(mainModel::generarAlertaSimple(
+                    $transferidos . ' estudiante(s) transferido(s)',
+                    'success',
+                    'recargar'
+                ));
+            } else {
+                $mensaje = $resultado['data']['error'] ?? $resultado['message'] ?? 'Error desconocido';
+                return json_encode(mainModel::generarAlertaSimple('Error: ' . $mensaje, 'error', 'simple'));
+            }
+        } catch (Exception $e) {
+            return json_encode(mainModel::generarAlertaSimple('Error: ' . $e->getMessage(), 'error', 'simple'));
+        }
+    }        
+    //ligado    
+    public function obtener_datos_transferencia_ajax(): void{
+        $sectionId = $_POST['section_id'] ?? 0;
+//var_dump($sectionId);die();
+        if (!$sectionId) {
+            echo json_encode(['ok' => false, 'error' => 'ID de sección no proporcionado']);
+            return;
+        }
+        $token = $_SESSION['auth_access_token'] ?? null;
+        if (!$token) {
+            echo json_encode(['ok' => false, 'error' => 'Sesión no disponible']);
+            return;
+        }
+        $resultado = periodoModelo::obtener_datos_transferencia_supabase((int) $sectionId, $token);
+        echo json_encode($resultado);
+    }
+/*----------------------------------------------a partir de aqui empiezan las evaluaciones--------------------------------------------------*/
+
+    /**
+     * Obtiene todos los datos necesarios para la vista de nueva evaluación.
+     * Incluye: sección, periodo, evaluaciones activas, estudiantes y datos de validación.
+     */
+    public function datos_para_evaluacion_new(int $periodCourseId, string $sectionLetter): array
+    {
+        $token = $_SESSION['auth_access_token'] ?? null;
+        if (!$token) {
+            return ['ok' => false, 'message' => 'Sesión no disponible'];
+        }
+
+        // 1. Obtener sección con periodo y curso
+        $seccionResult = periodoModelo::obtener_seccion_por_period_course_y_letra_supabase(
+            $periodCourseId,
+            $sectionLetter,
+            $token
+        );
+        if (!$seccionResult['ok'] || empty($seccionResult['data'][0])) {
+            return ['ok' => false, 'message' => 'Sección no encontrada'];
+        }
+        $seccion = $seccionResult['data'][0];
+        $period = $seccion['period_course']['period'] ?? [];
+
+        $evaluacionesResult = periodoModelo::obtener_evaluaciones_por_seccion_supabase(
+            $seccion['id'],
+            $token
+        );
+        $evaluaciones = $evaluacionesResult['data'] ?? [];
+        $evaluacionesActivas = array_filter($evaluaciones, function($e) {
+            return isset($e['state']) && $e['state'] == 1;
+        });
+        $totalActivas = count($evaluacionesActivas);
+        $sumaPorcentajes = 0;
+        foreach ($evaluacionesActivas as $e) {
+            $sumaPorcentajes += (float) ($e['percentage'] ?? 0);
+        }
+        $porcentajeDisponible = max(0, 100 - $sumaPorcentajes);
+        $limiteAlcanzado = ($totalActivas >= 6);
+
+        /*$estudiantesResult = periodoModelo::obtener_estudiantes_por_seccion_supabase($seccion['id'],$token);*/
+        
+        $estudiantesResult = periodoModelo::obtener_estudiantes_por_seccion_supabase(
+            $seccion['id'],
+            9999, // límite grande para obtener todos
+            0,   // offset
+            $token,
+            true // solo activos
+        );
+        $estudiantes = $estudiantesResult['data'] ?? [];
+
+        return [
+            'ok' => true,
+            'seccion' => $seccion,
+            'period' => $period,
+            'evaluaciones_activas' => $evaluacionesActivas,
+            'total_evaluaciones_activas' => $totalActivas,
+            'suma_porcentajes' => $sumaPorcentajes,
+            'porcentaje_disponible' => $porcentajeDisponible,
+            'limite_alcanzado' => $limiteAlcanzado,
+            'estudiantes' => $estudiantes,
+            'periodCourseId' => $periodCourseId,
+            'sectionLetter' => $sectionLetter,
+        ];
+    }
+        
+        
+        
+        
+        
+        
+
+    public function agregar_evaluacion_controlador(): void{
+        try {
+            $sectionId = (int) ($_POST['id_seccion'] ?? 0);
+            $name = trim(mainModel::limpiar_cadena($_POST['tipo_evaluacion'] ?? ''));
+            $objective = (float) ($_POST['obj'] ?? 0);
+            $percentage = (int) ($_POST['porcentaje'] ?? 0);
+            $evaluationDate = $_POST['fecha_evaluacion'] ?? '';
+
+            if ($sectionId <= 0 || $name === '' || $objective <= 0 || $percentage <= 0 || $evaluationDate === '') {
+                echo json_encode(mainModel::generarAlertaSimple('Todos los campos son obligatorios', 'error', 'simple'));
+                return;
+            }
+
+            if ($percentage < 1 || $percentage > 100) {
+                echo json_encode(mainModel::generarAlertaSimple('El porcentaje debe estar entre 1 y 100', 'error', 'simple'));
+                return;
+            }
+
+            $token = $_SESSION['auth_access_token'] ?? null;
+            if (!$token) {
+                echo json_encode(mainModel::generarAlertaSimple('Sesión no disponible', 'error', 'simple'));
+                return;
+            }
+
+            $puntajes = [];
+            foreach ($_POST as $key => $value) {
+                if (strpos($key, 'puntaje_') === 0) {
+                    $registrationId = (int) str_replace('puntaje_', '', $key);
+                    if ($registrationId > 0) {
+                        $score = $value === 'NP' ? null : (float) $value;
+                        $puntajes[] = [
+                            'registration_id' => $registrationId,
+                            'score' => $score
+                        ];
+                    }
+                }
+            }
+
+            if (empty($puntajes)) {
+                echo json_encode(mainModel::generarAlertaSimple('No se recibieron puntajes de estudiantes (o están mal formados)', 'error', 'simple'));
+                return;
+            }
+
+            $puntajesJson = json_encode($puntajes);
+            //var_dump($puntajesJson);die();
+            if ($puntajesJson === false || $puntajesJson === 'null') {
+                echo json_encode(mainModel::generarAlertaSimple('Error al codificar los puntajes', 'error', 'simple'));
+                return;
+            }
+
+            // 4. Llamar a la RPC
+            $datos = [
+                'section_id' => $sectionId,
+                'evaluation_type' => $name,
+                'objective' => $objective,
+                'percentage' => $percentage,
+                'evaluation_date' => $evaluationDate,
+                'puntajes' => $puntajes
+            ];
+            //var_dump($datos);die();
+              //  'puntajes' => $puntajesJson
+
+            $resultado = periodoModelo::crear_evaluacion_con_puntajes_supabase($datos, $token);
+
+
+            if ($resultado['ok'] && ($resultado['data']['ok'] ?? false) === true) {
+      
+                echo json_encode(mainModel::generarAlertaSimple('Evaluación registrada correctamente', 'success', 'recargar'));
+            } else {
+                $mensaje = $resultado['data']['error'] ?? $resultado['message'] ?? 'Error desconocido';
+                echo json_encode(mainModel::generarAlertaSimple('Error al crear evaluación: ' . $mensaje, 'error', 'simple'));
+            }
+        } catch (Exception $e) {
+            echo json_encode(mainModel::generarAlertaSimple('Error: ' . $e->getMessage(), 'error', 'simple'));
+        }
+    }
+        
+        
+
+
+    public function actualizar_evaluacion_controlador(): void
+    {
+        try {
+            $token = $_SESSION['auth_access_token'] ?? null;
+            if (!$token) {
+                echo json_encode(mainModel::generarAlertaSimple('Sesión no disponible', 'error', 'simple'));
+                return;
+            }
+
+            $evaluationId = (int) ($_POST['evaluacion_id_up'] ?? 0);
+            $sectionId = (int) ($_POST['id_seccion'] ?? 0);
+            $name = trim(mainModel::limpiar_cadena($_POST['tipo_evaluacion'] ?? ''));
+            $objective = (float) ($_POST['obj'] ?? 0);
+            $percentage = (int) ($_POST['porcentaje'] ?? 0);
+            $evaluationDate = $_POST['fecha_evaluacion'] ?? '';
+
+            if ($evaluationId <= 0 || $sectionId <= 0 || $name === '' || $objective <= 0 || $percentage <= 0 || $evaluationDate === '') {
+                echo json_encode(mainModel::generarAlertaSimple('Todos los campos son obligatorios', 'error', 'simple'));
+                return;
+            }
+
+            if ($percentage < 1 || $percentage > 100) {
+                echo json_encode(mainModel::generarAlertaSimple('El porcentaje debe estar entre 1 y 100', 'error', 'simple'));
+                return;
+            }
+
+            // Preparar puntajes (todos los estudiantes de la sección)
+            $puntajes = [];
+            foreach ($_POST as $key => $value) {
+                if (strpos($key, 'puntaje_') === 0) {
+                    $registrationId = (int) str_replace('puntaje_', '', $key);
+                    if ($registrationId > 0) {
+                        $score = $value === 'NP' ? null : (float) $value;
+                        $puntajes[] = [
+                            'registration_id' => $registrationId,
+                            'score' => $score
+                        ];
+                    }
+                }
+            }
+
+            if (empty($puntajes)) {
+                echo json_encode(mainModel::generarAlertaSimple('No se recibieron puntajes de estudiantes', 'error', 'simple'));
+                return;
+            }
+
+            $datos = [
+                'evaluation_id' => $evaluationId,
+                'evaluation_type' => $name,
+                'objective' => $objective,
+                'percentage' => $percentage,
+                'evaluation_date' => $evaluationDate,
+                'puntajes' => $puntajes,
+            ];
+
+            $resultado = periodoModelo::actualizar_evaluacion_con_puntajes_supabase($datos, $token);
+
+            if ($resultado['ok'] && ($resultado['data']['ok'] ?? false) === true) {
+                echo json_encode(mainModel::generarAlertaSimple('Evaluación actualizada correctamente', 'success', 'recargar'));
+            } else {
+                $mensaje = $resultado['data']['error'] ?? $resultado['message'] ?? 'Error desconocido';
+                echo json_encode(mainModel::generarAlertaSimple('Error al actualizar: ' . $mensaje, 'error', 'simple'));
+            }
+        } catch (Exception $e) {
+            echo json_encode(mainModel::generarAlertaSimple('Error: ' . $e->getMessage(), 'error', 'simple'));
+        }
+    }
+        
+        
+    public function datos_para_evaluacion_update_controlador(int $evaluationId): array
+    {
+        $token = $_SESSION['auth_access_token'] ?? null;
+        if (!$token) {
+            return ['ok' => false, 'message' => 'Sesión no disponible'];
+        }
+        return periodoModelo::obtener_evaluacion_para_update_supabase($evaluationId, $token);
+    }
+        
+        
+        
+        
+        
+        
+        
+
+
+    /**
+     * Paginador de evaluaciones (activas o archivadas)
+     * @param int $pagina Número de página
+     * @param int $registros Registros por página
+     * @param int $sectionId ID de la sección
+     * @param int $state 1: activas, 0: archivadas
+     */
+    public function paginador_evaluaciones_controlador(
+        int $pagina,
+        int $registros,
+        int $sectionId,
+        int $state = 1
+    ): string {
+        $token = $_SESSION['auth_access_token'] ?? null;
+        if (!$token) {
+            return '<div class="alert alert-danger">Sesión no disponible.</div>';
+        }
+
+        $limit = max(1, $registros);
+        $offset = ($pagina - 1) * $limit;
+
+        $resultado = periodoModelo::listar_evaluaciones_por_seccion_supabase(
+            $sectionId,
+            $limit,
+            $offset,
+            $token,
+            $state
+        );
+        if (!$resultado['ok']) {
+            return '<div class="alert alert-danger">Error al cargar evaluaciones.</div>';
+        }
+        $evaluaciones = $resultado['data'] ?? [];
+
+        $totalResult = periodoModelo::contar_evaluaciones_por_seccion_supabase(
+            $sectionId,
+            $token,
+            $state
+        );
+        $total = $totalResult['ok'] ? (int) ($totalResult['data'][0]['count'] ?? 0) : 0;
+        $paginas = max(1, ceil($total / $limit));
+
+        // Datos del usuario (cargo, carpeta)
+        $cargo = $_SESSION['cargo_spm'] ?? 0;
+        $carpetas = [
+            1 => 'admin',
+            2 => 'Control de estudio',
+            3 => 'administrador de pagos',
+            4 => 'Supervisor de cursos',
+            5 => 'Estudiante'
+        ];
+        $carpeta = $carpetas[$cargo] ?? 'admin';
+
+        
+        //<th>Puntajes</th>
+        // Construir tabla
+        $html = '<div class="table-responsive"><table class="table table-dark table-sm"><thead><tr class="text-center">';
+        $html .= '<th>ID</th><th>Tipo</th><th>Objetivo</th><th>Porcentaje</th><th>Fecha</th>';
+        if (in_array($cargo, [1, 2])) {
+            $html .= '<th>Acciones</th>';
+        }
+        $html .= '</tr></thead><tbody>';
+
+        if ($total > 0) {
+            $regInicio = $offset + 1;
+            foreach ($evaluaciones as $eval) {
+                $id = $eval['id'];
+                $encId = mainModel::encryption($id);
+                $html .= '<tr class="text-center">';
+                $html .= '<td>' . $id . '</td>';
+                $html .= '<td>' . htmlspecialchars($eval['evaluation_type'] ?? '') . '</td>';
+                $html .= '<td>' . htmlspecialchars($eval['objective'] ?? '') . '</td>';
+                $html .= '<td>' . ($eval['percentage'] ?? 0) . '%</td>';
+                $html .= '<td>' . ($eval['evaluation_date'] ?? '') . '</td>';
+                // Botón para abrir modal de puntajes
+                
+                // Dentro del bucle de evaluaciones
+                /*
+                $html .= '<td>
+                    <button type="button" class="btn btn-info btn-sm ver-puntajes" 
+                            data-evaluacion="' . $id . '"
+                            data-nombre="' . htmlspecialchars($eval['evaluation_type'] ?? '') . '"
+                            data-state="' . $state . '"> 
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </td>';*/
+                
+                // Acciones según estado
+                if (in_array($cargo, [1, 2])) {
+                    $html .= '<td>';
+                    if ($state == 1) {
+                        // Activa → botones de Editar y Archivar
+                        $html .= '
+                            <a href="' . SERVERURL . 'index.php?views=' . urlencode($carpeta) . '/evaluacion-update&evaluacion_id_up=' . $encId . '" class="btn btn-success btn-sm" title="Actualizar"><i class="fas fa-edit"></i></a>
+                            <form class="FormularioAjax d-inline" action="' . SERVERURL . 'ajax/periodoAjax.php" method="POST" data-form="delete" data-entity="evaluacion">
+                                <input type="hidden" name="id_evaluacion_archivar" value="' . $encId . '">
+                                <button type="submit" class="btn btn-warning btn-sm" title="archivar"><i class="fas fa-archive"></i></button>
+                            </form>
+                        ';
+                    } else {
+                        // Archivada → solo botón Restaurar
+                        $html .= '
+                            <form class="FormularioAjax d-inline" action="' . SERVERURL . 'ajax/periodoAjax.php" method="POST" data-form="restore" data-entity="evaluacion">
+                                <input type="hidden" name="id_evaluacion_restaurar" value="' . $encId . '">
+                                <button type="submit" class="btn btn-info btn-sm" title="Restaurar"><i class="fas fa-undo"></i></button>
+                            </form>
+                            <form class="FormularioAjax d-inline" action="<?php echo SERVERURL; ?>ajax/periodoAjax.php" method="POST" data-form="delete" data-entity="seccion_archivada" autocomplete="off">
+                                <input type="hidden" name="id_seccion_eliminar" value="<?php echo $seccionId; ?>">
+                                <button type="submit" class="btn btn-sm btn-danger" title="Eliminar sección">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        ';
+                    }
+                    $html .= '</td>';
+                }
+                $html .= '</tr>';
+            }
+            $regFinal = $regInicio + count($evaluaciones) - 1;
+        } else {
+            $colspan = in_array($cargo, [1, 2]) ? 7 : 6;
+            $html .= '<tr><td colspan="' . $colspan . '" class="text-center">No hay evaluaciones registradas.</td></tr>';
+        }
+
+        $html .= '</tbody></table></div>';
+
+        // Paginador
+        if ($total > 0) {
+            $html .= '<p class="text-right">Mostrando ' . $regInicio . ' al ' . $regFinal . ' de ' . $total . '</p>';
+            $url = SERVERURL . 'index.php?views=' . urlencode($carpeta) . '/seccion-consult&archivados=' . $state . '&curso_vigente=' . ($_GET['curso_vigente'] ?? 0) . '&seccion=' . ($_GET['seccion'] ?? '') . '&eval_page=';
+            $html .= mainModel::paginador_tablas($pagina, $paginas, $url, 7);
+        }
+
+        /*
+        // Agregar el modal genérico (se añade una sola vez)
+        $html .= mainModel::generar_modal_tabla(
+            'modalPuntajes',
+            'Puntajes de la evaluación',
+            ['CI', 'Nombre', 'Apellido', 'Puntaje'],
+            'cargar_puntajes'
+        );*/
+
+        return $html;
+    }        
+        
+
+
+    /**
+     * Paginador de estudiantes con sus puntajes en evaluaciones (activas o archivadas).
+     * @param int $pagina Número de página
+     * @param int $registros Registros por página
+     * @param int $sectionId ID de la sección
+     * @param int $state 1: evaluaciones activas, 0: archivadas
+     */
+    public function paginador_estudiantes_con_puntajes_controlador(
+        int $pagina,
+        int $registros,
+        int $sectionId,
+        int $state = 1
+    ): string {
+        $token = $_SESSION['auth_access_token'] ?? null;
+        if (!$token) {
+            return '<div class="alert alert-danger">Sesión no disponible.</div>';
+        }
+
+        $limit = max(1, $registros);
+        $offset = ($pagina - 1) * $limit;
+
+        // Llamar a la RPC
+        $resultado = periodoModelo::listar_estudiantes_seccion_consulta_supabase(
+            $sectionId,
+            $limit,
+            $offset,
+            $state,
+            $token
+        );
+
+        if (!$resultado['ok'] || !isset($resultado['data']['ok']) || !$resultado['data']['ok']) {
+            return '<div class="alert alert-danger">Error al cargar datos: ' . ($resultado['data']['error'] ?? '') . '</div>';
+        }
+
+        $data = $resultado['data'];
+        $estudiantes = $data['estudiantes'] ?? [];
+        $evaluaciones = $data['evaluaciones'] ?? [];
+        $puntajes = $data['puntajes'] ?? [];
+        $total = (int) ($data['total_estudiantes'] ?? 0);
+        $paginas = max(1, ceil($total / $limit));
+
+        // Construir mapa de puntajes por registration_id y evaluation_id
+        $puntajesMap = [];
+        foreach ($puntajes as $p) {
+            $regId = $p['registration_id'];
+            $evalId = $p['evaluation_id'];
+            if (!isset($puntajesMap[$regId])) {
+                $puntajesMap[$regId] = [];
+            }
+            $puntajesMap[$regId][$evalId] = $p['score'];
+        }
+
+        // Generar tabla HTML
+        $html = '<div class="table-responsive" style="max-height:500px; overflow-y:auto;">';
+        $html .= '<table class="table table-dark table-sm table-bordered">';
+        $html .= '<thead><tr class="text-center">';
+        $html .= '<th>ID</th><th>Cédula</th><th>Nombre</th><th>Apellido</th>';
+
+        // Si hay evaluaciones, agregar columnas dinámicas
+        foreach ($evaluaciones as $eval) {
+            $tipo = htmlspecialchars($eval['evaluation_type'] ?? 'Evaluación');
+            $obj = $eval['objective'] ?? '';
+            $html .= "<th>{$tipo}<br><small>(Obj: {$obj})</small></th>";
+        }
+        $html .= '<th>Nota final</th>';
+        $html .= '</tr></thead><tbody>';
+
+        if ($total > 0) {
+            $regInicio = $offset + 1;
+            foreach ($estudiantes as $est) {
+                $studentId = $est['student_id'] ?? '';
+                $ci = $est['ci'] ?? '';
+                $name = htmlspecialchars($est['name'] ?? '');
+                $lastName = htmlspecialchars($est['last_name'] ?? '');
+                $registrationId = $est['registration_id'];
+
+                $html .= '<tr class="text-center">';
+                $html .= "<td>{$studentId}</td>";
+                $html .= "<td>{$ci}</td>";
+                $html .= "<td>{$name}</td>";
+                $html .= "<td>{$lastName}</td>";
+
+                // Si no hay evaluaciones, mostrar mensaje o nada
+                if (empty($evaluaciones)) {
+                    $html .= '<td colspan="1" class="text-muted">Sin evaluaciones</td>';
+                } else {
+                    // Calcular nota final ponderada
+                    $notaFinal = 0;
+                    $totalPorcentaje = 0;
+                    $tienePuntaje = false;
+
+                    foreach ($evaluaciones as $eval) {
+                        $evalId = $eval['id'];
+                        $porcentaje = (float) ($eval['percentage'] ?? 0);
+                        $totalPorcentaje += $porcentaje;
+
+                        $puntaje = $puntajesMap[$registrationId][$evalId] ?? null;
+                        $mostrar = ($puntaje !== null) ? $puntaje : 'NP';
+
+                        if ($puntaje !== null && $puntaje !== 'NP') {
+                            $notaFinal += (float) $puntaje * $porcentaje / 100;
+                            $tienePuntaje = true;
+                        }
+
+                        $html .= "<td>{$mostrar}</td>";
+                    }
+
+                    // Nota final
+                    if ($totalPorcentaje == 100 && $tienePuntaje) {
+                        $notaRedondeada = ($notaFinal - floor($notaFinal) >= 0.5) ? ceil($notaFinal) : floor($notaFinal);
+                        $color = ($notaRedondeada > 10) ? 'text-success' : 'text-danger';
+                        $html .= "<td class='{$color}'><strong>{$notaRedondeada}</strong></td>";
+                    } else {
+                        $html .= "<td class='text-muted'>-</td>";
+                    }
+                }
+
+                $html .= '</tr>';
+            }
+            $regFinal = $regInicio + count($estudiantes) - 1;
+        } else {
+            $colspan = empty($evaluaciones) ? 5 : (count($evaluaciones) + 5);
+            $html .= "<tr><td colspan='{$colspan}' class='text-center'>No hay estudiantes inscritos en esta sección.</td></tr>";
+        }
+
+        $html .= '</tbody></table></div>';
+
+        // Paginador
+        if ($total > 0) {
+            $html .= '<p class="text-right">Mostrando ' . $regInicio . ' al ' . $regFinal . ' de ' . $total . '</p>';
+            $url = SERVERURL . 'index.php?views=admin/seccion-consult&curso_vigente=' . ($_GET['curso_vigente'] ?? 0) . '&seccion=' . ($_GET['seccion'] ?? '') . '&est_page=';
+            $html .= mainModel::paginador_tablas($pagina, $paginas, $url, 7);
+        }
+
+        return $html;
+    }
+  
+       
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+/**
+ * Paginador de estudiantes con sus puntajes en evaluaciones (activas o archivadas).
+ * @param int $pagina Número de página
+ * @param int $registros Registros por página
+ * @param int $sectionId ID de la sección
+ * @param int $state 1: evaluaciones activas, 0: archivadas
+ *
+public function paginador_estudiantes_con_puntajes_controlador(
+    int $pagina,
+    int $registros,
+    int $sectionId,
+    int $state = 1
+): string {
+    $token = $_SESSION['auth_access_token'] ?? null;
+    if (!$token) {
+        return '<div class="alert alert-danger">Sesión no disponible.</div>';
+    }
+
+    $limit = max(1, $registros);
+    $offset = ($pagina - 1) * $limit;
+
+    // 1. Obtener evaluaciones de la sección con el state indicado
+    $evalResult = periodoModelo::obtener_evaluaciones_por_seccion_y_state_supabase(
+        $sectionId,
+        $token,
+        $state
+    );
+    if (!$evalResult['ok']) {
+        return '<div class="alert alert-danger">Error al cargar evaluaciones.</div>';
+    }
+    $evaluaciones = $evalResult['data'] ?? [];
+
+    // Si no hay evaluaciones, mostrar mensaje
+    if (empty($evaluaciones)) {
+        return '<div class="alert alert-info text-center">No hay evaluaciones ' . ($state == 1 ? 'activas' : 'archivadas') . ' para esta sección.</div>';
+    }
+
+    // 2. Obtener estudiantes (solo inscripciones activas)
+    $estudiantesResult = periodoModelo::obtener_estudiantes_por_seccion_supabase(
+        $sectionId,
+        $limit,
+        $offset,
+        $token,
+        true
+    );
+    if (!$estudiantesResult['ok']) {
+        return '<div class="alert alert-danger">Error al cargar estudiantes: ' . ($estudiantesResult['message'] ?? '') . '</div>';
+    }
+    $estudiantes = $estudiantesResult['data'] ?? [];
+
+    // 3. Obtener total de estudiantes para paginación
+    $total = periodoModelo::contar_estudiantes_por_seccion_supabase($sectionId, $token, true);
+    $paginas = max(1, ceil($total / $limit));
+
+    // 4. Para cada evaluación, obtener puntajes y armar un mapa por registration_id
+    $puntajesMap = [];
+    foreach ($evaluaciones as $eval) {
+        $evalId = $eval['id'];
+        $puntajesResult = SupabaseApi::getWithToken('qualification_student', [
+            'select' => 'registration_id, score',
+            'evaluation_id' => 'eq.' . $evalId,
+            'state' => 'eq.' . $state,
+        ], $token);
+        if ($puntajesResult['ok']) {
+            $puntajesMap[$evalId] = [];
+            foreach ($puntajesResult['data'] as $p) {
+                $puntajesMap[$evalId][$p['registration_id']] = $p['score'];
+            }
+        } else {
+            $puntajesMap[$evalId] = [];
+        }
+    }
+
+    // 5. Construir la tabla HTML
+    $html = '<div class="table-responsive" style="max-height:500px; overflow-y:auto;">';
+    $html .= '<table class="table table-dark table-sm table-bordered">';
+    $html .= '<thead><tr class="text-center">';
+    $html .= '<th>ID</th><th>Cédula</th><th>Nombre</th><th>Apellido</th>';
+    // Columnas dinámicas para cada evaluación
+    foreach ($evaluaciones as $eval) {
+        $tipo = htmlspecialchars($eval['evaluation_type'] ?? 'Evaluación');
+        $obj = $eval['objective'] ?? '';
+        $html .= "<th>{$tipo}<br><small>(Obj: {$obj})</small></th>";
+    }
+    $html .= '<th>Nota final</th>';
+    $html .= '</tr></thead><tbody>';
+
+    if ($total > 0) {
+        $regInicio = $offset + 1;
+        foreach ($estudiantes as $est) {
+            $student = $est['student'] ?? [];
+            $studentId = $student['id'] ?? '';
+            $ci = $student['ci'] ?? '';
+            $name = htmlspecialchars($student['name'] ?? '');
+            $lastName = htmlspecialchars($student['last_name'] ?? '');
+            $registrationId = $est['id']; // ID de inscripción
+
+            $html .= '<tr class="text-center">';
+            $html .= "<td>{$studentId}</td>";
+            $html .= "<td>{$ci}</td>";
+            $html .= "<td>{$name}</td>";
+            $html .= "<td>{$lastName}</td>";
+
+            // Calcular nota final ponderada
+            $notaFinal = 0;
+            $totalPorcentaje = 0;
+            $tienePuntaje = false;
+
+            foreach ($evaluaciones as $eval) {
+                $evalId = $eval['id'];
+                $porcentaje = (float) ($eval['percentage'] ?? 0);
+                $totalPorcentaje += $porcentaje;
+
+                // Obtener puntaje del mapa
+                $puntaje = $puntajesMap[$evalId][$registrationId] ?? null;
+                $mostrar = ($puntaje !== null) ? $puntaje : 'NP';
+
+                if ($puntaje !== null && $puntaje !== 'NP') {
+                    $notaFinal += (float) $puntaje * $porcentaje / 100;
+                    $tienePuntaje = true;
+                }
+
+                $html .= "<td>{$mostrar}</td>";
+            }
+
+            // Nota final
+            if ($totalPorcentaje == 100 && $tienePuntaje) {
+                // Redondear según regla: >= .5 redondear arriba
+                $notaRedondeada = ($notaFinal - floor($notaFinal) >= 0.5) ? ceil($notaFinal) : floor($notaFinal);
+                $color = ($notaRedondeada > 10) ? 'text-success' : 'text-danger';
+                $html .= "<td class='{$color}'><strong>{$notaRedondeada}</strong></td>";
+            } else {
+                $html .= "<td class='text-muted'>-</td>";
+            }
+
+            $html .= '</tr>';
+        }
+        $regFinal = $regInicio + count($estudiantes) - 1;
+    } else {
+        $colspan = count($evaluaciones) + 5; // ID, CI, Nombre, Apellido, Nota final
+        $html .= "<tr><td colspan='{$colspan}' class='text-center'>No hay estudiantes inscritos en esta sección.</td></tr>";
+    }
+
+    $html .= '</tbody></table></div>';
+
+    // Paginador
+    if ($total > 0) {
+        $html .= '<p class="text-right">Mostrando ' . $regInicio . ' al ' . $regFinal . ' de ' . $total . '</p>';
+        // URL fija con carpeta 'admin'
+        $url = SERVERURL . 'index.php?views=admin/seccion-consult&curso_vigente=' . ($_GET['curso_vigente'] ?? 0) . '&seccion=' . ($_GET['seccion'] ?? '') . '&est_page=';
+        $html .= mainModel::paginador_tablas($pagina, $paginas, $url, 7);
+    }
+
+    return $html;
+}*/
+        
+        
+        
+        
+
+//restaurar evaluacion
+    public function archivar_evaluacion_controlador($encryptedId): string
+    {
+        try {
+            $idDec = mainModel::decryption($encryptedId);
+            $idReal = (int) $idDec;
+            if ($idReal <= 0) {
+                return json_encode(mainModel::generarAlertaSimple('ID inválido', 'error', 'simple'));
+            }
+            $token = $_SESSION['auth_access_token'] ?? null;
+            if (!$token) {
+                return json_encode(mainModel::generarAlertaSimple('Sesión no disponible', 'error', 'simple'));
+            }
+            $resultado = periodoModelo::archivar_evaluacion_con_puntajes_supabase($idReal, $token);
+            if ($resultado['ok'] && ($resultado['data']['ok'] ?? false) === true) {
+                return json_encode(mainModel::generarAlertaSimple('Evaluación archivada correctamente', 'success', 'recargar'));
+            } else {
+                $mensaje = $resultado['data']['error'] ?? $resultado['message'] ?? 'Error desconocido';
+                return json_encode(mainModel::generarAlertaSimple('Error al archivar: ' . $mensaje, 'error', 'simple'));
+            }
+        } catch (Exception $e) {
+            return json_encode(mainModel::generarAlertaSimple('Error: ' . $e->getMessage(), 'error', 'simple'));
+        }
+    }
+
+
+    public function restaurar_evaluacion_controlador($encryptedId): string
+    {
+        try {
+            $idDec = mainModel::decryption($encryptedId);
+            $idReal = (int) $idDec;
+            if ($idReal <= 0) {
+                return json_encode(mainModel::generarAlertaSimple('ID inválido', 'error', 'simple'));
+            }
+            $token = $_SESSION['auth_access_token'] ?? null;
+            if (!$token) {
+                return json_encode(mainModel::generarAlertaSimple('Sesión no disponible', 'error', 'simple'));
+            }
+            $resultado = periodoModelo::restaurar_evaluacion_con_puntajes_supabase($idReal, $token);
+            if ($resultado['ok'] && ($resultado['data']['ok'] ?? false) === true) {
+                return json_encode(mainModel::generarAlertaSimple($resultado['data']['message'] ?? 'Evaluación restaurada correctamente', 'success', 'recargar'));
+            } else {
+                $mensaje = $resultado['data']['error'] ?? $resultado['message'] ?? 'Error desconocido';
+                return json_encode(mainModel::generarAlertaSimple('Error al restaurar: ' . $mensaje, 'error', 'simple'));
+            }
+        } catch (Exception $e) {
+            return json_encode(mainModel::generarAlertaSimple('Error: ' . $e->getMessage(), 'error', 'simple'));
+        }
+    }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
 
 //modificar profe en seccion consult
 public function modificar_profesor_seccion_controlador() {
@@ -1123,8 +3547,7 @@ public function paginador_secciones_controlador($pagina, $registros, $es_activo,
     
     
     
-/*------------------------------------------------------------------------------------------------------------------------*/
-
+/*------------------------------------------------------------------------------------------------------------------------*
 
 
 
@@ -1248,11 +3671,11 @@ $carpeta = $carpetasPorCargo[$cargo] ?? "admin";
             }
         }
     }
+    */
     
     
     
-    
-    public function paginador_estudiantes_con_puntajes_controlador($pagina, $registros, $id_seccion){
+    public function paginador_estudiantes_con_puntajes_controlador___old($pagina, $registros, $id_seccion){
     $pagina = (int) mainModel::limpiar_cadena($pagina);
     $registros = (int) mainModel::limpiar_cadena($registros);
     $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
@@ -3385,7 +5808,3 @@ $carpeta = $carpetasPorCargo[$cargo] ?? "admin";
 }
 
 ?>
-
-
-
-

@@ -4,7 +4,7 @@ require_once __DIR__ . '/../modelos/mainModel.php';
 class ListInscripcionesControlador extends mainModel {
 
     public function listar_inscripciones_completas() {
-        $conexion = mainModel::conectar();
+        $conexion = mainModel::conectarSupabase();
         $consulta = $conexion->prepare("
             SELECT 
                 i.id_inscripcion,
@@ -133,6 +133,24 @@ class ListInscripcionesControlador extends mainModel {
         ");
         $consulta->execute();
         return $consulta->fetchColumn();
+    }
+
+    public static function verificar_referencia_unica($referencia, $id_transaccion_excluir = 0) {
+        $referencia = trim($referencia);
+        if (empty($referencia)) {
+            return true;
+        }
+
+        $conexion = mainModel::conectar();
+        if ($id_transaccion_excluir > 0) {
+            $stmt = $conexion->prepare("SELECT COUNT(*) FROM transaccion WHERE referencia = :ref AND id_transaccion != :id");
+            $stmt->execute([':ref' => $referencia, ':id' => $id_transaccion_excluir]);
+        } else {
+            $stmt = $conexion->prepare("SELECT COUNT(*) FROM transaccion WHERE referencia = :ref");
+            $stmt->execute([':ref' => $referencia]);
+        }
+
+        return $stmt->fetchColumn() == 0;
     }
 }
 ?>

@@ -9,10 +9,10 @@ $controlador_notificaciones = '';
 
 switch ($cargo) {
     case 1: // Admin
-        $mostrar_notificaciones = true;
-        $controlador_notificaciones = 'Cron_admin_controlador.php';
+        $mostrar_notificaciones = false;// era true pero lo cambie pa q no joda el pdo, olvier arreglalo
+       // $controlador_notificaciones = 'Cron_admin_controlador.php';
         break;
-    case 2: // Supervisor de cursos
+  /*  case 2: // Supervisor de cursos
         $mostrar_notificaciones = true;
         $controlador_notificaciones = 'Cron_supervisor_controlador.php';
         break;
@@ -28,6 +28,7 @@ switch ($cargo) {
         $mostrar_notificaciones = ($id_usuario && $id_estudiante);
         $controlador_notificaciones = 'Cron_estudiante_controlador.php';
         break;
+        */
     // Puedes agregar más roles aquí
     default:
         $mostrar_notificaciones = false;
@@ -55,6 +56,9 @@ switch ($cargo) {
         </div>
     </div>
     <?php endif; ?>
+    <button type="button" id="btn-dark-mode" class="btn btn-sm btn-outline-light" title="Modo oscuro/claro">
+        <i class="fas fa-moon" style="color:orange;" id="icon-dark-mode"></i>
+    </button>
     <a href="#" class="float-left show-nav-lateral">
         <i class="fas fa-exchange-alt"></i>
     </a>
@@ -63,6 +67,15 @@ switch ($cargo) {
         <i class="fas fa-power-off"></i>
     </a>
 </nav>
+
+<!--script>
+console.log('[CEPROCA][NavBar] renderizado', {
+    cargo: <php echo json_encode($cargo); ?>,
+    mostrarNotificaciones: <php echo $mostrar_notificaciones ? 'true' : 'false'; ?>,
+    botonMenu: document.querySelectorAll('.show-nav-lateral').length,
+    botonSalida: document.querySelectorAll('.btn-exit-system').length
+});
+</script-->
 
 <?php if($mostrar_notificaciones): ?>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -84,12 +97,15 @@ $(document).ready(function() {
         $body.html('<div class="cargando-notificaciones"><div class="spinner"></div><p>Cargando notificaciones...</p></div>');
         
         var datos = {
-            id_usuario: <?= $id_usuario ?>
+            //id_usuario: <= $id_usuario ?>
+            id_usuario: <?php echo json_encode($id_usuario); ?>
+         
         };
         
         // Agregar id_estudiante solo si es estudiante
         <?php if($cargo == 5): ?>
-        datos.id_estudiante = <?= $id_estudiante ?>;
+        //datos.id_estudiante = <= $id_estudiante ?>;
+        datos.id_estudiante = <?php echo json_encode($id_estudiante); ?>;
         <?php endif; ?>
         
         $.post('<?php echo SERVERURL; ?>controladores/<?= $controlador_notificaciones ?>', 

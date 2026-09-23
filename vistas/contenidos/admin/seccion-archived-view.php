@@ -271,12 +271,12 @@ if ($origen === 'curso' && isset($_GET['filtro_nombre'])) {
 
 <div class="container-fluid">
     <?php
-        require_once "./controladores/periodoControlador.php";
-        $ins_secciones = new periodoControlador();
+        require_once "./controladores/seccionControlador.php";
+        $ins_secciones = new seccionControlador();
  
         $pagina_actual = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 
-        echo $ins_secciones->paginador_secciones_controlador($pagina_actual, 15, 0);
+        echo $ins_secciones->paginador_secciones_controlador2($pagina_actual, 15, "");
     ?>
 </div>
 

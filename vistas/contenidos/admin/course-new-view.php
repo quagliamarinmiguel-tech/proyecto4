@@ -1,73 +1,24 @@
+
 <?php 
     if($_SESSION['cargo_spm']!=1 && $_SESSION['cargo_spm']!=4 ){
         echo $lc->forzar_cierre_sesion_controlador();
         exit();
     }
 
+    $cargo = $_SESSION['cargo_spm'] ?? 1;
 
-$cargo = $_SESSION['cargo_spm'] ?? 1;
+    $carpetasPorCargo = [
+        1 => "admin",
+        2 => "Control de estudio",
+        3 => "administrador de pagos",
+        4 => "Supervisor de cursos",
+        5 => "Estudiante"
+    ];
 
-$carpetasPorCargo = [
-    1 => "admin",
-    2 => "Control de estudio",
-    3 => "administrador de pagos",
-    4 => "Supervisor de cursos",
-    5 => "Estudiante"
-];
-
-$carpeta = $carpetasPorCargo[$cargo] ?? "admin";
-
-
+    $carpeta = $carpetasPorCargo[$cargo] ?? "admin";
 ?>
-<style>
-button[disabled] {
-  opacity: 0.6;
-  cursor: not-allowed;
-  pointer-events: none;
-  box-shadow: none;
-  transition: all 0.3s ease;
-}
-</style>
 
-<!--style>
-.tooltip-custom {
-    background: #dc3545;
-    color: white;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 13px;
-    font-weight: 500;
-    z-index: 9999;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    opacity: 0;
-    transition: opacity 0.2s ease-in-out;
-    white-space: nowrap;
-    pointer-events: none;
-    position: fixed !important;
-    will-change: transform;
-}
-
-.tooltip-custom.show {
-    opacity: 1; position: fixed;
-}
-
-.btn-disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    pointer-events: none;
-}
-</style-->
-
-
-
-
-
-
-
-
-
-
-
+    <script src="<?php echo SERVERURL; ?>vistas/js/miscript.js"></script>
 <div class="full-box page-header">
     <h3 class="text-left">
         <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO CURSO
@@ -178,62 +129,8 @@ button[disabled] {
 </style>
 
 
-<!--
-  function validarCurso() {
-    const nombre = nombreInput.value.trim();
-    const tipo = tipoSelect.value;
-
-    if (nombre.length < 4) {
-      estadoValidaciones.nombreLargo = false;
-      verificarEstadoBoton();
-      return;
-    } else {
-      estadoValidaciones.nombreLargo = true;
-    }
-
-    if (tipo === "") return;
-
-    // --- CAMBIO AQUÍ: Consumimos la respuesta como JSON o Texto ---
-    fetch(`${SERVERURL}ajax/cursoAjax.php?accion=validar_curso&nombre=${encodeURIComponent(nombre)}&tipo=${encodeURIComponent(tipo)}`)
-    //  .then(res => res.json())
-      .then(res => {
-    console.log('Status:', res.status); // Ver el código de respuesta
-    console.log('Headers:', res.headers); // Ver los headers
-    return res.json();
-  })
-      
-      // El servidor debe responder 'true' o 'false'
-      .then(esValido => { // 'esValido' ahora es directamente el booleano
-        
-        estadoValidaciones.duplicado = esValido;
-
-        if (!esValido) {
-          // --- ESTADO ERROR (Respuesta: false) ---
-          alertaCurso.classList.replace("text-success", "text-danger");
-          alertaCurso.innerHTML = `<i class="fas fa-times-circle"></i> Ya existe un curso con ese nombre y tipo.`;
-          
-          nombreInput.style.borderColor = "#ff5722";
-          tipoSelect.style.borderColor = "#ff5722";
-        } else {
-          // --- ESTADO ÉXITO (Respuesta: true) ---
-          alertaCurso.classList.replace("text-danger", "text-success");
-          alertaCurso.innerHTML = `<i class="fas fa-check-circle"></i> No se puede repetir un curso de mismo nombre y tipo`;
-          
-          nombreInput.style.borderColor = "";
-          tipoSelect.style.borderColor = "";
-        }
-        verificarEstadoBoton();
-      })
-      .catch(err => {
-        console.error("Error:", err);
-        // En caso de error de red, bloqueamos por seguridad
-        estadoValidaciones.duplicado = false;
-        verificarEstadoBoton();
-      });
-  }
--->
-
 <script>
+    
 document.addEventListener("DOMContentLoaded", () => {
   const nombreInput = document.getElementById("curso_nombre");
   const tipoSelect = document.getElementById("curso_tipo");
@@ -327,185 +224,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
   verificarEstadoBoton();
 });</script>
-
-
-
-
-
-
-
-
-
-
-
-
-<!--script>
-document.addEventListener("DOMContentLoaded", () => {
-  const nombreInput = document.getElementById("curso_nombre");
-  const tipoSelect = document.getElementById("curso_tipo");
-  const alertaCurso = document.getElementById("alerta-curso");
-  const btnSubmit = document.querySelector("button[type='submit']");
-  const SERVERURL = "<?php echo SERVERURL; ?>";
-
-  // LISTA DE VALIDACIONES (Si algo es false, el botón se bloquea)
-  let estadoValidaciones = {
-    nombreLargo: false,
-    duplicado: true // Empezamos asumiendo que no está duplicado hasta que se pruebe lo contrario
-  };
-
-  function verificarEstadoBoton() {
-    // Si hay algún "false" en nuestro objeto de validaciones, desactivamos el botón
-    const tieneErrores = Object.values(estadoValidaciones).includes(false);
-    btnSubmit.disabled = tieneErrores;
-    
-    if (tieneErrores) {
-      btnSubmit.classList.add("btn-disabled");
-      btnSubmit.style.opacity = "0.5";
-      btnSubmit.style.cursor = "not-allowed";
-    } else {
-      btnSubmit.classList.remove("btn-disabled");
-      btnSubmit.style.opacity = "1";
-      btnSubmit.style.cursor = "pointer";
-    }
-  }
-
-  function validarCurso() {
-    const nombre = nombreInput.value.trim();
-    const tipo = tipoSelect.value;
-
-    // 1. Validación básica de longitud (No disparamos AJAX si es muy corto)
-    if (nombre.length < 4) {
-      estadoValidaciones.nombreLargo = false;
-      verificarEstadoBoton();
-      return;
-    } else {
-      estadoValidaciones.nombreLargo = true;
-    }
-
-    if (tipo === "") return;
-
-    // 2. Validación AJAX contra la DB
-    fetch(`${SERVERURL}ajax/cursoAjax.php?accion=validar_curso&nombre=${encodeURIComponent(nombre)}&tipo=${encodeURIComponent(tipo)}`)
-      .then(res => res.json())
-      .then(data => {
-        if (!data.valido) {
-          // --- ESTADO ERROR ---
-          estadoValidaciones.duplicado = false;
-          
-          // Cambiar texto a rojo
-          alertaCurso.classList.replace("text-success", "text-danger");
-          alertaCurso.innerHTML = `<i class="fas fa-times-circle"></i> ${data.mensaje}`;
-          
-          // Resaltar bordes de los inputs en rojo
-          nombreInput.style.borderColor = "#ff5722";
-          tipoSelect.style.borderColor = "#ff5722";
-          
-        } else {
-          // --- ESTADO ÉXITO ---
-          estadoValidaciones.duplicado = true;
-          
-          // Volver texto a verde
-          alertaCurso.classList.replace("text-danger", "text-success");
-          alertaCurso.innerHTML = `<i class="fas fa-check-circle"></i> No se puede repetir un curso de mismo nombre y tipo`;
-          
-          // Limpiar bordes rojos
-          nombreInput.style.borderColor = "";
-          tipoSelect.style.borderColor = "";
-        }
-        verificarEstadoBoton();
-      })
-      .catch(err => {
-        console.error("Error:", err);
-        estadoValidaciones.duplicado = false;
-        verificarEstadoBoton();
-      });
-  }
-
-  nombreInput.addEventListener("input", validarCurso);
-  tipoSelect.addEventListener("change", validarCurso);
-
-  // Ejecutar una vez al cargar por si hay datos autocompletados
-  verificarEstadoBoton();
-        });</script-->
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!--script> 
-document.addEventListener("DOMContentLoaded", () => {
-  const nombreInput = document.getElementById("curso_nombre");
-  const tipoSelect = document.getElementById("curso_tipo");
-  const alertaCurso = document.getElementById("alerta-curso");
-  const btnSubmit = document.querySelector("button[type='submit']");
-  const SERVERURL = "<?php echo SERVERURL; ?>";
-
-  function actualizarEstiloBoton() {
-    if (btnSubmit.disabled) {
-      btnSubmit.classList.add("btn-disabled");
-    } else {
-      btnSubmit.classList.remove("btn-disabled");
-    }
-  }
-
-  function validarCurso() {
-    const nombre = nombreInput.value.trim();
-    const tipo = tipoSelect.value;
-
-    if (nombre.length < 4 || tipo === "") {
-      alertaCurso.style.display = "none";
-      btnSubmit.disabled = true;
-      actualizarEstiloBoton();
-      return;
-    }
-
-    fetch(`${SERVERURL}ajax/cursoAjax.php?accion=validar_curso&nombre=${encodeURIComponent(nombre)}&tipo=${encodeURIComponent(tipo)}`)
-      .then(res => res.json())
-      .then(data => {
-        if (!data.valido) {
-          alertaCurso.textContent = data.mensaje;
-          alertaCurso.style.display = "block";
-          btnSubmit.disabled = true;
-        } else {
-          alertaCurso.style.display = "none";
-          btnSubmit.disabled = false;
-        }
-        actualizarEstiloBoton();
-      })
-      .catch(err => {
-        console.error("Error al validar curso:", err);
-        alertaCurso.textContent = "Error de conexión con el servidor.";
-        alertaCurso.style.display = "block";
-        btnSubmit.disabled = true;
-        actualizarEstiloBoton();
-      });
-  }
-
-  nombreInput.addEventListener("input", validarCurso);
-  tipoSelect.addEventListener("change", validarCurso);
-});
-</script--

@@ -17,18 +17,18 @@ try {
     ) {
         require_once "../controladores/cursoPublicidadControlador.php";
         $ins_publicidad = new cursoPublicidadControlador();
+	    session_start(['name' => 'SPM']);
 
-        /*--------- Actualizar publicidad ---------*/
-        if (isset($_POST['publicidad_id_up'])) {
-            // ¿Viene nueva imagen?
-            if (isset($_FILES['archivo_imagen']) && $_FILES['archivo_imagen']['error'] === 0) {
-                echo $ins_publicidad->actualizar_publicidad_con_imagen_controlador();
-            } else {
-                echo $ins_publicidad->actualizar_publicidad_controlador();
+        
+            // Actualizar publicidad
+            if (isset($_POST['publicidad_id_up']) && isset($_POST['prefacio'])) {
+                echo $ins_publicidad->actualizar_marketing_controlador();
+                exit();
             }
-            exit();
-        }
-
+        
+        
+        
+        
         /*--------- Eliminar publicidad ---------*/
         if (isset($_POST['publicidad_id_del'])) {
             echo $ins_publicidad->eliminar_publicidad_controlador();
@@ -51,6 +51,7 @@ try {
                 echo $ins_publicidad->restaurar_publicidad_controlador();
                 exit();
             }
+   
 
             // Archivar publicidad activa
             if(isset($_POST['publicidad_id_archive'])){
