@@ -9,3 +9,5 @@ config/supabase_test.php
 config/SERVER.php
 config/conection.php
 
+/vendor
+
