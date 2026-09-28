@@ -1,0 +1,522 @@
+[
+  {
+    "Table": "activity_log",
+    "Name": "activity_log_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX activity_log_pkey ON public.activity_log USING btree (id)"
+  },
+  {
+    "Table": "classes",
+    "Name": "classes_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX classes_pkey ON public.classes USING btree (id)"
+  },
+  {
+    "Table": "classroom",
+    "Name": "classroom_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX classroom_pkey ON public.classroom USING btree (id)"
+  },
+  {
+    "Table": "course",
+    "Name": "course_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX course_pkey ON public.course USING btree (id)"
+  },
+  {
+    "Table": "course",
+    "Name": "unique_course_name_type_state",
+    "Columns": "name, type, state",
+    "Unique": true,
+    "Primary": false,
+    "View definition": "CREATE UNIQUE INDEX unique_course_name_type_state ON public.course USING btree (name, type, state)"
+  },
+  {
+    "Table": "evaluation",
+    "Name": "evaluation_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX evaluation_pkey ON public.evaluation USING btree (id)"
+  },
+  {
+    "Table": "evaluation",
+    "Name": "idx_evaluation_section_id_s1",
+    "Columns": "section_id",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_evaluation_section_id_s1 ON public.evaluation USING btree (section_id) WHERE (state = 1)"
+  },
+  {
+    "Table": "img",
+    "Name": "img_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX img_pkey ON public.img USING btree (id)"
+  },
+  {
+    "Table": "ip_visitor",
+    "Name": "ip_visitor_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX ip_visitor_pkey ON public.ip_visitor USING btree (id)"
+  },
+  {
+    "Table": "marketing_course",
+    "Name": "idx_marketing_course_course_id_s1",
+    "Columns": "course_id",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_marketing_course_course_id_s1 ON public.marketing_course USING btree (course_id) WHERE (state = 1)"
+  },
+  {
+    "Table": "marketing_course",
+    "Name": "marketing_course_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX marketing_course_pkey ON public.marketing_course USING btree (id)"
+  },
+  {
+    "Table": "notification",
+    "Name": "notification_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX notification_pkey ON public.notification USING btree (id)"
+  },
+  {
+    "Table": "page_info",
+    "Name": "page_info_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX page_info_pkey ON public.page_info USING btree (id)"
+  },
+  {
+    "Table": "page_info_img",
+    "Name": "page_info-img_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX \"page_info-img_pkey\" ON public.page_info_img USING btree (id)"
+  },
+  {
+    "Table": "page_interaction",
+    "Name": "page_interaction_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX page_interaction_pkey ON public.page_interaction USING btree (id)"
+  },
+  {
+    "Table": "period",
+    "Name": "period_name_key",
+    "Columns": "name",
+    "Unique": true,
+    "Primary": false,
+    "View definition": "CREATE UNIQUE INDEX period_name_key ON public.period USING btree (name)"
+  },
+  {
+    "Table": "period",
+    "Name": "period_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX period_pkey ON public.period USING btree (id)"
+  },
+  {
+    "Table": "period_costs",
+    "Name": "idx_period_costs_period_id",
+    "Columns": "period_id",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_period_costs_period_id ON public.period_costs USING btree (period_id)"
+  },
+  {
+    "Table": "period_costs",
+    "Name": "period_costs_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX period_costs_pkey ON public.period_costs USING btree (id)"
+  },
+  {
+    "Table": "period_course",
+    "Name": "idx_period_course_course_id",
+    "Columns": "course_id",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_period_course_course_id ON public.period_course USING btree (course_id)"
+  },
+  {
+    "Table": "period_course",
+    "Name": "idx_period_course_course_id_s1",
+    "Columns": "course_id",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_period_course_course_id_s1 ON public.period_course USING btree (course_id) WHERE (state = 1)"
+  },
+  {
+    "Table": "period_course",
+    "Name": "idx_period_course_period_id",
+    "Columns": "period_id",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_period_course_period_id ON public.period_course USING btree (period_id)"
+  },
+  {
+    "Table": "period_course",
+    "Name": "idx_period_course_state",
+    "Columns": "state",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_period_course_state ON public.period_course USING btree (state)"
+  },
+  {
+    "Table": "period_course",
+    "Name": "period_course_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX period_course_pkey ON public.period_course USING btree (id)"
+  },
+  {
+    "Table": "profile",
+    "Name": "idx_profile_role_id",
+    "Columns": "role_id",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_profile_role_id ON public.profile USING btree (role_id)"
+  },
+  {
+    "Table": "profile",
+    "Name": "idx_profile_state",
+    "Columns": "state",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_profile_state ON public.profile USING btree (state)"
+  },
+  {
+    "Table": "profile",
+    "Name": "idx_profile_user_id",
+    "Columns": "user_id",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_profile_user_id ON public.profile USING btree (user_id)"
+  },
+  {
+    "Table": "profile",
+    "Name": "user_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX user_pkey ON public.profile USING btree (id)"
+  },
+  {
+    "Table": "qualification_student",
+    "Name": "idx_qualification_student_evaluation_id_s1",
+    "Columns": "evaluation_id",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_qualification_student_evaluation_id_s1 ON public.qualification_student USING btree (evaluation_id) WHERE (state = 1)"
+  },
+  {
+    "Table": "qualification_student",
+    "Name": "idx_qualification_student_registration_id_s1",
+    "Columns": "registration_id",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_qualification_student_registration_id_s1 ON public.qualification_student USING btree (registration_id) WHERE (state = 1)"
+  },
+  {
+    "Table": "qualification_student",
+    "Name": "qualification-student_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX \"qualification-student_pkey\" ON public.qualification_student USING btree (id)"
+  },
+  {
+    "Table": "qualification_student",
+    "Name": "unique_evaluation_registration",
+    "Columns": "evaluation_id, registration_id",
+    "Unique": true,
+    "Primary": false,
+    "View definition": "CREATE UNIQUE INDEX unique_evaluation_registration ON public.qualification_student USING btree (evaluation_id, registration_id)"
+  },
+  {
+    "Table": "registration",
+    "Name": "idx_registration_period_course_id",
+    "Columns": "period_course_id",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_registration_period_course_id ON public.registration USING btree (period_course_id)"
+  },
+  {
+    "Table": "registration",
+    "Name": "idx_registration_period_course_s1",
+    "Columns": "period_course_id",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_registration_period_course_s1 ON public.registration USING btree (period_course_id) WHERE (state = 1)"
+  },
+  {
+    "Table": "registration",
+    "Name": "idx_registration_section_id",
+    "Columns": "section_id",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_registration_section_id ON public.registration USING btree (section_id)"
+  },
+  {
+    "Table": "registration",
+    "Name": "idx_registration_state",
+    "Columns": "state",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_registration_state ON public.registration USING btree (state)"
+  },
+  {
+    "Table": "registration",
+    "Name": "idx_registration_student_id",
+    "Columns": "student_id",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_registration_student_id ON public.registration USING btree (student_id)"
+  },
+  {
+    "Table": "registration",
+    "Name": "registration_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX registration_pkey ON public.registration USING btree (id)"
+  },
+  {
+    "Table": "role",
+    "Name": "role_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX role_pkey ON public.role USING btree (id)"
+  },
+  {
+    "Table": "role",
+    "Name": "role_role_key",
+    "Columns": "role",
+    "Unique": true,
+    "Primary": false,
+    "View definition": "CREATE UNIQUE INDEX role_role_key ON public.role USING btree (role)"
+  },
+  {
+    "Table": "section",
+    "Name": "idx_section_period_course_id",
+    "Columns": "period_course_id",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_section_period_course_id ON public.section USING btree (period_course_id)"
+  },
+  {
+    "Table": "section",
+    "Name": "idx_section_period_course_id_s1",
+    "Columns": "period_course_id",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_section_period_course_id_s1 ON public.section USING btree (period_course_id) WHERE (state = 1)"
+  },
+  {
+    "Table": "section",
+    "Name": "idx_section_state",
+    "Columns": "state",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_section_state ON public.section USING btree (state)"
+  },
+  {
+    "Table": "section",
+    "Name": "idx_section_teacher_id",
+    "Columns": "teacher_id",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_section_teacher_id ON public.section USING btree (teacher_id)"
+  },
+  {
+    "Table": "section",
+    "Name": "idx_section_teacher_id_s1",
+    "Columns": "teacher_id",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_section_teacher_id_s1 ON public.section USING btree (teacher_id) WHERE (state = 1)"
+  },
+  {
+    "Table": "section",
+    "Name": "section_name_active_unique",
+    "Columns": "period_course_id, name",
+    "Unique": true,
+    "Primary": false,
+    "View definition": "CREATE UNIQUE INDEX section_name_active_unique ON public.section USING btree (period_course_id, name) WHERE ((state = 1) AND (name IS NOT NULL) AND (name <> ''::text))"
+  },
+  {
+    "Table": "section",
+    "Name": "section_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX section_pkey ON public.section USING btree (id)"
+  },
+  {
+    "Table": "staff",
+    "Name": "staff_ci_key",
+    "Columns": "ci",
+    "Unique": true,
+    "Primary": false,
+    "View definition": "CREATE UNIQUE INDEX staff_ci_key ON public.staff USING btree (ci)"
+  },
+  {
+    "Table": "staff",
+    "Name": "staff_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX staff_pkey ON public.staff USING btree (id)"
+  },
+  {
+    "Table": "student",
+    "Name": "idx_student_ci",
+    "Columns": "ci",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_student_ci ON public.student USING btree (ci)"
+  },
+  {
+    "Table": "student",
+    "Name": "idx_student_profile_id",
+    "Columns": "profile_id",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_student_profile_id ON public.student USING btree (profile_id)"
+  },
+  {
+    "Table": "student",
+    "Name": "idx_student_state",
+    "Columns": "state",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_student_state ON public.student USING btree (state)"
+  },
+  {
+    "Table": "student",
+    "Name": "student_ci_active_unique",
+    "Columns": "ci",
+    "Unique": true,
+    "Primary": false,
+    "View definition": "CREATE UNIQUE INDEX student_ci_active_unique ON public.student USING btree (ci) WHERE ((state = 1) AND (ci IS NOT NULL) AND (ci <> ''::text))"
+  },
+  {
+    "Table": "student",
+    "Name": "student_email_active_unique",
+    "Columns": "email",
+    "Unique": true,
+    "Primary": false,
+    "View definition": "CREATE UNIQUE INDEX student_email_active_unique ON public.student USING btree (email) WHERE ((state = 1) AND (email IS NOT NULL) AND (email <> ''::text))"
+  },
+  {
+    "Table": "student",
+    "Name": "student_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX student_pkey ON public.student USING btree (id)"
+  },
+  {
+    "Table": "teacher",
+    "Name": "teacher_ci_key",
+    "Columns": "ci",
+    "Unique": true,
+    "Primary": false,
+    "View definition": "CREATE UNIQUE INDEX teacher_ci_key ON public.teacher USING btree (ci)"
+  },
+  {
+    "Table": "teacher",
+    "Name": "teacher_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX teacher_pkey ON public.teacher USING btree (id)"
+  },
+  {
+    "Table": "transaction",
+    "Name": "idx_transaction_state",
+    "Columns": "state",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_transaction_state ON public.transaction USING btree (state)"
+  },
+  {
+    "Table": "transaction",
+    "Name": "idx_transaction_student_id",
+    "Columns": "student_id",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_transaction_student_id ON public.transaction USING btree (student_id)"
+  },
+  {
+    "Table": "transaction",
+    "Name": "transaction_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX transaction_pkey ON public.transaction USING btree (id)"
+  },
+  {
+    "Table": "transaction",
+    "Name": "transaction_reference_key",
+    "Columns": "reference",
+    "Unique": true,
+    "Primary": false,
+    "View definition": "CREATE UNIQUE INDEX transaction_reference_key ON public.transaction USING btree (reference)"
+  },
+  {
+    "Table": "transaction_detail",
+    "Name": "idx_transaction_detail_registration_id",
+    "Columns": "registration_id",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_transaction_detail_registration_id ON public.transaction_detail USING btree (registration_id)"
+  },
+  {
+    "Table": "transaction_detail",
+    "Name": "idx_transaction_detail_transaction_id",
+    "Columns": "transaction_id",
+    "Unique": false,
+    "Primary": false,
+    "View definition": "CREATE INDEX idx_transaction_detail_transaction_id ON public.transaction_detail USING btree (transaction_id)"
+  },
+  {
+    "Table": "transaction_detail",
+    "Name": "transaction_detail_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX transaction_detail_pkey ON public.transaction_detail USING btree (id)"
+  },
+  {
+    "Table": "visit",
+    "Name": "visit_pkey",
+    "Columns": "id",
+    "Unique": true,
+    "Primary": true,
+    "View definition": "CREATE UNIQUE INDEX visit_pkey ON public.visit USING btree (id)"
+  }
+]
