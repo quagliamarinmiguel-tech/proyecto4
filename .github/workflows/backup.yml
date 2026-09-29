@@ -63,4 +63,4 @@ jobs:
 
       - name: Subir a Google Drive
         run: |
-          rclone copy supabase_backup_*.tar.gz.enc gdrive:/
+          rclone copy supabase_backup_*.tar.gz.enc gdrive:Respaldo_ceproca
