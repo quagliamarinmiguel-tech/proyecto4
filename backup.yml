@@ -1,0 +1,66 @@
+name: Backup Supabase a Google Drive
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v6
+
+      - name: Instalar Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: latest
+
+      - name: Crear volcados (roles, esquema, datos)
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          mkdir -p backup
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/roles.sql --role-only
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/schema.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/data.sql --data-only --use-copy
+
+      - name: Comprimir y cifrar
+        env:
+          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+        run: |
+          cd backup
+          tar -czf ../supabase_backup.tar.gz .
+          cd ..
+          openssl enc -aes-256-cbc -salt -pbkdf2 -iter 100000 \
+            -in supabase_backup.tar.gz \
+            -out supabase_backup_$(date +%Y-%m-%d).tar.gz.enc \
+            -pass pass:"$ENCRYPTION_KEY"
+          rm supabase_backup.tar.gz
+
+      - name: Instalar rclone
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rclone
+
+      - name: Configurar rclone con OAuth
+        env:
+          GDRIVE_CLIENT_ID: ${{ secrets.GDRIVE_CLIENT_ID }}
+          GDRIVE_CLIENT_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
+          GDRIVE_REFRESH_TOKEN: ${{ secrets.GDRIVE_REFRESH_TOKEN }}
+        run: |
+          mkdir -p ~/.config/rclone
+          cat > ~/.config/rclone/rclone.conf << EOF
+          [gdrive]
+          type = drive
+          client_id = $GDRIVE_CLIENT_ID
+          client_secret = $GDRIVE_CLIENT_SECRET
+          scope = drive
+          token = $GDRIVE_REFRESH_TOKEN
+          EOF
+
+      - name: Subir a Google Drive
+        run: |
+          rclone copy supabase_backup_*.tar.gz.enc gdrive:Respaldo_ceproca
