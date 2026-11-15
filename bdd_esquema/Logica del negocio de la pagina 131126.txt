@@ -1,0 +1,109 @@
+Logica del negocio de la pagina 131126
+
+La pagina tiene como base registrar estudiantes, con sus pagos y notas, y llevar un historial de que cursos se dieron en que periodo y que se cobraba. 
+
+primero está la vista publica que puede ser vista por cualquier persona, y pueden ver que datos del local y los cursos disponibles.
+
+Luego tenemos el area administrativa del sistema, esta permite crear cursos, periodos, estudiantes, notas, pagos, y editar la información e la vista publica.
+
+también esta el area estudiantil, aquellos estudiantes con cuenta pueden verificar sus pagos y notas, y hacer una solicitud de transacción un otra inscripción.
+
+los roles son los siguientes:	1. Administrador, 2. Personal administrativo, 3. Control de estudio, 4. Supervisor de cursos, 5. Estudiantes
+
+
+en cuanto a los módulos del sistema, hablaré un poco de estos. el principal es el periodo, determina que cursos están disponibles en que tiempo (mediante los campos de fecha de inicio y fin)
+y que se pagó de estos (pagos mensuales, por titulo, el de inscripción, etc). hay 3 tipos, extendidos y técnicos profesionales, q son normalmente de 3 meses, y cobran las mismas cosas, luego, el intensivo,
+que dura un promedio de mes y medio y consta de 6 encuentros, antes estos 2 estaban separados, ahora todo esta unificado en 1 solo modulo. Los siguientes son sus pagos:
+
+Extendidos y técnicos profesionales:
+pago_art13 (Tiene fecha)
+pago_inscripcion
+pago_aranceles (Tiene fecha)
+pago_modulo1 (Tiene fecha)
+pago_modulo2 (Tiene fecha)
+pago_modulo3 (Tiene fecha)
+
+Intensivos:
+pago_inscripcion
+pago_titulo
+pago_encuentro1
+pago_encuentro2
+pago_encuentro3
+pago_encuentro4
+pago_encuentro5
+pago_encuentro6
+
+Estos pagos pueden tener fechas q indican el tiempo limite para pagarse, son pagos de estado pendiente si ya ha pasado la fecha y se vuelven atrasados si ya han pasado 28 días desde la fecha,
+los pagos sin fecha, pasan a estar atrasados cuando pasaron 28 dias desde que el periodo terminó.
+
+a este se le asignan cursos del mismo tipo (no es lo mismo un curso de ingles de 3 meses, un curso tecnico de 3 meses de ingles, y un curso de ingles de 6 encuentros)
+
+y por cada curso que se le asigna al periodo se le crea su sección A, Con su profe y dia de clases.
+
+Solo puede archivarse un periodo si no tiene inscritos, y solo puede restaurarse si no hay un periodo vigente del mismo tipo impartiéndose en alguna fecha que coincida con la del periodo a restaurar.
+no se puede editar un periodo si ya es vigente o si esta al menos a 10 dias de estar vigente
+
+
+
+antes de pasar a los estudiantes para aclarar lo de los pagos quiero hablar de los cursos, estos tienen solo el nombre y tipo, no pueden modificarse si este ya esta disponible en un periodo vigente (ósea, si el curso ya tiene historial),
+al archivarse seguirá viéndose en el historial pero no saldrá en la pagina publica ni se podrá asignar a periodos futuros. el curso también tiene su marketing_course,
+es una tabla que muestra toda la info del curso que es vista en la pagina publica, si se archiva el curso, se archiva este, y dicha información solo sale en la pagina, si el curso al que pertenece,
+se encuentra disponible en un periodo vigente o proximo.
+
+
+
+Ahora paso a los estudiantes. cada estudiante se inscribe a un curso disponible en un periodo, y se le asigna una sección donde ve sus evaluaciones y obtiene sus notas. el estudiante tiene una isncripcion o registration,
+esta determina a que curso y sección de un periodo al que se inscribió pertenece, el estudiante también hace sus pagos, para eso esta la tabla de transacción, ligada a registration, determina que está pagando el dueño de esa inscripción,
+los pagos vienen del periodo al que está inscrito el estudiante, y aunque transaction tiene los datos del pago, transaction_detail que es otra tabla, determina que se esta pagando,
+también se permite pagar por partes en algunos casos como por ejemplo hacer 3 pagos para pagar 1 mes de un periodo extendido, el único con el que eso no aplica es la inscripción.
+
+en cuanto a los requisitos para inscribirse son estos:
+-	hay chance de inscripción hasta 14 dias después de haber empezado un periodo (es decir, se puede inscribir en periodos vigentes y próximos)
+-	minimo 9 años creo q era para inscribirse
+-	28 dias después de darse una fecha de pago, pasa a atrasado 
+
+
+ahora, entre el periodo y el curso, hay una tabla, el period_course, solo es una tabla N a N q guarda la relación entre el curso y periodo, aunque el sistema esta hecho para que no se tome en cuenta dicha tabla como un paso intermedio,
+sino que trata de no mostrar su existencia (lo hice asi para no confundir al usuario al ponerle tablas intermedias raras), pero a esta pertenecen las secciones, y la registration también guarda a q sección pertenece el estudiante,
+las secciones tienen las evaluaciones y los puntajes, y a estas se les aplican varias reglas: 
+
+ no puede eliminarse ni archivarse una sección con inscritos.
+ es posible transferir estudiantes entre secciones si la sección emisora no tiene evaluaciones.
+ solo puede eliminarse una sección si no tiene inscritos. la sección A no puede eliminarse, en dado caso que no sea necesaria, se archiva (junto con su period course).
+ no puede actualizarse si el periodo esta terminado, ni tampoco transferir estudaintes.
+ es posible agregar y modificar evaluaciones una ves termine el periodo.
+ una seccion por si sola no puede ser restaurada.
+
+en cuanto a las evaluaciones de la seccion, tienen sus caracteristicas, no pueden ser mas de 6, apenas la suma del porcentaje de todas las evaluaciones den 100% se calculará y guardara la nota final en la inscripción,
+se puede archivar una evaluacion mas no eliminarla, y solo se restaura si no hay 6 evaluaciones y si sumar el porcentaje de la evaluacion archivada no supera el 100% de porcentaje. el puntaje se redondea a 20 y de 10 para arriba es aprobado.
+
+
+en cuanto a los profesores, se guardan sus datos normales. tienen una peculiaridad, la pagina publica muestra datos de ciertos profes, pero solo lo hacen si el atributo de "mostrar_profesor" es true, si no lo haces, no aparece,
+se hizo esto para proteger la privacidad de un profesor si no esta dispuesto a salir en la pagina publica. Al archivarse el profesor, dejara de aparecer en la pagina publica y no podra ser asignado a una seccion.
+
+ahora paso a hablar de los usuarios
+ 
+
+tanto personal como estudiantes tiene usaurio, los une la tabla profile, lo que los identificara para entrar al sistema es el login, al crear un usuario el servidor de la bdd enviara un mensaje al correo para confirmar si el correo es real,
+lo mismo al cambiar de clave, el usaurio no puede eliminarse, mas si desactivarse, lo que evita que pueda entrar al sistema, y de este se registran las actividades que lleva a cabo en la pagina
+
+
+en cuanto a los modulos de local y configuracion de aspectos visuales pues, las rutas de las imagenes no se guardan en la bdd, hay una funcion que siempre le pone los mismos nombres a las imagenes dependiendo de donde se usen,
+haciendo q lo unico q cambie sea el formato de las imagenes, hay otra funcion que determina primero el formato de la imagen antes de buscarla, y si no la encuentra, pone una de default,
+
+
+no hay mucho mas que pueda decirse de la vista publica excepto que, aunque los cursos que se muestran son los disponibles en cohortes vigentes y próximos, los que se le permite emitir una solicitud de nuevo ingreso son los que están o próximos o,
+en el caso de que sean vigentes, solo se permite la inscripción si no han pasado 14 días desde que inició el periodo. 
+
+
+
+
+
+Una ultima cosa importante, la base de datos esta alojada en un servidor externo llamado supabase, y ahora la bdd es de posgres, se hizo esto porque el servicio ofrece enviar mensajes al correo,
+pero por consecuencia se cambió todo el backend o modelo,
+ porque supabase no permitia llamadas tipo pdo, q era las q usaba el sistema, por ende, el modelo solo hace llamadas con peticiones propias de supabase y a su ves, llama a rpcs,
+ son funciones hechas dentro de supabase que si permiten acciones complejas.
+
+
+
+

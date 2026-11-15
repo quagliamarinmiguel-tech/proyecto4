@@ -1,0 +1,178 @@
+cronjob:
+
+| jobid | jobname                    | schedule  | active | database | username |
+| 1     | recalc_period_states_daily | 0 0 * * * | true   | postgres | postgres |
+
+--actualiza el estado de cada periodo a diario dependiendo de que si ya paso su fecha de vigencia
+
+| jobid | jobname                        | schedule   | command                                  | database | username | active |
+| ----- | ------------------------------ | ---------- | ---------------------------------------- | -------- | -------- | ------ |
+| 2     | purge-old-visit-interaction-3m | 10 0 * * * | SELECT public.purge_old_tracking_data(); | postgres | postgres | true   |
+
+--Elimina las visitas e interacciones anteriores a los ultimos 3 meses
+
+
+triggers 121126
+
+
+[
+  {
+    "Name": "trg_activity_classes",
+    "Table": "classes",
+    "Function": "public.log_activity",
+    "Events": "INSERT, DELETE, UPDATE",
+    "Orientation": "ROW",
+    "Enabled": "Enabled",
+    "Definition": "CREATE TRIGGER trg_activity_classes AFTER INSERT OR DELETE OR UPDATE ON classes FOR EACH ROW EXECUTE FUNCTION log_activity()"
+  },
+  {
+    "Name": "trg_activity_classroom",
+    "Table": "classroom",
+    "Function": "public.log_activity",
+    "Events": "INSERT, DELETE, UPDATE",
+    "Orientation": "ROW",
+    "Enabled": "Enabled",
+    "Definition": "CREATE TRIGGER trg_activity_classroom AFTER INSERT OR DELETE OR UPDATE ON classroom FOR EACH ROW EXECUTE FUNCTION log_activity()"
+  },
+  {
+    "Name": "trg_activity_course",
+    "Table": "course",
+    "Function": "public.log_activity",
+    "Events": "INSERT, DELETE, UPDATE",
+    "Orientation": "ROW",
+    "Enabled": "Enabled",
+    "Definition": "CREATE TRIGGER trg_activity_course AFTER INSERT OR DELETE OR UPDATE ON course FOR EACH ROW EXECUTE FUNCTION log_activity()"
+  },
+  {
+    "Name": "trg_activity_evaluation",
+    "Table": "evaluation",
+    "Function": "public.log_activity",
+    "Events": "INSERT, DELETE, UPDATE",
+    "Orientation": "ROW",
+    "Enabled": "Enabled",
+    "Definition": "CREATE TRIGGER trg_activity_evaluation AFTER INSERT OR DELETE OR UPDATE ON evaluation FOR EACH ROW EXECUTE FUNCTION log_activity()"
+  },
+  {
+    "Name": "trg_activity_marketing_course",
+    "Table": "marketing_course",
+    "Function": "public.log_activity",
+    "Events": "INSERT, DELETE, UPDATE",
+    "Orientation": "ROW",
+    "Enabled": "Enabled",
+    "Definition": "CREATE TRIGGER trg_activity_marketing_course AFTER INSERT OR DELETE OR UPDATE ON marketing_course FOR EACH ROW EXECUTE FUNCTION log_activity()"
+  },
+  {
+    "Name": "trg_activity_page_info",
+    "Table": "page_info",
+    "Function": "public.log_activity",
+    "Events": "INSERT, DELETE, UPDATE",
+    "Orientation": "ROW",
+    "Enabled": "Enabled",
+    "Definition": "CREATE TRIGGER trg_activity_page_info AFTER INSERT OR DELETE OR UPDATE ON page_info FOR EACH ROW EXECUTE FUNCTION log_activity()"
+  },
+  {
+    "Name": "trg_activity_period",
+    "Table": "period",
+    "Function": "public.log_activity",
+    "Events": "INSERT, DELETE, UPDATE",
+    "Orientation": "ROW",
+    "Enabled": "Enabled",
+    "Definition": "CREATE TRIGGER trg_activity_period AFTER INSERT OR DELETE OR UPDATE ON period FOR EACH ROW EXECUTE FUNCTION log_activity()"
+  },
+  {
+    "Name": "trg_activity_period_course",
+    "Table": "period_course",
+    "Function": "public.log_activity",
+    "Events": "INSERT, DELETE, UPDATE",
+    "Orientation": "ROW",
+    "Enabled": "Enabled",
+    "Definition": "CREATE TRIGGER trg_activity_period_course AFTER INSERT OR DELETE OR UPDATE ON period_course FOR EACH ROW EXECUTE FUNCTION log_activity()"
+  },
+  {
+    "Name": "trg_activity_profile",
+    "Table": "profile",
+    "Function": "public.log_activity",
+    "Events": "INSERT, DELETE, UPDATE",
+    "Orientation": "ROW",
+    "Enabled": "Enabled",
+    "Definition": "CREATE TRIGGER trg_activity_profile AFTER INSERT OR DELETE OR UPDATE ON profile FOR EACH ROW EXECUTE FUNCTION log_activity()"
+  },
+  {
+    "Name": "trg_activity_registration",
+    "Table": "registration",
+    "Function": "public.log_activity",
+    "Events": "INSERT, DELETE, UPDATE",
+    "Orientation": "ROW",
+    "Enabled": "Enabled",
+    "Definition": "CREATE TRIGGER trg_activity_registration AFTER INSERT OR DELETE OR UPDATE ON registration FOR EACH ROW EXECUTE FUNCTION log_activity()"
+  },
+  {
+    "Name": "trg_activity_role",
+    "Table": "role",
+    "Function": "public.log_activity",
+    "Events": "INSERT, DELETE, UPDATE",
+    "Orientation": "ROW",
+    "Enabled": "Enabled",
+    "Definition": "CREATE TRIGGER trg_activity_role AFTER INSERT OR DELETE OR UPDATE ON role FOR EACH ROW EXECUTE FUNCTION log_activity()"
+  },
+  {
+    "Name": "trg_activity_section",
+    "Table": "section",
+    "Function": "public.log_activity",
+    "Events": "INSERT, DELETE, UPDATE",
+    "Orientation": "ROW",
+    "Enabled": "Enabled",
+    "Definition": "CREATE TRIGGER trg_activity_section AFTER INSERT OR DELETE OR UPDATE ON section FOR EACH ROW EXECUTE FUNCTION log_activity()"
+  },
+  {
+    "Name": "trg_activity_staff",
+    "Table": "staff",
+    "Function": "public.log_activity",
+    "Events": "INSERT, DELETE, UPDATE",
+    "Orientation": "ROW",
+    "Enabled": "Enabled",
+    "Definition": "CREATE TRIGGER trg_activity_staff AFTER INSERT OR DELETE OR UPDATE ON staff FOR EACH ROW EXECUTE FUNCTION log_activity()"
+  },
+  {
+    "Name": "trg_activity_student",
+    "Table": "student",
+    "Function": "public.log_activity",
+    "Events": "INSERT, DELETE, UPDATE",
+    "Orientation": "ROW",
+    "Enabled": "Enabled",
+    "Definition": "CREATE TRIGGER trg_activity_student AFTER INSERT OR DELETE OR UPDATE ON student FOR EACH ROW EXECUTE FUNCTION log_activity()"
+  },
+  {
+    "Name": "trg_activity_teacher",
+    "Table": "teacher",
+    "Function": "public.log_activity",
+    "Events": "INSERT, DELETE, UPDATE",
+    "Orientation": "ROW",
+    "Enabled": "Enabled",
+    "Definition": "CREATE TRIGGER trg_activity_teacher AFTER INSERT OR DELETE OR UPDATE ON teacher FOR EACH ROW EXECUTE FUNCTION log_activity()"
+  },
+  {
+    "Name": "trg_activity_transaction",
+    "Table": "transaction",
+    "Function": "public.log_activity",
+    "Events": "INSERT, DELETE, UPDATE",
+    "Orientation": "ROW",
+    "Enabled": "Enabled",
+    "Definition": "CREATE TRIGGER trg_activity_transaction AFTER INSERT OR DELETE OR UPDATE ON transaction FOR EACH ROW EXECUTE FUNCTION log_activity()"
+  },
+  {
+    "Name": "trg_activity_transaction_detail",
+    "Table": "transaction_detail",
+    "Function": "public.log_activity",
+    "Events": "INSERT, DELETE, UPDATE",
+    "Orientation": "ROW",
+    "Enabled": "Enabled",
+    "Definition": "CREATE TRIGGER trg_activity_transaction_detail AFTER INSERT OR DELETE OR UPDATE ON transaction_detail FOR EACH ROW EXECUTE FUNCTION log_activity()"
+  }
+]
+
+
+
+
+
+
