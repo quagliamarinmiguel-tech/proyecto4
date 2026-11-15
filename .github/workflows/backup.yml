@@ -59,6 +59,7 @@ jobs:
           client_secret = $GDRIVE_CLIENT_SECRET
           scope = drive
           token = GDRIVE_REFRESH_TOKEN
+          EOF
 
       - name: Subir a Google Drive
         run: |
