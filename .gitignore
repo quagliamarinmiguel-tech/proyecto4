@@ -1,0 +1,15 @@
+# Local secrets and environment configuration
+.env
+.env.*
+!.env.example
+config/SERVER.php
+config/supabase.env.php
+config/supabase_test.php
+config/SERVERnormalnosupabase180826.php
+
+# Local runtime and dependency artifacts
+/cache/
+/vendor/
+.htaccess.bak
+*.log
+vistas/cm/local_data.json
