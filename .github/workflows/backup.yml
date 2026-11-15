@@ -58,8 +58,8 @@ jobs:
           client_id = $GDRIVE_CLIENT_ID
           client_secret = $GDRIVE_CLIENT_SECRET
           scope = drive
-          token = $GDRIVE_REFRESH_TOKEN
-          EOF
+          token = {"access_token":"ya29.a0AehfTOlC3Y9swvJVLNGs7Vwg0F7igsjBa4XpCvqi15ilUTS0FRvoy4ZbodLsGf8WDnnQ_0-CJ9NXXOd_RAWveqeKIHJ_LTa-gGxsVPj4IwGYj_uVDq5Hf1kXP3pYg5Ff19r2FLf3rZreg6qIXeM-gocVEhdt52GgI0602QEav3RgYQFxdudjoEM_LdkLpwL9cY392DQaCgYKAb4SARASFQHGX2MiiBKl_zMjM4ZoYkVFpr5bBw0206","token_type":"Bearer","refresh_token":"1//01Zwve_OkRjdACgYIARAAGAESNwF-L9IraqHDmeRLlRHaorRkWsasCmi0XUPwsFfRJl4Z9E7BjSmFov7D-J_mPydH8VjXUlFXkfw","expiry":"2026-11-15T18:25:18.5757299-04:00","expires_in":3599}
+
 
       - name: Subir a Google Drive
         run: |
