@@ -47,16 +47,12 @@ jobs:
 
       - name: Configurar rclone con OAuth
         env:
-          GDRIVE_CLIENT_ID: ${{ secrets.GDRIVE_CLIENT_ID }}
-          GDRIVE_CLIENT_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
           GDRIVE_REFRESH_TOKEN: ${{ secrets.GDRIVE_REFRESH_TOKEN }}
         run: |
           mkdir -p ~/.config/rclone
           cat > ~/.config/rclone/rclone.conf << EOF
           [gdrive]
           type = drive
-          client_id = $GDRIVE_CLIENT_ID
-          client_secret = $GDRIVE_CLIENT_SECRET
           scope = drive
           token = $GDRIVE_REFRESH_TOKEN
           EOF
